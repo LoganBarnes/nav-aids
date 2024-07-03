@@ -53,6 +53,7 @@ file(
   LIST_DIRECTORIES
   false
   CONFIGURE_DEPENDS
+  ${CMAKE_CURRENT_LIST_DIR}/external/src/*.c
   ${CMAKE_CURRENT_LIST_DIR}/src/ltb/*.cpp
   ${CMAKE_CURRENT_LIST_DIR}/src/ltb/*.hpp
 )

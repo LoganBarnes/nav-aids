@@ -21,7 +21,7 @@ private:
     window::FullscreenWindow& window_;
     // graphics::GraphicsFramework2d& graphics_;
 
-    //    ogl::Texture texture_ = ogl::Texture{ ogl::NoInit };
+    ogl::Texture texture_ = ogl::Texture{ ogl::NoInit };
 };
 
 } // namespace ltb::ils

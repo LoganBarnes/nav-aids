@@ -47,8 +47,9 @@ Bound< OglObj, BindingType >::Bound( OglObj& obj, WhenFinished when_finished )
     {
         using enum WhenFinished;
 
-        case RestorePreviousState:
-            glGetIntegerv( ogl::binding_type( BindingType ), &restore_value );
+        case RestorePreviousState: {
+            glGetIntegerv( ogl::binding_getter_type< BindingType >, &restore_value );
+        }
             // fallthrough
         case RestoreNullState:
             restore_value_callback_ = std::shared_ptr< void >( this, RestoreValue{ when_finished, restore_value } );
