@@ -1,0 +1,26 @@
+// ///////////////////////////////////////////////////////////////////////////////////////
+// A Logan Thomas Barnes project
+// ///////////////////////////////////////////////////////////////////////////////////////
+#pragma once
+
+#include <filesystem>
+
+namespace ltb::vis::config
+{
+
+inline auto project_root_dir_path( ) -> std::filesystem::path
+{
+    return "@CMAKE_CURRENT_LIST_DIR@";
+}
+
+inline auto res_dir_path( ) -> std::filesystem::path
+{
+    return project_root_dir_path( ) / "res";
+}
+
+inline auto shader_dir_path( ) -> std::filesystem::path
+{
+    return res_dir_path( ) / "shaders";
+}
+
+} // namespace ltb::vis::config
