@@ -16,27 +16,6 @@ constexpr auto color_texture_internal_format = GL_RGBA;
 constexpr auto color_texture_format          = GL_RGBA;
 constexpr auto color_texture_type            = GL_UNSIGNED_BYTE;
 
-auto store_framebuffer_textures( ogl::Framebuffer& framebuffer ) -> utils::Result<>
-{
-    auto color_texture = ogl::Texture{ };
-    LTB_CHECK( color_texture.initialize( ) );
-
-    filter_and_wrap_tex_parameteri(
-        bind< GL_TEXTURE_2D >( color_texture ),
-        GL_LINEAR,
-        GL_CLAMP_TO_EDGE
-    );
-
-    store_framebuffer_texture_2d< GL_FRAMEBUFFER, GL_TEXTURE_2D >(
-        framebuffer,
-        { color_texture },
-        // No depth texture needed
-        std::nullopt
-    );
-
-    return utils::success( );
-}
-
 } // namespace
 
 App::App( window::Window& window )
@@ -56,9 +35,23 @@ auto App::initialize( ) -> utils::Result< App* >
     spdlog::info( "Framebuffer size: {}x{}", framebuffer_size_.x, framebuffer_size_.y );
 
     LTB_CHECK( ogl_loader_.initialize( ) );
+    LTB_CHECK( color_texture_.initialize( ) );
     LTB_CHECK( framebuffer_.initialize( ) );
 
-    LTB_CHECK( store_framebuffer_textures( framebuffer_ ) );
+    // Attach the color texture to the framebuffer.
+    constexpr auto null_depth_texture = std::nullopt;
+    framebuffer_texture_2d< GL_TEXTURE_2D >(
+        bind< GL_FRAMEBUFFER >( framebuffer_ ),
+        { color_texture_ },
+        // No depth texture needed for 2D rendering.
+        null_depth_texture
+    );
+
+    // Specify the color texture parameters.
+    auto const bound_texture = bind< GL_TEXTURE_2D >( color_texture_ );
+    tex_parameteri( bound_texture, ogl::TexParams::filter( ), GL_LINEAR );
+    tex_parameteri( bound_texture, ogl::TexParams::wrap( ), GL_CLAMP_TO_EDGE );
+
     on_resize( );
 
     return this;
@@ -106,7 +99,7 @@ auto App::on_resize( ) const -> void
 {
     constexpr auto mipmap_level = GLint{ 0 };
     tex_image_2d< void >(
-        ogl::bind< GL_TEXTURE_2D >( framebuffer_.data( ).stored_color_textures[ 0 ] ),
+        ogl::bind< GL_TEXTURE_2D >( color_texture_ ),
         framebuffer_size_,
         nullptr,
         color_texture_internal_format,

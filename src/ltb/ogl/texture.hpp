@@ -102,19 +102,6 @@ auto tex_parameteri(
     }
 }
 
-/// \brief Set the texture filter and wrap parameters.
-template < GLenum BindingType >
-    requires is_tex_parameteri_type< BindingType >
-auto filter_and_wrap_tex_parameteri(
-    Bound< Texture, BindingType > bound_texture,
-    GLint                         filter_type,
-    GLint                         wrap_type
-) -> void
-{
-    tex_parameteri( bound_texture, TexParams::filter( ), filter_type );
-    tex_parameteri( bound_texture, TexParams::wrap( ), wrap_type );
-}
-
 /// \brief Copy the provided pixel data to this texture.
 /// \param size The size of the texture.
 /// \param pixels The input CPU pixel data.

@@ -24,8 +24,9 @@ private:
 
     glm::ivec2 framebuffer_size_ = { };
 
-    ogl::OpenglLoader ogl_loader_  = { };
-    ogl::Framebuffer  framebuffer_ = { };
+    ogl::OpenglLoader ogl_loader_    = { };
+    ogl::Texture      color_texture_ = { };
+    ogl::Framebuffer  framebuffer_   = { };
 
     auto on_resize( ) const -> void;
     auto render_to_framebuffer( ) const -> void;

@@ -29,9 +29,6 @@ struct FramebufferData
 {
     /// \brief OpenGL ID from `glGenFramebuffers()`
     GLuint gl_id = 0u;
-
-    std::vector< Texture >   stored_color_textures = { };
-    std::optional< Texture > stored_depth_texture  = std::nullopt;
 };
 
 class Framebuffer
@@ -47,12 +44,6 @@ public:
     /// \brief The raw settings stored for this framebuffer
     [[nodiscard( "Const getter" )]]
     auto data( ) const -> FramebufferData const&;
-
-    /// \brief Store the textures to be used as color and depth attachments.
-    auto store_textures(
-        std::vector< Texture >   color_textures,
-        std::optional< Texture > optional_depth_texture
-    ) -> void;
 
     static auto static_bind( GLenum type, Framebuffer const& framebuffer ) -> void;
     static auto static_bind( GLenum type, GLuint raw_gl_id ) -> void;
@@ -110,6 +101,7 @@ auto Framebuffer::read_pixels(
     glReadPixels( viewport.min.x, viewport.min.y, size.x, size.y, format, type, pixels );
 }
 
+/// \brief Attach a texture to the framebuffer.
 template < GLenum tex_bind_type, GLenum bind_type >
 auto framebuffer_texture_2d(
     Bound< Framebuffer, bind_type > const& bound_framebuffer,
@@ -131,6 +123,7 @@ auto framebuffer_texture_2d(
     glFramebufferTexture2D( bind_type, attachment, tex_bind_type, texture.data( ).gl_id, level );
 }
 
+/// \brief Attach color textures and an optional depth texture to the framebuffer.
 template < GLenum tex_bind_type, GLenum bind_type >
 auto framebuffer_texture_2d(
     Bound< Framebuffer, bind_type > const& bound_framebuffer,
@@ -141,38 +134,21 @@ auto framebuffer_texture_2d(
     auto const texture_count = color_textures.size( );
     for ( auto i = 0U; i < texture_count; ++i )
     {
-        auto const attachment = GL_COLOR_ATTACHMENT0 + i;
-        ogl::framebuffer_texture_2d(
+        framebuffer_texture_2d(
             bound_framebuffer,
-            attachment,
-            ogl::bind< tex_bind_type >( color_textures[ i ] )
+            GL_COLOR_ATTACHMENT0 + i,
+            bind< tex_bind_type >( color_textures[ i ] )
         );
     }
 
     if ( optional_depth_texture.has_value( ) )
     {
-        ogl::framebuffer_texture_2d(
+        framebuffer_texture_2d(
             bound_framebuffer,
             GL_DEPTH_ATTACHMENT,
             bind< tex_bind_type >( optional_depth_texture.value( ) )
         );
     }
-}
-
-template < GLenum bind_type, GLenum tex_bind_type >
-auto store_framebuffer_texture_2d(
-    Framebuffer&             framebuffer,
-    std::vector< Texture >   color_textures,
-    std::optional< Texture > optional_depth_texture
-) -> void
-{
-    framebuffer.store_textures( std::move( color_textures ), std::move( optional_depth_texture ) );
-
-    return framebuffer_texture_2d< tex_bind_type >(
-        bind< bind_type >( framebuffer ),
-        framebuffer.data( ).stored_color_textures,
-        framebuffer.data( ).stored_depth_texture
-    );
 }
 
 /// \brief Check the status of the currently bound framebuffer.

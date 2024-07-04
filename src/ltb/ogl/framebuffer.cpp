@@ -20,19 +20,6 @@ auto Framebuffer::data( ) const -> FramebufferData const&
     return data_;
 }
 
-auto Framebuffer::store_textures(
-    std::vector< Texture >   color_textures,
-    std::optional< Texture > optional_depth_texture
-) -> void
-{
-    data_.stored_color_textures = std::move( color_textures );
-
-    if ( optional_depth_texture.has_value( ) )
-    {
-        data_.stored_depth_texture = std::move( optional_depth_texture.value( ) );
-    }
-}
-
 auto Framebuffer::static_bind( GLenum const type, Framebuffer const& framebuffer ) -> void
 {
     Framebuffer::static_bind( type, framebuffer.data( ).gl_id );
