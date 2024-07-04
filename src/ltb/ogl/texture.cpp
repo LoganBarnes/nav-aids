@@ -6,10 +6,12 @@
 namespace ltb::ogl
 {
 
-auto Texture::initialize( ) -> utils::Result<>
+auto Texture::initialize( ) -> void
 {
-    LTB_CHECK( deleter_, ogl::initialize( data_.gl_id, glGenTextures, glDeleteTextures ) );
-    return utils::success( );
+    glGenTextures( 1, &data_.gl_id );
+
+    spdlog::debug( "glGenTextures({})", data_.gl_id );
+    deleter_ = make_array_deleter( { data_.gl_id }, glDeleteTextures, "glDeleteTextures" );
 }
 
 auto Texture::data( ) const -> TextureData const&

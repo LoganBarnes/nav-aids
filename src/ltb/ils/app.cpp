@@ -3,6 +3,9 @@
 // project
 #include "ltb/utils/error_callback.hpp"
 
+// generated
+#include "ltb/ltb_config.hpp"
+
 // external
 #include <magic_enum.hpp>
 #include <spdlog/spdlog.h>
@@ -35,8 +38,17 @@ auto App::initialize( ) -> utils::Result< App* >
     spdlog::info( "Framebuffer size: {}x{}", framebuffer_size_.x, framebuffer_size_.y );
 
     LTB_CHECK( ogl_loader_.initialize( ) );
-    LTB_CHECK( color_texture_.initialize( ) );
-    LTB_CHECK( framebuffer_.initialize( ) );
+
+    LTB_CHECK( vertex_shader_.initialize( ) );
+    LTB_CHECK( fragment_shader_.initialize( ) );
+
+    auto const shader_dir = config::shader_dir_path( );
+
+    LTB_CHECK( vertex_shader_.load_and_compile( shader_dir / "tmp.vert" ) );
+    LTB_CHECK( fragment_shader_.load_and_compile( shader_dir / "tmp.frag" ) );
+
+    color_texture_.initialize( );
+    framebuffer_.initialize( );
 
     // Attach the color texture to the framebuffer.
     constexpr auto null_depth_texture = std::nullopt;

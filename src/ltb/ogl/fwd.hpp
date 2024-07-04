@@ -18,7 +18,6 @@ struct FramebufferData;
 class Program;
 struct ProgramData;
 
-class Shader;
 struct ShaderData;
 
 class ShaderProgram;

@@ -5,7 +5,7 @@
 
 #include <filesystem>
 
-namespace ltb::vis::config
+namespace ltb::config
 {
 
 inline auto project_root_dir_path( ) -> std::filesystem::path
@@ -23,4 +23,4 @@ inline auto shader_dir_path( ) -> std::filesystem::path
     return res_dir_path( ) / "shaders";
 }
 
-} // namespace ltb::vis::config
+} // namespace ltb::config

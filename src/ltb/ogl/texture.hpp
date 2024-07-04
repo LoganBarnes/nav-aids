@@ -7,7 +7,6 @@
 #include "ltb/math/range.hpp"
 #include "ltb/ogl/bound.hpp"
 #include "ltb/ogl/type_traits.hpp"
-#include "ltb/utils/result.hpp"
 
 // standard
 #include <memory>
@@ -31,9 +30,9 @@ public:
 
     /// \brief Initialize the texture object. This must
     ///        be called before using the texture.
-    auto initialize( ) -> utils::Result<>;
+    auto initialize( ) -> void;
 
-    /// \brief The raw settings stored for this texture
+    /// \brief The raw settings stored for this texture.
     [[nodiscard( "Const getter" )]]
     auto data( ) const -> TextureData const&;
 

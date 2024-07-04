@@ -28,7 +28,7 @@ auto rotor_main( ) -> utils::Result< void >
 
 auto main( ) -> int
 {
-    spdlog::set_level( spdlog::level::info );
+    spdlog::set_level( spdlog::level::debug );
 
     if ( auto result = ltb::rotor_main( ); !result )
     {

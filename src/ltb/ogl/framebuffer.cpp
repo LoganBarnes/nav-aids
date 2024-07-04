@@ -9,10 +9,12 @@
 namespace ltb::ogl
 {
 
-auto Framebuffer::initialize( ) -> utils::Result<>
+auto Framebuffer::initialize( ) -> void
 {
-    LTB_CHECK( deleter_, ogl::initialize( data_.gl_id, glGenFramebuffers, glDeleteFramebuffers ) );
-    return utils::success( );
+    glGenFramebuffers( 1, &data_.gl_id );
+
+    spdlog::debug( "glGenFramebuffers({})", data_.gl_id );
+    deleter_ = make_array_deleter( { data_.gl_id }, glDeleteFramebuffers, "glDeleteFramebuffers" );
 }
 
 auto Framebuffer::data( ) const -> FramebufferData const&

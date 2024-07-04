@@ -39,7 +39,7 @@ public:
 
     /// \brief Initialize the framebuffer object. This must
     ///        be called before using the framebuffer.
-    auto initialize( ) -> utils::Result<>;
+    auto initialize( ) -> void;
 
     /// \brief The raw settings stored for this framebuffer
     [[nodiscard( "Const getter" )]]
