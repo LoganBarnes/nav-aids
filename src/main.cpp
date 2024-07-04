@@ -4,7 +4,7 @@
 
 // project
 #include "ltb/ils/app.hpp"
-#include "ltb/window/fullscreen_glfw_window.hpp"
+#include "ltb/window/glfw_window.hpp"
 
 // external
 #include <spdlog/spdlog.h>
@@ -16,7 +16,7 @@ namespace
 
 auto rotor_main( ) -> utils::Result< void >
 {
-    auto window = window::FullscreenGlfwWindow{ };
+    auto window = window::GlfwWindow{ };
 
     auto app = ils::App{ window };
 

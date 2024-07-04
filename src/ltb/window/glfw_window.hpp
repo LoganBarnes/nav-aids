@@ -1,18 +1,18 @@
 #pragma once
 
 // project
-#include "ltb/window/fullscreen_window.hpp"
+#include "ltb/window/window.hpp"
 
 namespace ltb::window
 {
 
-class FullscreenGlfwWindow : public FullscreenWindow
+class GlfwWindow : public Window
 {
 public:
-    explicit FullscreenGlfwWindow( );
-    ~FullscreenGlfwWindow( ) override;
+    explicit GlfwWindow( );
+    ~GlfwWindow( ) override;
 
-    auto initialize( std::string_view window_title ) -> utils::Result< glm::ivec2 > override;
+    auto initialize( WindowSettings settings ) -> utils::Result< glm::ivec2 > override;
     auto poll_events( ) -> void override;
     auto swap_buffers( ) -> void override;
 

@@ -1,7 +1,7 @@
 // /////////////////////////////////////////////////////////////
 // Copyright (c) Rotor Technologies, Inc. - All Rights Reserved
 // /////////////////////////////////////////////////////////////
-#include "ltb/window/fullscreen_glfw_window.hpp"
+#include "ltb/window/glfw_window.hpp"
 
 // Graphics
 #include "ltb/ogl/opengl.hpp"
@@ -48,7 +48,7 @@ struct GlfwWindowDeleter
 
 } // namespace
 
-struct FullscreenGlfwWindow::Data
+struct GlfwWindow::Data
 {
     std::unique_ptr< int32_t const, GlfwDeleter >    glfw   = nullptr;
     std::unique_ptr< GLFWwindow, GlfwWindowDeleter > window = nullptr;
@@ -81,8 +81,7 @@ auto key_quit_callback(
 
 auto resize_callback( GLFWwindow* const window, int32_t const width, int32_t const height ) -> void
 {
-    auto* const data
-        = static_cast< FullscreenGlfwWindow::Data* >( ::glfwGetWindowUserPointer( window ) );
+    auto* const data = static_cast< GlfwWindow::Data* >( ::glfwGetWindowUserPointer( window ) );
 
     data->resized_framebuffer = glm::ivec2{ width, height };
 }
@@ -92,11 +91,10 @@ auto resize_callback( GLFWwindow* const window, int32_t const width, int32_t con
 // This constructor and destructor must be defined in the cpp
 // file since the unique_ptr<Data> requires the full definition
 // of Data when it is instantiated and destroyed.
-FullscreenGlfwWindow::FullscreenGlfwWindow( )  = default;
-FullscreenGlfwWindow::~FullscreenGlfwWindow( ) = default;
+GlfwWindow::GlfwWindow( )  = default;
+GlfwWindow::~GlfwWindow( ) = default;
 
-auto FullscreenGlfwWindow::initialize( std::string_view const window_title
-) -> utils::Result< glm::ivec2 >
+auto GlfwWindow::initialize( WindowSettings const settings ) -> utils::Result< glm::ivec2 >
 {
     data_ = std::make_unique< Data >( );
 
@@ -141,36 +139,16 @@ auto FullscreenGlfwWindow::initialize( std::string_view const window_title
     ::glfwWindowHint( GLFW_BLUE_BITS, video_mode->blueBits );
     ::glfwWindowHint( GLFW_REFRESH_RATE, video_mode->refreshRate );
 
-    // Get the work area of the monitor to create a window that fits
-    // the screen without overlapping the taskbar or other system UI.
-    struct WorkArea
+    auto initial_size = glm::ivec2{ video_mode->width, video_mode->height };
+    if ( settings.initial_size.has_value( ) )
     {
-        glm::ivec2 position = { };
-        glm::ivec2 size     = { };
-    };
-
-    auto work_area = WorkArea{ };
-
-    ::glfwGetMonitorWorkarea(
-        monitor,
-        &work_area.position.x,
-        &work_area.position.y,
-        &work_area.size.x,
-        &work_area.size.y
-    );
-
-    // The window does not need to be resized since it will
-    // already be the appropriate size for the current monitor.
-    ::glfwWindowHint( GLFW_RESIZABLE, GLFW_FALSE );
-
-    // The title bar pushes the window down below the work area, so it is
-    // disabled. The window can still be closed by using the taskbar icon.
-    ::glfwWindowHint( GLFW_DECORATED, GLFW_FALSE );
+        initial_size = settings.initial_size.value( );
+    }
 
     auto* const maybe_window = ::glfwCreateWindow(
-        work_area.size.x,
-        work_area.size.y,
-        window_title.data( ),
+        initial_size.x,
+        initial_size.y,
+        settings.title.c_str( ),
         nullptr,
         nullptr
     );
@@ -198,23 +176,23 @@ auto FullscreenGlfwWindow::initialize( std::string_view const window_title
     return framebuffer_size;
 }
 
-auto FullscreenGlfwWindow::poll_events( ) -> void
+auto GlfwWindow::poll_events( ) -> void
 {
     data_->resized_framebuffer = std::nullopt;
     ::glfwPollEvents( );
 }
 
-auto FullscreenGlfwWindow::swap_buffers( ) -> void
+auto GlfwWindow::swap_buffers( ) -> void
 {
     ::glfwSwapBuffers( data_->window.get( ) );
 }
 
-auto FullscreenGlfwWindow::should_close( ) const -> bool
+auto GlfwWindow::should_close( ) const -> bool
 {
     return ::glfwWindowShouldClose( data_->window.get( ) );
 }
 
-auto FullscreenGlfwWindow::resized( ) const -> std::optional< glm::ivec2 >
+auto GlfwWindow::resized( ) const -> std::optional< glm::ivec2 >
 {
     return data_->resized_framebuffer;
 }

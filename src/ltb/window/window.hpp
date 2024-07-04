@@ -12,13 +12,22 @@
 namespace ltb::window
 {
 
-class FullscreenWindow
+struct WindowSettings
+{
+    /// \brief The text displayed on the window title bar.
+    std::string title = "Window";
+
+    /// \brief The initial size of the window. Fullscreen if nullopt.
+    std::optional< glm::ivec2 > initial_size = std::nullopt;
+};
+
+class Window
 {
 public:
-    virtual ~FullscreenWindow( ) = 0;
+    virtual ~Window( ) = 0;
 
     /// \brief Initializes a window and returns the initial size of the framebuffer.
-    virtual auto initialize( std::string_view window_title ) -> utils::Result< glm::ivec2 > = 0;
+    virtual auto initialize( WindowSettings settings ) -> utils::Result< glm::ivec2 > = 0;
 
     /// \brief Polls events for the window.
     virtual auto poll_events( ) -> void = 0;
@@ -35,6 +44,6 @@ public:
     virtual auto resized( ) const -> std::optional< glm::ivec2 > = 0;
 };
 
-inline FullscreenWindow::~FullscreenWindow( ) = default;
+inline Window::~Window( ) = default;
 
 } // namespace ltb::window

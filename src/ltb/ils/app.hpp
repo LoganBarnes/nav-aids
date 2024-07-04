@@ -3,7 +3,7 @@
 // project
 #include "ltb/ogl/opengl_loader.hpp"
 #include "ltb/ogl/texture.hpp"
-#include "ltb/window/fullscreen_window.hpp"
+#include "ltb/window/window.hpp"
 
 namespace ltb::ils
 {
@@ -12,15 +12,17 @@ namespace ltb::ils
 class App
 {
 public:
-    explicit App( window::FullscreenWindow& window );
+    explicit App( window::Window& window );
 
     auto initialize( ) -> utils::Result< App* >;
     auto run( ) -> utils::Result< void >;
 
 private:
     // Window & graphics interfaces
-    window::FullscreenWindow& window_;
+    window::Window& window_;
     // graphics::GraphicsFramework2d& graphics_;
+
+    glm::ivec2 framebuffer_size_ = { };
 
     ogl::OpenglLoader ogl_loader_ = { };
     ogl::Texture      texture_    = { };
