@@ -19,7 +19,8 @@ namespace ltb::ogl
 struct TextureData
 {
     /// \brief OpenGL ID from `glGenTextures()`
-    GLuint                   gl_id      = 0u;
+    GLuint gl_id = 0u;
+
     std::array< GLsizei, 3 > dimensions = { 0, 0, 0 };
     GLenum                   format     = GL_RGBA;
     GLenum                   type       = GL_FLOAT;

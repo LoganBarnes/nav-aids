@@ -1,29 +1,14 @@
 #include "ltb/ogl/texture.hpp"
 
+// project
+#include "ltb/ogl/object_id.hpp"
+
 namespace ltb::ogl
 {
 
-struct Deleter
-{
-    GLuint id;
-
-    template < typename Ignored >
-    auto operator( )( Ignored const* const ) const
-    {
-        glDeleteTextures( 1, &id );
-    }
-};
-
 auto Texture::initialize( ) -> utils::Result<>
 {
-    glGenTextures( 1, &data_.gl_id );
-    if ( 0u == data_.gl_id )
-    {
-        return LTB_MAKE_UNEXPECTED_ERROR( "Failed to generate texture ID" );
-    }
-
-    deleter_ = std::shared_ptr< void >( this, Deleter{ data_.gl_id } );
-
+    LTB_CHECK( deleter_, ogl::initialize( data_.gl_id, glGenTextures, glDeleteTextures ) );
     return utils::success( );
 }
 

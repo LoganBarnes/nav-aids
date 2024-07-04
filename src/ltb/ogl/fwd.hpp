@@ -6,12 +6,6 @@
 namespace ltb::ogl
 {
 
-struct NoInitT
-{
-};
-
-constexpr auto NoInit = NoInitT{ };
-
 template < typename T >
 struct UniformSetter;
 

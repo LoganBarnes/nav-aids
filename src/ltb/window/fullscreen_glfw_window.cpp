@@ -43,6 +43,26 @@ struct GlfwWindowDeleter
     auto operator( )( GLFWwindow* const window ) const -> void { ::glfwDestroyWindow( window ); }
 };
 
+auto key_quit_callback(
+    GLFWwindow* const window,
+    int32_t const     key,
+    int32_t const     scancode,
+    int32_t const     action,
+    int32_t const     mods
+) -> void
+{
+    utils::ignore( scancode );
+
+    auto const shift_down = 0 != ( mods & GLFW_MOD_SHIFT );
+    auto const ctrl_down  = 0 != ( mods & GLFW_MOD_CONTROL );
+    auto const q_released = ( GLFW_KEY_Q == key ) && ( GLFW_RELEASE == action );
+
+    if ( q_released && ctrl_down && shift_down )
+    {
+        ::glfwSetWindowShouldClose( window, GLFW_TRUE );
+    }
+}
+
 } // namespace
 
 struct FullscreenGlfwWindow::Data
@@ -146,11 +166,12 @@ auto FullscreenGlfwWindow::initialize( std::string_view const window_title
     ::glfwMakeContextCurrent( data_->window.get( ) );
     ::glfwSwapInterval( 1 );
 
+    // Ignore the old callback.
+    utils::ignore( ::glfwSetKeyCallback( data_->window.get( ), &key_quit_callback ) );
+
     // Get and return the current framebuffer size for any graphics APIs using the window.
     auto framebuffer_size = glm::ivec2{ };
     ::glfwGetFramebufferSize( data_->window.get( ), &framebuffer_size.x, &framebuffer_size.y );
-
-    spdlog::info( "Window content size {}x{}", framebuffer_size.x, framebuffer_size.y );
 
     return framebuffer_size;
 }
