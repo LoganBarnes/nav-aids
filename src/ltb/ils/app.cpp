@@ -29,6 +29,11 @@ auto App::run( ) -> utils::Result< void >
     {
         window_.poll_events( );
 
+        if ( auto const resized = window_.resized( ) )
+        {
+            spdlog::info( "Resized to {}x{}", resized->x, resized->y );
+        }
+
         /// \todo(logan): Render the scene here.
 
         window_.swap_buffers( );

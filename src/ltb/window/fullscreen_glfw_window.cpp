@@ -14,6 +14,9 @@
 #include <GLFW/glfw3.h>
 #include <spdlog/spdlog.h>
 
+// standard
+#include <memory>
+
 namespace ltb::window
 {
 namespace
@@ -43,6 +46,19 @@ struct GlfwWindowDeleter
     auto operator( )( GLFWwindow* const window ) const -> void { ::glfwDestroyWindow( window ); }
 };
 
+} // namespace
+
+struct FullscreenGlfwWindow::Data
+{
+    std::unique_ptr< int32_t const, GlfwDeleter >    glfw   = nullptr;
+    std::unique_ptr< GLFWwindow, GlfwWindowDeleter > window = nullptr;
+
+    std::optional< glm::ivec2 > resized_framebuffer = std::nullopt;
+};
+
+namespace
+{
+
 auto key_quit_callback(
     GLFWwindow* const window,
     int32_t const     key,
@@ -63,13 +79,15 @@ auto key_quit_callback(
     }
 }
 
-} // namespace
-
-struct FullscreenGlfwWindow::Data
+auto resize_callback( GLFWwindow* const window, int32_t const width, int32_t const height ) -> void
 {
-    std::unique_ptr< int32_t const, GlfwDeleter >    glfw   = nullptr;
-    std::unique_ptr< GLFWwindow, GlfwWindowDeleter > window = nullptr;
-};
+    auto* const data
+        = static_cast< FullscreenGlfwWindow::Data* >( ::glfwGetWindowUserPointer( window ) );
+
+    data->resized_framebuffer = glm::ivec2{ width, height };
+}
+
+} // namespace
 
 // This constructor and destructor must be defined in the cpp
 // file since the unique_ptr<Data> requires the full definition
@@ -166,6 +184,8 @@ auto FullscreenGlfwWindow::initialize( std::string_view const window_title
     ::glfwMakeContextCurrent( data_->window.get( ) );
     ::glfwSwapInterval( 1 );
 
+    ::glfwSetWindowUserPointer( data_->window.get( ), data_.get( ) );
+
     // Ignore the old callback.
     utils::ignore( ::glfwSetKeyCallback( data_->window.get( ), &key_quit_callback ) );
 
@@ -173,11 +193,14 @@ auto FullscreenGlfwWindow::initialize( std::string_view const window_title
     auto framebuffer_size = glm::ivec2{ };
     ::glfwGetFramebufferSize( data_->window.get( ), &framebuffer_size.x, &framebuffer_size.y );
 
+    utils::ignore( ::glfwSetFramebufferSizeCallback( data_->window.get( ), &resize_callback ) );
+
     return framebuffer_size;
 }
 
 auto FullscreenGlfwWindow::poll_events( ) -> void
 {
+    data_->resized_framebuffer = std::nullopt;
     ::glfwPollEvents( );
 }
 
@@ -189,6 +212,11 @@ auto FullscreenGlfwWindow::swap_buffers( ) -> void
 auto FullscreenGlfwWindow::should_close( ) const -> bool
 {
     return ::glfwWindowShouldClose( data_->window.get( ) );
+}
+
+auto FullscreenGlfwWindow::resized( ) const -> std::optional< glm::ivec2 >
+{
+    return data_->resized_framebuffer;
 }
 
 } // namespace ltb::window
