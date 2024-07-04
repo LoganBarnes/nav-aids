@@ -31,7 +31,7 @@ public:
     virtual auto should_close( ) const -> bool = 0;
 
     /// \brief Returns the new size of the framebuffer if the window was resized.
-    [[nodiscard("Const getter")]]
+    [[nodiscard( "Const getter" )]]
     virtual auto resized( ) const -> std::optional< glm::ivec2 > = 0;
 };
 
