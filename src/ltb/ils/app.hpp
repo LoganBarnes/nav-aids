@@ -1,8 +1,8 @@
 #pragma once
 
 // project
+#include "ltb/ogl/framebuffer.hpp"
 #include "ltb/ogl/opengl_loader.hpp"
-#include "ltb/ogl/texture.hpp"
 #include "ltb/window/window.hpp"
 
 namespace ltb::ils
@@ -24,8 +24,11 @@ private:
 
     glm::ivec2 framebuffer_size_ = { };
 
-    ogl::OpenglLoader ogl_loader_ = { };
-    ogl::Texture      texture_    = { };
+    ogl::OpenglLoader ogl_loader_  = { };
+    ogl::Framebuffer  framebuffer_ = { };
+
+    auto on_resize( ) const -> void;
+    auto render_to_framebuffer( ) const -> void;
 };
 
 } // namespace ltb::ils

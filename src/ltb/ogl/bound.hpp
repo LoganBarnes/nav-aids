@@ -10,22 +10,18 @@
 namespace ltb::ogl
 {
 
-template < typename OglObj, GLenum BindingType >
+template < typename OglObj, GLenum bind_type >
 class Bound
 {
 public:
-    explicit Bound( OglObj& obj, WhenFinished when_finished );
+    explicit Bound( OglObj const& obj, WhenFinished when_finished );
 
     /// \brief The original object.
     [[nodiscard( "Const getter" )]]
     auto object( ) const -> OglObj const&;
 
-    /// \brief The type used when binding this object.
-    [[nodiscard( "Const getter" )]]
-    auto binding_type( ) const -> GLenum;
-
 private:
-    OglObj& obj_;
+    OglObj const& obj_;
 
     std::shared_ptr< void > restore_value_callback_ = nullptr;
 
@@ -39,20 +35,20 @@ private:
     };
 };
 
-template < GLenum BindingType, typename OglObj >
-auto bind( OglObj& object, WhenFinished when_finished )
+template < GLenum bind_type, typename OglObj >
+auto bind( OglObj const& object, WhenFinished when_finished )
 {
-    return Bound< OglObj, BindingType >( object, when_finished );
+    return Bound< OglObj, bind_type >( object, when_finished );
 }
 
-template < GLenum BindingType, typename OglObj >
-auto bind( OglObj& object )
+template < GLenum bind_type, typename OglObj >
+auto bind( OglObj const& object )
 {
-    return make_bound< BindingType >( object, WhenFinished::RestoreNullState );
+    return bind< bind_type >( object, WhenFinished::RestoreNullState );
 }
 
-template < typename OglObj, GLenum BindingType >
-Bound< OglObj, BindingType >::Bound( OglObj& obj, WhenFinished when_finished )
+template < typename OglObj, GLenum bind_type >
+Bound< OglObj, bind_type >::Bound( OglObj const& obj, WhenFinished when_finished )
     : obj_( obj )
 {
     auto restore_value = GLint{ 0 };
@@ -62,7 +58,7 @@ Bound< OglObj, BindingType >::Bound( OglObj& obj, WhenFinished when_finished )
         using enum WhenFinished;
 
         case RestorePreviousState: {
-            glGetIntegerv( ogl::binding_getter_type< BindingType >, &restore_value );
+            glGetIntegerv( ogl::binding_getter_type< bind_type >( ), &restore_value );
         }
             // fallthrough
         case RestoreNullState:
@@ -75,12 +71,12 @@ Bound< OglObj, BindingType >::Bound( OglObj& obj, WhenFinished when_finished )
 
     } // end switch
 
-    OglObj::static_bind( BindingType, obj_ );
+    OglObj::static_bind( bind_type, obj_ );
 }
 
-template < typename OglObj, GLenum BindingType >
+template < typename OglObj, GLenum bind_type >
 template < typename Ignored >
-auto Bound< OglObj, BindingType >::RestoreValue::operator( )( Ignored const* ) const -> void
+auto Bound< OglObj, bind_type >::RestoreValue::operator( )( Ignored const* ) const -> void
 {
     switch ( when_finished_ )
     {
@@ -88,7 +84,7 @@ auto Bound< OglObj, BindingType >::RestoreValue::operator( )( Ignored const* ) c
 
         case RestorePreviousState:
         case RestoreNullState:
-            OglObj::static_bind( BindingType, static_cast< GLuint >( restore_value_ ) );
+            OglObj::static_bind( bind_type, static_cast< GLuint >( restore_value_ ) );
             break;
 
         case DoNothing:
@@ -97,16 +93,10 @@ auto Bound< OglObj, BindingType >::RestoreValue::operator( )( Ignored const* ) c
     } // end switch
 }
 
-template < typename OglObj, GLenum BindingType >
-auto Bound< OglObj, BindingType >::object( ) const -> OglObj const&
+template < typename OglObj, GLenum bind_type >
+auto Bound< OglObj, bind_type >::object( ) const -> OglObj const&
 {
     return obj_;
-}
-
-template < typename OglObj, GLenum BindingType >
-auto Bound< OglObj, BindingType >::binding_type( ) const -> GLenum
-{
-    return BindingType;
 }
 
 } // namespace ltb::ogl

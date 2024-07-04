@@ -40,9 +40,9 @@ auto to_string( GLubyte const* str ) -> std::string;
 /// \brief Return the result of glGetString as a std::string.
 auto get_string( GLenum name ) -> std::string;
 
-template < GLenum BindingType >
+template < GLenum bind_type >
 constexpr auto is_bindable_buffer_v = is_any_v<
-    BindingType,
+    bind_type,
     GL_ARRAY_BUFFER,
     GL_ATOMIC_COUNTER_BUFFER,
     GL_COPY_READ_BUFFER,
@@ -56,9 +56,9 @@ constexpr auto is_bindable_buffer_v = is_any_v<
     GL_TRANSFORM_FEEDBACK_BUFFER,
     GL_UNIFORM_BUFFER >;
 
-template < GLenum BindingType >
+template < GLenum bind_type >
 constexpr auto is_bindable_texture_v = is_any_v<
-    BindingType,
+    bind_type,
     GL_TEXTURE_1D,
     GL_TEXTURE_2D,
     GL_TEXTURE_3D,
@@ -71,20 +71,20 @@ constexpr auto is_bindable_texture_v = is_any_v<
     GL_TEXTURE_2D_MULTISAMPLE,
     GL_TEXTURE_2D_MULTISAMPLE_ARRAY >;
 
-template < GLenum BindingType >
+template < GLenum bind_type >
 constexpr auto is_bindable_framebuffer_v
-    = is_any_v< BindingType, GL_FRAMEBUFFER, GL_DRAW_FRAMEBUFFER, GL_READ_FRAMEBUFFER >;
+    = is_any_v< bind_type, GL_FRAMEBUFFER, GL_DRAW_FRAMEBUFFER, GL_READ_FRAMEBUFFER >;
 
-template < GLenum BindingType >
+template < GLenum bind_type >
 constexpr auto is_bindable_v
-    = is_bindable_buffer_v< BindingType > || is_bindable_texture_v< BindingType >
-   || is_bindable_framebuffer_v< BindingType >;
+    = is_bindable_buffer_v< bind_type > || is_bindable_texture_v< bind_type >
+   || is_bindable_framebuffer_v< bind_type >;
 
-template < GLenum BindingType >
-    requires is_bindable_v< BindingType >
+template < GLenum bind_type >
+    requires is_bindable_v< bind_type >
 constexpr auto binding_getter_type( ) -> GLenum
 {
-    switch ( BindingType )
+    switch ( bind_type )
     {
             // Buffers
         case GL_ARRAY_BUFFER:

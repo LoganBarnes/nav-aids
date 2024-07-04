@@ -1,0 +1,86 @@
+#include "ltb/ogl/framebuffer.hpp"
+
+// project
+#include "ltb/ogl/object_id.hpp"
+
+// external
+#include <spdlog/fmt/fmt.h>
+
+namespace ltb::ogl
+{
+
+auto Framebuffer::initialize( ) -> utils::Result<>
+{
+    LTB_CHECK( deleter_, ogl::initialize( data_.gl_id, glGenFramebuffers, glDeleteFramebuffers ) );
+    return utils::success( );
+}
+
+auto Framebuffer::data( ) const -> FramebufferData const&
+{
+    return data_;
+}
+
+auto Framebuffer::store_textures(
+    std::vector< Texture >   color_textures,
+    std::optional< Texture > optional_depth_texture
+) -> void
+{
+    data_.stored_color_textures = std::move( color_textures );
+
+    if ( optional_depth_texture.has_value( ) )
+    {
+        data_.stored_depth_texture = std::move( optional_depth_texture.value( ) );
+    }
+}
+
+auto Framebuffer::static_bind( GLenum const type, Framebuffer const& framebuffer ) -> void
+{
+    Framebuffer::static_bind( type, framebuffer.data( ).gl_id );
+}
+
+auto Framebuffer::static_bind( GLenum const type, GLuint const raw_gl_id ) -> void
+{
+    glBindFramebuffer( type, raw_gl_id );
+}
+
+auto Framebuffer::blit(
+    Bound< Framebuffer, GL_READ_FRAMEBUFFER > const& read_framebuffer,
+    Bound< Framebuffer, GL_DRAW_FRAMEBUFFER > const& draw_framebuffer,
+    math::Range2Di const&                            viewport,
+    std::vector< FramebufferAttachmentPair > const&  attachments,
+    GLbitfield const                                 mask,
+    GLenum const                                     filter
+) -> void
+{
+    // These need to be bound, but nothing has to be done with them
+    utils::ignore( read_framebuffer, draw_framebuffer );
+
+    for ( auto attachment : attachments )
+    {
+        // Specify which attachments should be used (GL_COLOR_ATTACHMENT[0,1,...])
+        if ( attachment.read )
+        {
+            glReadBuffer( attachment.read.value( ) );
+        }
+        if ( attachment.write )
+        {
+            glDrawBuffer( attachment.write.value( ) );
+        }
+
+        // Copy from one buffer to the other
+        glBlitFramebuffer(
+            viewport.min.x,
+            viewport.min.y,
+            viewport.max.x,
+            viewport.max.y,
+            viewport.min.x,
+            viewport.min.y,
+            viewport.max.x,
+            viewport.max.y,
+            mask,
+            filter
+        );
+    }
+}
+
+} // namespace ltb::ogl
