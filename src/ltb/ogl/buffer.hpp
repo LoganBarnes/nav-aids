@@ -50,7 +50,8 @@ public:
     [[nodiscard]] auto bind( ) const -> Bound< Type >;
 
     template < GLenum Type = GL_TEXTURE_2D >
-    [[nodiscard]] auto bind( WhenFinished when_finished = WhenFinished::RestoreNullState ) const -> Bound< Type >;
+    [[nodiscard]] auto
+    bind( WhenFinished when_finished = WhenFinished::RestoreNullState ) const -> Bound< Type >;
 
 private:
     std::shared_ptr< TextureData > data_ = nullptr; ///< The RAII data.
@@ -118,7 +119,10 @@ public:
     /// \brief Set the texture filter and wrap parameters.
     template < GLenum T = Type >
         requires is_tex_parameteri_type< T >
-    auto filter_and_wrap_tex_parameteri( GLint filter_type = GL_LINEAR, GLint wrap_type = GL_CLAMP_TO_EDGE ) -> Bound&;
+    auto filter_and_wrap_tex_parameteri(
+        GLint filter_type = GL_LINEAR,
+        GLint wrap_type   = GL_CLAMP_TO_EDGE
+    ) -> Bound&;
 
     /// \brief Copy the provided pixel data to this texture.
     /// \param size The size of the texture.
@@ -227,7 +231,8 @@ private:
 template < GLenum Type >
 template < GLenum T >
     requires is_tex_parameteri_type< T >
-auto Texture::Bound< Type >::tex_parameteri( std::vector< GLenum > const& params, GLint value ) -> Bound< Type >&
+auto Texture::Bound< Type >::tex_parameteri( std::vector< GLenum > const& params, GLint value )
+    -> Bound< Type >&
 {
     for ( GLenum param : params )
     {
@@ -239,9 +244,11 @@ auto Texture::Bound< Type >::tex_parameteri( std::vector< GLenum > const& params
 template < GLenum Type >
 template < GLenum T >
     requires is_tex_parameteri_type< T >
-auto Texture::Bound< Type >::filter_and_wrap_tex_parameteri( GLint filter_type, GLint wrap_type ) -> Bound< Type >&
+auto Texture::Bound< Type >::filter_and_wrap_tex_parameteri( GLint filter_type, GLint wrap_type )
+    -> Bound< Type >&
 {
-    return tex_parameteri( TexParams::filter( ), filter_type ).tex_parameteri( TexParams::wrap( ), wrap_type );
+    return tex_parameteri( TexParams::filter( ), filter_type )
+        .tex_parameteri( TexParams::wrap( ), wrap_type );
 }
 
 template < GLenum Type >
@@ -262,7 +269,17 @@ auto Texture::Bound< Type >::tex_image_2d(
     texture_.data_->dimensions = { size[ 0 ], size[ 1 ], 0 };
     texture_.data_->format     = format;
     texture_.data_->type       = type;
-    glTexImage2D( Type, level, internal_format, size[ 0 ], size[ 1 ], border, format, type, pixels );
+    glTexImage2D(
+        Type,
+        level,
+        internal_format,
+        size[ 0 ],
+        size[ 1 ],
+        border,
+        format,
+        type,
+        pixels
+    );
     return *this;
 }
 
@@ -319,7 +336,14 @@ auto Texture::Bound< Type >::tex_image_2d_multisample(
 ) -> Bound< Type >&
 {
     texture_.data_->dimensions = { size[ 0 ], size[ 1 ], 0 };
-    glTexImage2DMultisample( Type, samples, internal_format, size[ 0 ], size[ 1 ], fixed_sample_locations );
+    glTexImage2DMultisample(
+        Type,
+        samples,
+        internal_format,
+        size[ 0 ],
+        size[ 1 ],
+        fixed_sample_locations
+    );
     return *this;
 }
 

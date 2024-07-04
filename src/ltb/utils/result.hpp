@@ -25,107 +25,111 @@ class [[nodiscard]] expected;
 #define LTB_MAKE_UNEXPECTED_WARNING( ... ) ::tl::make_unexpected( LTB_MAKE_WARNING( __VA_ARGS__ ) )
 
 // Do not use this macro directly; use LTB_CHECK_VALID instead.
-#define DETAIL_LTB_CHECK_VALID1( var )                                                                                 \
-    do                                                                                                                 \
-    {                                                                                                                  \
-        if ( !( var ) )                                                                                                \
-        {                                                                                                              \
-            return LTB_MAKE_UNEXPECTED_ERROR( "{} invalid", #var );                                                    \
-        }                                                                                                              \
+#define DETAIL_LTB_CHECK_VALID1( var )                                                             \
+    do                                                                                             \
+    {                                                                                              \
+        if ( !( var ) )                                                                            \
+        {                                                                                          \
+            return LTB_MAKE_UNEXPECTED_ERROR( "{} invalid", #var );                                \
+        }                                                                                          \
     } while ( false )
 
 // Do not use this macro directly; use LTB_CHECK_VALID instead.
-#define DETAIL_LTB_CHECK_VALID2( var, msg )                                                                            \
-    do                                                                                                                 \
-    {                                                                                                                  \
-        if ( !( var ) )                                                                                                \
-        {                                                                                                              \
-            return LTB_MAKE_UNEXPECTED_ERROR( "{} invalid: {}", #var, msg );                                           \
-        }                                                                                                              \
+#define DETAIL_LTB_CHECK_VALID2( var, msg )                                                        \
+    do                                                                                             \
+    {                                                                                              \
+        if ( !( var ) )                                                                            \
+        {                                                                                          \
+            return LTB_MAKE_UNEXPECTED_ERROR( "{} invalid: {}", #var, msg );                       \
+        }                                                                                          \
     } while ( false )
 
 /// \brief Checks if the inputs expression is valid,
 ///        otherwise returns an unexpected error.
-#define LTB_CHECK_VALID( ... )                                                                                         \
-    LTB_EXPAND( LTB_GET2( __VA_ARGS__, DETAIL_LTB_CHECK_VALID2, DETAIL_LTB_CHECK_VALID1, )( __VA_ARGS__ ) )
+#define LTB_CHECK_VALID( ... )                                                                     \
+    LTB_EXPAND(                                                                                    \
+        LTB_GET2( __VA_ARGS__, DETAIL_LTB_CHECK_VALID2, DETAIL_LTB_CHECK_VALID1, )( __VA_ARGS__ )  \
+    )
 
 // Do not use this macro directly; use LTB_CHECK_VALID_OR instead.
-#define DETAIL_LTB_CHECK_VALID_OR( var, callback )                                                                     \
-    do                                                                                                                 \
-    {                                                                                                                  \
-        if ( !( var ) )                                                                                                \
-        {                                                                                                              \
-            callback( LTB_MAKE_ERROR( "{} invalid", #var ) );                                                          \
-        }                                                                                                              \
+#define DETAIL_LTB_CHECK_VALID_OR( var, callback )                                                 \
+    do                                                                                             \
+    {                                                                                              \
+        if ( !( var ) )                                                                            \
+        {                                                                                          \
+            callback( LTB_MAKE_ERROR( "{} invalid", #var ) );                                      \
+        }                                                                                          \
     } while ( false )
 
 // Do not use this macro directly; use LTB_CHECK_VALID_OR instead.
-#define DETAIL_LTB_CHECK_VALID_OR( var, callback )                                                                     \
-    do                                                                                                                 \
-    {                                                                                                                  \
-        if ( !( var ) )                                                                                                \
-        {                                                                                                              \
-            callback( LTB_MAKE_ERROR( "{} invalid", #var ) );                                                          \
-        }                                                                                                              \
+#define DETAIL_LTB_CHECK_VALID_OR( var, callback )                                                 \
+    do                                                                                             \
+    {                                                                                              \
+        if ( !( var ) )                                                                            \
+        {                                                                                          \
+            callback( LTB_MAKE_ERROR( "{} invalid", #var ) );                                      \
+        }                                                                                          \
     } while ( false )
 
 /// \brief Checks if the inputs expression is valid,
 ///        otherwise calls the provided error callback.
-#define LTB_CHECK_VALID_OR( ... )                                                                                      \
-    LTB_EXPAND( LTB_GET2( __VA_ARGS__, DETAIL_LTB_CHECK_VALID_OR2, DETAIL_LTB_CHECK_VALID_OR1, )( __VA_ARGS__ ) )
+#define LTB_CHECK_VALID_OR( ... )                                                                  \
+    LTB_EXPAND( LTB_GET2( __VA_ARGS__, DETAIL_LTB_CHECK_VALID_OR2, DETAIL_LTB_CHECK_VALID_OR1, )(  \
+        __VA_ARGS__                                                                                \
+    ) )
 
 // Do not use this macro directly; use LTB_CHECK instead.
-#define DETAIL_LTB_CHECK1( unique_name, func )                                                                         \
-    do                                                                                                                 \
-    {                                                                                                                  \
-        if ( auto unique_name = to_void( func ); /* check for error -> */ !unique_name )                               \
-        {                                                                                                              \
-            return tl::make_unexpected( unique_name.error( ) );                                                        \
-        }                                                                                                              \
+#define DETAIL_LTB_CHECK1( unique_name, func )                                                     \
+    do                                                                                             \
+    {                                                                                              \
+        if ( auto unique_name = to_void( func ); /* check for error -> */ !unique_name )           \
+        {                                                                                          \
+            return tl::make_unexpected( unique_name.error( ) );                                    \
+        }                                                                                          \
     } while ( false )
 
 // Do not use this macro directly; use LTB_CHECK instead.
-#define DETAIL_LTB_CHECK2( unique_name, var, func )                                                                    \
-    auto&& unique_name = ( func );                                                                                     \
-    if ( !unique_name )                                                                                                \
-    {                                                                                                                  \
-        return tl::make_unexpected( unique_name.error( ) );                                                            \
-    }                                                                                                                  \
+#define DETAIL_LTB_CHECK2( unique_name, var, func )                                                \
+    auto&& unique_name = ( func );                                                                 \
+    if ( !unique_name )                                                                            \
+    {                                                                                              \
+        return tl::make_unexpected( unique_name.error( ) );                                        \
+    }                                                                                              \
     var = std::move( unique_name.value( ) )
 
 /// \brief An "overloaded" macro that is replaced by LTB_CHECK1
 ///        or LTB_CHECK2 depending on the number of arguments.
-#define LTB_CHECK( ... )                                                                                               \
-    LTB_EXPAND( LTB_GET2( __VA_ARGS__, DETAIL_LTB_CHECK2, DETAIL_LTB_CHECK1, )(                                        \
-        LTB_UNIQUE_NAME( ltb_check_macro_result ),                                                                     \
-        __VA_ARGS__                                                                                                    \
+#define LTB_CHECK( ... )                                                                           \
+    LTB_EXPAND( LTB_GET2( __VA_ARGS__, DETAIL_LTB_CHECK2, DETAIL_LTB_CHECK1, )(                    \
+        LTB_UNIQUE_NAME( ltb_check_macro_result ),                                                 \
+        __VA_ARGS__                                                                                \
     ) )
 
 // Do not use this macro directly; use LTB_CHECK_OF instead.
-#define DETAIL_LTB_CHECK_OR1( unique_name, func, callback )                                                            \
-    do                                                                                                                 \
-    {                                                                                                                  \
-        if ( auto unique_name = to_void( func ); /* check for error -> */ !unique_name )                               \
-        {                                                                                                              \
-            callback( unique_name.error( ) );                                                                          \
-        }                                                                                                              \
+#define DETAIL_LTB_CHECK_OR1( unique_name, func, callback )                                        \
+    do                                                                                             \
+    {                                                                                              \
+        if ( auto unique_name = to_void( func ); /* check for error -> */ !unique_name )           \
+        {                                                                                          \
+            callback( unique_name.error( ) );                                                      \
+        }                                                                                          \
     } while ( false )
 
 // Do not use this macro directly; use LTB_CHECK_OF instead.
-#define DETAIL_LTB_CHECK_OR2( unique_name, var, func, callback )                                                       \
-    auto&& unique_name = ( func );                                                                                     \
-    if ( !unique_name )                                                                                                \
-    {                                                                                                                  \
-        callback( unique_name.error( ) );                                                                              \
-    }                                                                                                                  \
+#define DETAIL_LTB_CHECK_OR2( unique_name, var, func, callback )                                   \
+    auto&& unique_name = ( func );                                                                 \
+    if ( !unique_name )                                                                            \
+    {                                                                                              \
+        callback( unique_name.error( ) );                                                          \
+    }                                                                                              \
     var = std::move( unique_name.value( ) )
 
 /// \brief An "overloaded" macro that is replaced by LTB_CHECK_OR1
 ///        or LTB_CHECK_OR2 depending on the number of arguments.
-#define LTB_CHECK_OR( ... )                                                                                            \
-    LTB_EXPAND( LTB_GET3( __VA_ARGS__, DETAIL_LTB_CHECK_OR2, DETAIL_LTB_CHECK_OR1, )(                                  \
-        LTB_UNIQUE_NAME( ltb_check_macro_result ),                                                                     \
-        __VA_ARGS__                                                                                                    \
+#define LTB_CHECK_OR( ... )                                                                        \
+    LTB_EXPAND( LTB_GET3( __VA_ARGS__, DETAIL_LTB_CHECK_OR2, DETAIL_LTB_CHECK_OR1, )(              \
+        LTB_UNIQUE_NAME( ltb_check_macro_result ),                                                 \
+        __VA_ARGS__                                                                                \
     ) )
 
 namespace ltb::utils

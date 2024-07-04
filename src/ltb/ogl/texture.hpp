@@ -18,7 +18,8 @@ namespace ltb::ogl
 /// \brief All the data the Texture class stores and manages.
 struct TextureData
 {
-    GLuint                   gl_id      = 0u; ///< OpenGL ID from `glGenTextures()`.
+    /// \brief OpenGL ID from `glGenTextures()`
+    GLuint                   gl_id      = 0u;
     std::array< GLsizei, 3 > dimensions = { 0, 0, 0 };
     GLenum                   format     = GL_RGBA;
     GLenum                   type       = GL_FLOAT;
@@ -28,20 +29,24 @@ struct TextureData
 class Texture
 {
 public:
-    explicit Texture( NoInitT );
-    Texture( );
+    Texture( ) = default;
+
+    auto initialize( ) -> utils::Result<>;
 
     /// \brief The raw settings stored for this texture
-    [[nodiscard]] auto data( ) const -> TextureData const&;
+    [[nodiscard( "Const getter" )]]
+    auto data( ) const -> TextureData const&;
 
     /// \brief Set the active texture unit.
-    auto active_tex( GLint active_tex ) -> Texture&;
+    auto active_tex( GLint active_tex ) const -> void;
 
     static auto static_bind( GLenum type, Texture const& texture ) -> void;
     static auto static_bind( GLenum type, GLuint raw_gl_id ) -> void;
 
 private:
-    std::shared_ptr< TextureData > data_ = nullptr; ///< The RAII data.
+    /// \brief The RAII data.
+    TextureData             data_    = { };
+    std::shared_ptr< void > deleter_ = nullptr;
 };
 
 // Specific types for bound texture functions
@@ -72,8 +77,9 @@ constexpr auto is_generate_mipmap_type = is_any_v<
     GL_TEXTURE_CUBE_MAP,
     GL_TEXTURE_CUBE_MAP_ARRAY >;
 
-struct TexParams
+class TexParams
 {
+public:
     static auto filter( ) -> std::vector< GLenum >;
     static auto wrap( ) -> std::vector< GLenum >;
 };
@@ -81,10 +87,13 @@ struct TexParams
 /// \brief Set a texture parameter.
 template < GLenum BindingType >
     requires is_tex_parameteri_type< BindingType >
-auto tex_parameteri( Bound< Texture, BindingType > bound_texture, std::vector< GLenum > const& params, GLint value )
-    -> utils::Result< Bound< Texture, BindingType > >
+auto tex_parameteri(
+    Bound< Texture, BindingType > bound_texture,
+    std::vector< GLenum > const&  params,
+    GLint const                   value
+) -> utils::Result< Bound< Texture, BindingType > >
 {
-    for ( GLenum param : params )
+    for ( GLenum const param : params )
     {
         glTexParameteri( BindingType, param, value );
     }
@@ -94,8 +103,11 @@ auto tex_parameteri( Bound< Texture, BindingType > bound_texture, std::vector< G
 /// \brief Set the texture filter and wrap parameters.
 template < GLenum BindingType >
     requires is_tex_parameteri_type< BindingType >
-auto filter_and_wrap_tex_parameteri( Bound< Texture, BindingType > bound_texture, GLint filter_type, GLint wrap_type )
-    -> utils::Result< Bound< Texture, BindingType > >
+auto filter_and_wrap_tex_parameteri(
+    Bound< Texture, BindingType > bound_texture,
+    GLint                         filter_type,
+    GLint                         wrap_type
+) -> utils::Result< Bound< Texture, BindingType > >
 {
     return tex_parameteri( bound_texture, TexParams::filter( ), filter_type )
         .and_then( tex_parameteri< BindingType >, TexParams::wrap( ), wrap_type );
@@ -113,11 +125,11 @@ template < GLenum BindingType, typename PixelData >
 auto tex_image_2d(
     Bound< Texture, BindingType >   bound_texture,
     std::array< GLsizei, 2 > const& size,
-    PixelData const* const          pixels          = nullptr,
-    GLint const                     internal_format = GL_RGBA32F,
-    GLenum const                    format          = GL_RGBA,
-    GLenum const                    type            = GL_FLOAT,
-    GLint const                     level           = 0
+    PixelData const* const          pixels,
+    GLint const                     internal_format,
+    GLenum const                    format,
+    GLenum const                    type,
+    GLint const                     level
 ) -> utils::Result< Bound< Texture, BindingType > >
 {
     // From the OpenGL docs: "This value must be 0."
@@ -127,7 +139,17 @@ auto tex_image_2d(
     bound_texture.object( ).data( ).dimensions = { size[ 0 ], size[ 1 ], 0 };
     bound_texture.object( ).data( ).format     = format;
     bound_texture.object( ).data( ).type       = type;
-    glTexImage2D( BindingType, level, internal_format, size[ 0 ], size[ 1 ], border, format, type, pixels );
+    glTexImage2D(
+        BindingType,
+        level,
+        internal_format,
+        size[ 0 ],
+        size[ 1 ],
+        border,
+        format,
+        type,
+        pixels
+    );
     return bound_texture;
 }
 
@@ -145,19 +167,30 @@ auto tex_sub_image_2d(
     std::array< GLint, 2 > const&   pos,
     std::array< GLsizei, 2 > const& size,
     PixelData const* const          pixels,
-    GLenum const                    format = GL_RGBA,
-    GLenum const                    type   = GL_FLOAT,
-    GLint const                     level  = 0
+    GLenum const                    format,
+    GLenum const                    type,
+    GLint const                     level
 ) -> utils::Result< Bound< Texture, BindingType > >
 {
-    glTexSubImage2D( BindingType, level, pos[ 0 ], pos[ 1 ], size[ 0 ], size[ 1 ], format, type, pixels );
+    glTexSubImage2D(
+        BindingType,
+        level,
+        pos[ 0 ],
+        pos[ 1 ],
+        size[ 0 ],
+        size[ 1 ],
+        format,
+        type,
+        pixels
+    );
     return bound_texture;
 }
 
 /// \brief Generate sub-sampled level of detail images for this texture.
 template < GLenum BindingType >
     requires is_generate_mipmap_type< BindingType >
-auto generate_mipmap( Bound< Texture, BindingType > bound_texture ) -> utils::Result< Bound< Texture, BindingType > >
+auto generate_mipmap( Bound< Texture, BindingType > bound_texture
+) -> utils::Result< Bound< Texture, BindingType > >
 {
     glGenerateMipmap( BindingType );
     return bound_texture;

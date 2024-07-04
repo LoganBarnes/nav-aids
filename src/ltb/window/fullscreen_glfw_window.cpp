@@ -57,7 +57,8 @@ struct FullscreenGlfwWindow::Data
 FullscreenGlfwWindow::FullscreenGlfwWindow( )  = default;
 FullscreenGlfwWindow::~FullscreenGlfwWindow( ) = default;
 
-auto FullscreenGlfwWindow::initialize( std::string_view const window_title ) -> utils::Result< glm::ivec2 >
+auto FullscreenGlfwWindow::initialize( std::string_view const window_title
+) -> utils::Result< glm::ivec2 >
 {
     data_ = std::make_unique< Data >( );
 
@@ -128,8 +129,13 @@ auto FullscreenGlfwWindow::initialize( std::string_view const window_title ) -> 
     // disabled. The window can still be closed by using the taskbar icon.
     ::glfwWindowHint( GLFW_DECORATED, GLFW_FALSE );
 
-    auto* const maybe_window
-        = ::glfwCreateWindow( work_area.size.x, work_area.size.y, window_title.data( ), nullptr, nullptr );
+    auto* const maybe_window = ::glfwCreateWindow(
+        work_area.size.x,
+        work_area.size.y,
+        window_title.data( ),
+        nullptr,
+        nullptr
+    );
     if ( nullptr == maybe_window )
     {
         return LTB_MAKE_UNEXPECTED_ERROR( "glfwCreateWindow() failed" );

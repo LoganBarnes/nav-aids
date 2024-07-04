@@ -15,10 +15,10 @@ App::App( window::FullscreenWindow& window )
 auto App::initialize( ) -> utils::Result< App* >
 {
     LTB_CHECK( auto const framebuffer_size, window_.initialize( "Instrument Landing System" ) );
-
     spdlog::info( "Framebuffer size: {}x{}", framebuffer_size.x, framebuffer_size.y );
 
-//    texture_ = { };
+    LTB_CHECK( ogl_loader_.initialize( ) );
+    LTB_CHECK( texture_.initialize( ) );
 
     return this;
 }

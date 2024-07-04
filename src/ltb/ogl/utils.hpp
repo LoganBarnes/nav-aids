@@ -76,8 +76,9 @@ constexpr auto is_bindable_framebuffer_v
     = is_any_v< BindingType, GL_FRAMEBUFFER, GL_DRAW_FRAMEBUFFER, GL_READ_FRAMEBUFFER >;
 
 template < GLenum BindingType >
-constexpr auto is_bindable_v = is_bindable_buffer_v< BindingType > || is_bindable_texture_v< BindingType >
-                            || is_bindable_framebuffer_v< BindingType >;
+constexpr auto is_bindable_v
+    = is_bindable_buffer_v< BindingType > || is_bindable_texture_v< BindingType >
+   || is_bindable_framebuffer_v< BindingType >;
 
 template < GLenum BindingType >
     requires is_bindable_v< BindingType >

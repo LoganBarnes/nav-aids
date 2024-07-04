@@ -2,7 +2,7 @@
 # A Logan Thomas Barnes project
 # ##############################################################################
 cmake_minimum_required(VERSION 3.23)
-project(LtbIls VERSION 0.0.1)
+project(LtbNav VERSION 0.0.1)
 
 # Prevent cyclic dependencies even for static libs
 set(GLOBAL_DEPENDS_NO_CYCLES ON)
@@ -14,7 +14,7 @@ set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 # Options
 # ##############################################################################
 option(
-  LTB_ILS_USE_STRICT_FLAGS
+  LTB_NAV_USE_STRICT_FLAGS
   "Use strict flags when building"
   OFF
 )
@@ -33,11 +33,11 @@ include(${CMAKE_CURRENT_LIST_DIR}/cmake/ThirdParty.cmake)
 # Configuration
 # ##############################################################################
 # A directory where generated files can be stored and referenced
-set(LTB_ILS_GENERATED_DIR ${CMAKE_BINARY_DIR}/generated)
+set(LTB_NAV_GENERATED_DIR ${CMAKE_BINARY_DIR}/generated)
 
 configure_file(
   ${CMAKE_CURRENT_LIST_DIR}/src/ltb/ltb_config.hpp.in
-  ${LTB_ILS_GENERATED_DIR}/ltb/ltb_config.hpp
+  ${LTB_NAV_GENERATED_DIR}/ltb/ltb_config.hpp
 )
 
 if (TARGET Vulkan::Vulkan)
@@ -49,7 +49,7 @@ endif ()
 # ##############################################################################
 file(
   GLOB_RECURSE
-  LtbIls_SOURCE_FILES
+  LtbNav_SOURCE_FILES
   LIST_DIRECTORIES
   false
   CONFIGURE_DEPENDS
@@ -59,16 +59,16 @@ file(
 )
 
 add_library(
-  LtbIls
-  ${LtbIls_SOURCE_FILES}
+  LtbNav
+  ${LtbNav_SOURCE_FILES}
 )
 add_library(
-  LtbIls::LtbIls
+  LtbNav::LtbNav
   ALIAS
-  LtbIls
+  LtbNav
 )
 target_link_libraries(
-  LtbIls
+  LtbNav
   PUBLIC
   # C++ Utils
   Threads::Threads
@@ -83,19 +83,19 @@ target_link_libraries(
   imgui::imgui
 )
 target_include_directories(
-  LtbIls
+  LtbNav
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>
-  $<BUILD_INTERFACE:${LTB_ILS_GENERATED_DIR}>
+  $<BUILD_INTERFACE:${LTB_NAV_GENERATED_DIR}>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/external/include>
 )
 target_compile_features(
-  LtbIls
+  LtbNav
   PUBLIC
   cxx_std_20
 )
 target_compile_definitions(
-  LtbIls
+  LtbNav
   PUBLIC
   $<$<COMPILE_LANGUAGE:CXX>:VULKAN_HPP_NO_EXCEPTIONS>
   # Deal with windows warnings and macros.
@@ -103,13 +103,13 @@ target_compile_definitions(
   $<$<PLATFORM_ID:Windows>:NOMINMAX>
 )
 set_target_properties(
-  LtbIls
+  LtbNav
   PROPERTIES
   POSITION_INDEPENDENT_CODE ON
   WINDOWS_EXPORT_ALL_SYMBOLS ON
 )
 target_compile_options(
-  LtbIls
+  LtbNav
   PUBLIC
   # Ignore any headers using angle brackets on windows
   $<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/experimental:external>
@@ -122,9 +122,9 @@ target_compile_options(
 # ##############################################################################
 # Development Settings
 # ##############################################################################
-if (LTB_ILS_USE_STRICT_FLAGS)
+if (LTB_NAV_USE_STRICT_FLAGS)
   target_compile_options(
-    LtbIls
+    LtbNav
     PUBLIC
     # Strict warnings/errors with gcc and clang
     $<$<COMPILE_LANG_AND_ID:CXX,GNU,Clang,AppleClang>:-Wall>
@@ -162,11 +162,11 @@ endif ()
 # Executable
 # ##############################################################################
 add_executable(
-  LtbIlsApp
+  LtbNavApp
   ${CMAKE_CURRENT_LIST_DIR}/src/main.cpp
 )
 target_link_libraries(
-  LtbIlsApp
+  LtbNavApp
   PRIVATE
-  LtbIls::LtbIls
+  LtbNav::LtbNav
 )

@@ -18,7 +18,8 @@ namespace
 ///
 /// \brief Prepend the file and line number to the message if they were specified.
 ///
-auto create_debug_message( SourceLocation const& source_location, std::string const& error_message ) -> std::string
+auto create_debug_message( SourceLocation const& source_location, std::string const& error_message )
+    -> std::string
 {
     std::string result = "[" + source_location.filename.string( );
 

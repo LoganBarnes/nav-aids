@@ -10,11 +10,10 @@
 namespace ltb::ogl
 {
 
-template < typename OglObj, GLenum BindingType >
-class Bound
+class ObjectId
 {
 public:
-    explicit Bound( OglObj& obj, WhenFinished when_finished );
+    explicit ObjectId( GLuint id, );
 
     /// \brief The original object.
     [[nodiscard( "Const getter" )]]
@@ -42,7 +41,7 @@ private:
 template < GLenum BindingType, typename OglObj >
 auto bind( OglObj& object, WhenFinished when_finished )
 {
-    return Bound< OglObj, BindingType >( object, when_finished );
+    return ObjectId< OglObj, BindingType >( object, when_finished );
 }
 
 template < GLenum BindingType, typename OglObj >
@@ -52,7 +51,7 @@ auto bind( OglObj& object )
 }
 
 template < typename OglObj, GLenum BindingType >
-Bound< OglObj, BindingType >::Bound( OglObj& obj, WhenFinished when_finished )
+ObjectId< OglObj, BindingType >::ObjectId( OglObj& obj, WhenFinished when_finished )
     : obj_( obj )
 {
     auto restore_value = GLint{ 0 };
@@ -80,7 +79,7 @@ Bound< OglObj, BindingType >::Bound( OglObj& obj, WhenFinished when_finished )
 
 template < typename OglObj, GLenum BindingType >
 template < typename Ignored >
-auto Bound< OglObj, BindingType >::RestoreValue::operator( )( Ignored const* ) const -> void
+auto ObjectId< OglObj, BindingType >::RestoreValue::operator( )( Ignored const* ) const -> void
 {
     switch ( when_finished_ )
     {
@@ -98,13 +97,13 @@ auto Bound< OglObj, BindingType >::RestoreValue::operator( )( Ignored const* ) c
 }
 
 template < typename OglObj, GLenum BindingType >
-auto Bound< OglObj, BindingType >::object( ) const -> OglObj const&
+auto ObjectId< OglObj, BindingType >::object( ) const -> OglObj const&
 {
     return obj_;
 }
 
 template < typename OglObj, GLenum BindingType >
-auto Bound< OglObj, BindingType >::binding_type( ) const -> GLenum
+auto ObjectId< OglObj, BindingType >::binding_type( ) const -> GLenum
 {
     return BindingType;
 }

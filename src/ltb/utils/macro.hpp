@@ -17,4 +17,5 @@
 #include <string_view>
 
 #define LTB_STRINGIFY( item, ... ) "" #item
-#define LTB_IS_DEFINED( macro ) std::string_view( "" #macro ) != std::string_view( LTB_STRINGIFY( macro, ) )
+#define LTB_IS_DEFINED( macro )                                                                    \
+    std::string_view( "" #macro ) != std::string_view( LTB_STRINGIFY( macro, ) )

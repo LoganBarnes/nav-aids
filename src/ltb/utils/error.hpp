@@ -16,16 +16,25 @@
 /// ltb::utils::Error error = LTB_MAKE_ERROR("Bad thing happened!");
 /// assert(error.severity() == ltb::utils::Error::Severity::Error);
 /// \endcode
-#define LTB_MAKE_ERROR( ... )                                                                                          \
-    ::ltb::utils::Error( { __FILE__, __LINE__ }, ::ltb::utils::Error::Severity::Error, fmt::format( __VA_ARGS__ ) )
+#define LTB_MAKE_ERROR( ... )                                                                      \
+    ::ltb::utils::Error(                                                                           \
+        { __FILE__, __LINE__ },                                                                    \
+        ::ltb::utils::Error::Severity::Error,                                                      \
+        fmt::format( __VA_ARGS__ )                                                                 \
+    )
 
 ///\brief Macro used to auto-fill line and file information when creating a warning.
 /// \code
 /// ltb::utils::Error error = ROTOR_MAKE_WARNING("Not so bad thing happened!");
 /// assert(error.severity() == ltb::utils::Error::Severity::Warning);
 /// \endcode
-#define LTB_MAKE_WARNING( ... )                                                                                        \
-    ::ltb::utils::Error( { __FILE__, __LINE__ }, ::ltb::utils::Error::Severity::Warning, , fmt::format( __VA_ARGS__ ) )
+#define LTB_MAKE_WARNING( ... )                                                                    \
+    ::ltb::utils::Error(                                                                           \
+        { __FILE__, __LINE__ },                                                                    \
+        ::ltb::utils::Error::Severity::Warning,                                                    \
+        ,                                                                                          \
+        fmt::format( __VA_ARGS__ )                                                                 \
+    )
 
 namespace ltb::utils
 {
@@ -75,7 +84,8 @@ private:
     SourceLocation source_location_; ///< File and line number where error was created
     Severity       severity_; ///< The type of error (warning or error)
     std::string    error_message_; ///< The error message
-    std::string    debug_message_; ///< Error message with file and line number "[file:line] error message"
+    std::string
+        debug_message_; ///< Error message with file and line number "[file:line] error message"
 };
 
 /// \brief An error with extra data pertaining to a specific type of error.
@@ -87,11 +97,20 @@ struct ContextError
 
     [[nodiscard]] auto severity( ) const -> Error::Severity const& { return error.severity( ); }
 
-    [[nodiscard]] auto error_message( ) const -> std::string const& { return error.error_message( ); }
+    [[nodiscard]] auto error_message( ) const -> std::string const&
+    {
+        return error.error_message( );
+    }
 
-    [[nodiscard]] auto debug_error_message( ) const -> std::string const& { return error.debug_error_message( ); }
+    [[nodiscard]] auto debug_error_message( ) const -> std::string const&
+    {
+        return error.debug_error_message( );
+    }
 
-    [[nodiscard]] auto source_location( ) const -> SourceLocation const& { return error.source_location( ); }
+    [[nodiscard]] auto source_location( ) const -> SourceLocation const&
+    {
+        return error.source_location( );
+    }
 
     ContextError( Error err, Context ctx )
         : error( std::move( err ) )

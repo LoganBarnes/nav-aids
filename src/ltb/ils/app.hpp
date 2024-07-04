@@ -1,6 +1,7 @@
 #pragma once
 
 // project
+#include "ltb/ogl/opengl_loader.hpp"
 #include "ltb/ogl/texture.hpp"
 #include "ltb/window/fullscreen_window.hpp"
 
@@ -21,7 +22,8 @@ private:
     window::FullscreenWindow& window_;
     // graphics::GraphicsFramework2d& graphics_;
 
-    ogl::Texture texture_ = ogl::Texture{ ogl::NoInit };
+    ogl::OpenglLoader ogl_loader_ = { };
+    ogl::Texture      texture_    = { };
 };
 
 } // namespace ltb::ils
