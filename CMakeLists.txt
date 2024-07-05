@@ -85,6 +85,8 @@ target_link_libraries(
 target_include_directories(
   LtbNav
   PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
+  PRIVATE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>
   $<BUILD_INTERFACE:${LTB_NAV_GENERATED_DIR}>
 )
