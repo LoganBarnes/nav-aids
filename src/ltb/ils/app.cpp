@@ -41,14 +41,26 @@ auto App::initialize( ) -> utils::Result< App* >
 
     LTB_CHECK( vertex_shader_.initialize( ) );
     LTB_CHECK( fragment_shader_.initialize( ) );
+    vertex_buffer_.initialize( );
+    color_texture_.initialize( );
+    framebuffer_.initialize( );
 
     auto const shader_dir = config::shader_dir_path( );
 
     LTB_CHECK( vertex_shader_.load_and_compile( shader_dir / "tmp.vert" ) );
     LTB_CHECK( fragment_shader_.load_and_compile( shader_dir / "tmp.frag" ) );
 
-    color_texture_.initialize( );
-    framebuffer_.initialize( );
+    // Store the vertex data in a GPU buffer.
+    ogl::buffer_data(
+        ogl::bind< GL_ARRAY_BUFFER >( vertex_buffer_ ),
+        std::vector< glm::vec2 >{
+            { -1.0F, -1.0F },
+            { +1.0F, -1.0F },
+            { -1.0F, +1.0F },
+            { +1.0F, +1.0F },
+        },
+        GL_STATIC_DRAW
+    );
 
     // Attach the color texture to the framebuffer.
     constexpr auto null_depth_texture = std::nullopt;

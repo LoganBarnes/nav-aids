@@ -22,7 +22,7 @@ struct TextureData
     GLuint gl_id = 0u;
 };
 
-/// \brief
+/// \brief A class to manage OpenGL textures.
 class Texture
 {
 public:
@@ -48,12 +48,12 @@ private:
 };
 
 // Specific types for bound texture functions
-template < GLenum T >
-constexpr auto is_tex_parameteri_type = is_any_v< T, GL_TEXTURE_2D, GL_TEXTURE_CUBE_MAP >;
+template < GLenum bind_type >
+constexpr auto is_tex_parameteri_type = is_any_v< bind_type, GL_TEXTURE_2D, GL_TEXTURE_CUBE_MAP >;
 
-template < GLenum T >
-constexpr auto is_tex_image_2d_type = is_any_v<
-    T,
+template < GLenum bind_type >
+constexpr auto is_tex_image_2d_type_v = is_any_v<
+    bind_type,
     GL_TEXTURE_2D,
     GL_TEXTURE_1D_ARRAY,
     GL_TEXTURE_RECTANGLE,
@@ -64,9 +64,9 @@ constexpr auto is_tex_image_2d_type = is_any_v<
     GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
     GL_TEXTURE_CUBE_MAP_NEGATIVE_Z >;
 
-template < GLenum T >
-constexpr auto is_generate_mipmap_type = is_any_v<
-    T,
+template < GLenum bind_type >
+constexpr auto is_generate_mipmap_type_v = is_any_v<
+    bind_type,
     GL_TEXTURE_1D,
     GL_TEXTURE_2D,
     GL_TEXTURE_3D,
@@ -83,12 +83,12 @@ public:
 };
 
 /// \brief Set a texture parameter.
-template < GLenum BindingType >
-    requires is_tex_parameteri_type< BindingType >
+template < GLenum bind_type >
+    requires is_tex_parameteri_type< bind_type >
 auto tex_parameteri(
-    Bound< Texture, BindingType > bound_texture,
-    std::vector< GLenum > const&  params,
-    GLint const                   value
+    Bound< Texture, bind_type >  bound_texture,
+    std::vector< GLenum > const& params,
+    GLint const                  value
 ) -> void
 {
     // This argument is provided to ensure the texture
@@ -97,7 +97,7 @@ auto tex_parameteri(
 
     for ( GLenum const param : params )
     {
-        glTexParameteri( BindingType, param, value );
+        glTexParameteri( bind_type, param, value );
     }
 }
 
@@ -108,16 +108,16 @@ auto tex_parameteri(
 /// \param format The format of the input pixel data.
 /// \param type The type of the input pixel data.
 /// \param level The level-of-detail number. 0 is the base level.
-template < typename PixelData, GLenum BindingType >
-    requires is_tex_image_2d_type< BindingType >
+template < typename PixelData, GLenum bind_type >
+    requires is_tex_image_2d_type_v< bind_type >
 auto tex_image_2d(
-    Bound< Texture, BindingType > const& bound_texture,
-    glm::ivec2 const&                    size,
-    PixelData const* const               pixels,
-    GLint const                          internal_format,
-    GLenum const                         format,
-    GLenum const                         type,
-    GLint const                          level
+    Bound< Texture, bind_type > const& bound_texture,
+    glm::ivec2 const&                  size,
+    PixelData const* const             pixels,
+    GLint const                        internal_format,
+    GLenum const                       format,
+    GLenum const                       type,
+    GLint const                        level
 ) -> void
 {
     // This argument is provided to ensure the texture
@@ -129,17 +129,7 @@ auto tex_image_2d(
     // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glTexImage2D.xhtml
     constexpr auto border = 0;
 
-    glTexImage2D(
-        BindingType,
-        level,
-        internal_format,
-        size.x,
-        size.y,
-        border,
-        format,
-        type,
-        pixels
-    );
+    glTexImage2D( bind_type, level, internal_format, size.x, size.y, border, format, type, pixels );
 }
 
 /// \brief Copy the provided pixel data to a sub rectangle of this texture.
@@ -148,15 +138,15 @@ auto tex_image_2d(
 /// \param format The format of the input pixel data.
 /// \param type The type of the input pixel data.
 /// \param level The level-of-detail number. 0 is the base level.
-template < typename PixelData, GLenum BindingType >
-    requires is_tex_image_2d_type< BindingType >
+template < typename PixelData, GLenum bind_type >
+    requires is_tex_image_2d_type_v< bind_type >
 auto tex_sub_image_2d(
-    Bound< Texture, BindingType > bound_texture,
-    math::Range2Di const&         sub_rect,
-    PixelData const* const        pixels,
-    GLenum const                  format,
-    GLenum const                  type,
-    GLint const                   level
+    Bound< Texture, bind_type > bound_texture,
+    math::Range2Di const&       sub_rect,
+    PixelData const* const      pixels,
+    GLenum const                format,
+    GLenum const                type,
+    GLint const                 level
 ) -> void
 {
     // This argument is provided to ensure the texture
@@ -166,7 +156,7 @@ auto tex_sub_image_2d(
     auto const sub_rect_size = dimensions( sub_rect );
 
     glTexSubImage2D(
-        BindingType,
+        bind_type,
         level,
         sub_rect.min.x,
         sub_rect.min.y,
@@ -179,15 +169,15 @@ auto tex_sub_image_2d(
 }
 
 /// \brief Generate sub-sampled level of detail images for this texture.
-template < GLenum BindingType >
-    requires is_generate_mipmap_type< BindingType >
-auto generate_mipmap( Bound< Texture, BindingType > bound_texture ) -> void
+template < GLenum bind_type >
+    requires is_generate_mipmap_type_v< bind_type >
+auto generate_mipmap( Bound< Texture, bind_type > bound_texture ) -> void
 {
     // This argument is provided to ensure the texture
     // is bound, but nothing has to be done with it.
     utils::ignore( bound_texture );
 
-    glGenerateMipmap( BindingType );
+    glGenerateMipmap( bind_type );
 }
 
 } // namespace ltb::ogl

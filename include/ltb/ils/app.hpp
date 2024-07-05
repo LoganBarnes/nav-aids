@@ -1,6 +1,7 @@
 #pragma once
 
 // project
+#include "ltb/ogl/buffer.hpp"
 #include "ltb/ogl/framebuffer.hpp"
 #include "ltb/ogl/opengl_loader.hpp"
 #include "ltb/ogl/shader.hpp"
@@ -30,6 +31,7 @@ private:
     // OpenGL rendering objects
     ogl::Shader< GL_VERTEX_SHADER >   vertex_shader_   = { };
     ogl::Shader< GL_FRAGMENT_SHADER > fragment_shader_ = { };
+    ogl::Buffer                       vertex_buffer_   = { };
 
     // OpenGL display objects
     ogl::Texture     color_texture_ = { };
