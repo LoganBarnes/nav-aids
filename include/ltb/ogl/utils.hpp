@@ -144,11 +144,28 @@ constexpr auto binding_getter_type( ) -> GLenum
         case GL_READ_FRAMEBUFFER:
             return GL_READ_FRAMEBUFFER_BINDING;
 
+            // Framebuffer
+        case GL_VERTEX_ARRAY_BINDING:
+            return GL_VERTEX_ARRAY_BINDING;
+
         default:
             break;
     }
 
     return GL_INVALID_ENUM;
+}
+
+template < typename Object >
+constexpr auto binding_getter_type( ) -> GLenum
+{
+    if constexpr ( std::is_same_v< Object, VertexArray > )
+    {
+        return GL_VERTEX_ARRAY_BINDING;
+    }
+    else
+    {
+        return GL_INVALID_ENUM;
+    }
 }
 
 } // namespace ltb::ogl

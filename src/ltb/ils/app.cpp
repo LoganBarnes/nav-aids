@@ -42,6 +42,7 @@ auto App::initialize( ) -> utils::Result< App* >
     LTB_CHECK( vertex_shader_.initialize( ) );
     LTB_CHECK( fragment_shader_.initialize( ) );
     vertex_buffer_.initialize( );
+    vertex_array_.initialize( );
     color_texture_.initialize( );
     framebuffer_.initialize( );
 
@@ -60,6 +61,24 @@ auto App::initialize( ) -> utils::Result< App* >
             { +1.0F, +1.0F },
         },
         GL_STATIC_DRAW
+    );
+
+    // Tightly packed.
+    constexpr auto total_vertex_stride = 0U;
+    // Not instanced
+    constexpr auto attrib_divisor = 0U;
+
+    ogl::set_attributes< glm::vec2 >(
+        ogl::bind( vertex_array_ ),
+        ogl::bind< GL_ARRAY_BUFFER >( vertex_buffer_ ),
+        { {
+            .attribute_location      = 0,
+            .num_coordinates         = glm::vec2::length( ),
+            .data_type               = GL_FLOAT,
+            .initial_offset_into_vbo = nullptr,
+        } },
+        total_vertex_stride,
+        attrib_divisor
     );
 
     // Attach the color texture to the framebuffer.
