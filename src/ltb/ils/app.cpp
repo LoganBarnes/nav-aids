@@ -41,6 +41,7 @@ auto App::initialize( ) -> utils::Result< App* >
 
     LTB_CHECK( vertex_shader_.initialize( ) );
     LTB_CHECK( fragment_shader_.initialize( ) );
+    LTB_CHECK( program_.initialize( ) );
     vertex_buffer_.initialize( );
     vertex_array_.initialize( );
     color_texture_.initialize( );
@@ -50,6 +51,7 @@ auto App::initialize( ) -> utils::Result< App* >
 
     LTB_CHECK( vertex_shader_.load_and_compile( shader_dir / "tmp.vert" ) );
     LTB_CHECK( fragment_shader_.load_and_compile( shader_dir / "tmp.frag" ) );
+    LTB_CHECK( program_.attach_and_link( vertex_shader_, fragment_shader_ ) );
 
     // Store the vertex data in a GPU buffer.
     ogl::buffer_data(
@@ -97,6 +99,7 @@ auto App::initialize( ) -> utils::Result< App* >
 
     on_resize( );
 
+    glClearColor( 0.0F, 0.0F, 0.0F, 1.0F );
     return this;
 }
 
@@ -119,7 +122,6 @@ auto App::run( ) -> utils::Result< void >
         glViewport( 0, 0, framebuffer_size_.x, framebuffer_size_.y );
         glClear( GL_COLOR_BUFFER_BIT );
 
-#if 1
         auto const default_framebuffer = ogl::Framebuffer{ };
 
         ogl::Framebuffer::blit(
@@ -130,7 +132,6 @@ auto App::run( ) -> utils::Result< void >
             GL_COLOR_BUFFER_BIT,
             GL_NEAREST
         );
-#endif
 
         window_.swap_buffers( );
     }
@@ -159,17 +160,20 @@ auto App::on_resize( ) const -> void
 
 auto App::render_to_framebuffer( ) const -> void
 {
-    // Orange
-    glClearColor( 1.0F, 0.5F, 0.1F, 1.0F );
-
-    auto const bound_framebuffer
-        = bind< GL_FRAMEBUFFER >( framebuffer_, ogl::WhenFinished::RestoreNullState );
+    auto const bound_framebuffer = bind< GL_FRAMEBUFFER >( framebuffer_ );
 
     glViewport( 0, 0, framebuffer_size_.x, framebuffer_size_.y );
     glClear( GL_COLOR_BUFFER_BIT );
 
-    // Black
-    glClearColor( 0.0F, 0.0F, 0.0F, 1.0F );
+    auto constexpr start_index  = 0;
+    auto constexpr vertex_count = 4;
+    ogl::draw(
+        bind( program_ ),
+        bind( vertex_array_ ),
+        GL_TRIANGLE_STRIP,
+        start_index,
+        vertex_count
+    );
 }
 
 } // namespace ltb::ils

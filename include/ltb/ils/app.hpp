@@ -4,6 +4,7 @@
 #include "ltb/ogl/buffer.hpp"
 #include "ltb/ogl/framebuffer.hpp"
 #include "ltb/ogl/opengl_loader.hpp"
+#include "ltb/ogl/program.hpp"
 #include "ltb/ogl/shader.hpp"
 #include "ltb/ogl/vertex_array.hpp"
 #include "ltb/window/window.hpp"
@@ -32,6 +33,7 @@ private:
     // OpenGL rendering objects
     ogl::Shader< GL_VERTEX_SHADER >   vertex_shader_   = { };
     ogl::Shader< GL_FRAGMENT_SHADER > fragment_shader_ = { };
+    ogl::Program                      program_         = { };
     ogl::Buffer                       vertex_buffer_   = { };
     ogl::VertexArray                  vertex_array_    = { };
 

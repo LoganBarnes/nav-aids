@@ -25,16 +25,17 @@ constexpr auto dimensions( Range< T > const& range )
 template < typename T >
 constexpr auto center( Range< T > const& range )
 {
+    constexpr auto two = T{ 2 };
     // Find the center in a way that avoids overflow.
-    return range.min / T( 2 ) + range.max / T( 2 );
+    return ( range.min / two ) + ( range.max / two );
 }
 
 template < glm::length_t L, typename T >
 constexpr auto contains( Range< glm::vec< L, T > > const& range, glm::vec< L, T > const& p )
 {
-    for ( decltype( L ) i = 0; i < L; ++i )
+    for ( auto i = glm::length_t{ 0 }; i < L; ++i )
     {
-        if ( range.min[ i ] > p[ i ] || p[ i ] > range.max[ i ] )
+        if ( ( range.min[ i ] > p[ i ] ) || ( p[ i ] > range.max[ i ] ) )
         {
             return false;
         }
@@ -45,7 +46,7 @@ constexpr auto contains( Range< glm::vec< L, T > > const& range, glm::vec< L, T 
 template < typename T >
 constexpr auto contains( Range< T > const& range, T v )
 {
-    return range.min <= v && v <= range.max;
+    return ( range.min <= v ) && ( v <= range.max );
 }
 
 } // namespace ltb::math

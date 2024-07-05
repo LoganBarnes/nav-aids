@@ -162,9 +162,13 @@ constexpr auto binding_getter_type( ) -> GLenum
     {
         return GL_VERTEX_ARRAY_BINDING;
     }
+    else if constexpr ( std::is_same_v< Object, Program > )
+    {
+        return GL_CURRENT_PROGRAM;
+    }
     else
     {
-        return GL_INVALID_ENUM;
+        static_assert( 0 == sizeof( Object ), "Object is not a bindable type" );
     }
 }
 
