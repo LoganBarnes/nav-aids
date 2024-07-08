@@ -45,7 +45,7 @@ auto make_array_deleter(
     return std::shared_ptr< void >(
         // The pointer value is ignored. This shared_ptr is only used for the custom deleter.
         null_object,
-        ArrayDeleter{ std::move( ids ), delete_func, std::move( debug_type_str ) }
+        ArrayDeleter< DeleteFunc >{ std::move( ids ), delete_func, std::move( debug_type_str ) }
     );
 }
 
@@ -74,7 +74,7 @@ auto make_deleter( GLuint id, DeleteFunc delete_func, std::string debug_type_str
     return std::shared_ptr< void >(
         // The pointer value is ignored. This shared_ptr is only used for the custom deleter.
         null_object,
-        Deleter{ id, delete_func, std::move( debug_type_str ) }
+        Deleter< DeleteFunc >{ id, delete_func, std::move( debug_type_str ) }
     );
 }
 
