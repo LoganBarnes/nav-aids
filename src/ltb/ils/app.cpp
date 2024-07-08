@@ -21,8 +21,9 @@ constexpr auto color_texture_type            = GL_UNSIGNED_BYTE;
 
 } // namespace
 
-App::App( window::Window& window )
+App::App( window::Window& window, gui::ImguiSetup& imgui_setup )
     : window_( window )
+    , imgui_setup_( imgui_setup )
 {
 }
 
@@ -38,6 +39,7 @@ auto App::initialize( ) -> utils::Result< App* >
     spdlog::info( "Framebuffer size: {}x{}", framebuffer_size_.x, framebuffer_size_.y );
 
     LTB_CHECK( ogl_loader_.initialize( ) );
+    LTB_CHECK( imgui_setup_.initialize( ) );
 
     LTB_CHECK( vertex_shader_.initialize( ) );
     LTB_CHECK( fragment_shader_.initialize( ) );
@@ -133,6 +135,8 @@ auto App::run( ) -> utils::Result< void >
             GL_NEAREST
         );
 
+        render_gui( );
+
         window_.swap_buffers( );
     }
 
@@ -174,6 +178,15 @@ auto App::render_to_framebuffer( ) const -> void
         start_index,
         vertex_count
     );
+}
+
+auto App::render_gui( ) const -> void
+{
+    imgui_setup_.new_frame( );
+
+    ImGui::ShowDemoWindow( );
+
+    imgui_setup_.render( );
 }
 
 } // namespace ltb::ils

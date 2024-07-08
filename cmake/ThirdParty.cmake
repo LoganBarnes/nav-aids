@@ -14,7 +14,7 @@ if (NOT MSVC)
   find_package(TBB REQUIRED)
 endif ()
 
-# Graphics APIs
+# Graphics API
 find_package(OpenGL REQUIRED)
 
 ### External Repositories ###
@@ -188,10 +188,8 @@ if (imgui_ADDED)
     ${imgui_SOURCE_DIR}/imstb_truetype.h
     ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.h
     ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
-    $<$<TARGET_EXISTS:OpenGL::GL>:${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.h>
-    $<$<TARGET_EXISTS:OpenGL::GL>:${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp>
-    $<$<TARGET_EXISTS:Vulkan::Vulkan>:${imgui_SOURCE_DIR}/backends/imgui_impl_vulkan.h>
-    $<$<TARGET_EXISTS:Vulkan::Vulkan>:${imgui_SOURCE_DIR}/backends/imgui_impl_vulkan.cpp>
+    ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.h
+    ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
   )
   add_library(
     imgui::imgui

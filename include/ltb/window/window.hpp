@@ -27,7 +27,7 @@ public:
     virtual ~Window( ) = 0;
 
     /// \brief Initializes a window and returns the initial size of the framebuffer.
-    virtual auto initialize( WindowSettings settings ) -> utils::Result< glm::ivec2 > = 0;
+    virtual auto initialize( WindowSettings const& settings ) -> utils::Result< glm::ivec2 > = 0;
 
     /// \brief Polls events for the window.
     virtual auto poll_events( ) -> void = 0;

@@ -1,6 +1,7 @@
 #pragma once
 
 // project
+#include "ltb/gui/imgui_setup.hpp"
 #include "ltb/ogl/buffer.hpp"
 #include "ltb/ogl/framebuffer.hpp"
 #include "ltb/ogl/opengl_loader.hpp"
@@ -16,15 +17,15 @@ namespace ltb::ils
 class App
 {
 public:
-    explicit App( window::Window& window );
+    explicit App( window::Window& window, gui::ImguiSetup& imgui_setup );
 
     auto initialize( ) -> utils::Result< App* >;
     auto run( ) -> utils::Result< void >;
 
 private:
     // Window & graphics interfaces
-    window::Window& window_;
-    // graphics::GraphicsFramework2d& graphics_;
+    window::Window&  window_;
+    gui::ImguiSetup& imgui_setup_;
 
     glm::ivec2 framebuffer_size_ = { };
 
@@ -43,6 +44,7 @@ private:
 
     auto on_resize( ) const -> void;
     auto render_to_framebuffer( ) const -> void;
+    auto render_gui( ) const -> void;
 };
 
 } // namespace ltb::ils

@@ -3,6 +3,7 @@
 // ///////////////////////////////////////////////////////////////////////////////////////
 
 // project
+#include "ltb/gui/glfw_opengl_imgui_setup.hpp"
 #include "ltb/ils/app.hpp"
 #include "ltb/window/glfw_window.hpp"
 
@@ -17,8 +18,9 @@ namespace
 auto rotor_main( ) -> utils::Result< void >
 {
     auto window = window::GlfwWindow{ };
+    auto imgui  = gui::GlfwOpenglImguiSetup{ window };
 
-    auto app = ils::App{ window };
+    auto app = ils::App{ window, imgui };
 
     return app.initialize( ).and_then( &ils::App::run );
 }

@@ -89,10 +89,8 @@ public:
         //     ^^^^^^^^^^^^^^^^^^^^^ Specialize this struct to support custom types
     }
 
-    /// \brief
-    /// \param name
-    /// \param buffer
-    /// \param binding
+    /// \brief Set a buffer uniform.
+    [[nodiscard( "Check errors" )]]
     auto set_uniform(
         std::string const&                               name,
         Bound< Buffer, GL_SHADER_STORAGE_BUFFER > const& buffer,

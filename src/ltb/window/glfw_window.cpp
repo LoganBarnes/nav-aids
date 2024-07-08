@@ -48,56 +48,8 @@ struct GlfwWindowDeleter
 
 } // namespace
 
-struct GlfwWindow::Data
+auto GlfwWindow::initialize( WindowSettings const& settings ) -> utils::Result< glm::ivec2 >
 {
-    std::unique_ptr< int32_t const, GlfwDeleter >    glfw   = nullptr;
-    std::unique_ptr< GLFWwindow, GlfwWindowDeleter > window = nullptr;
-
-    std::optional< glm::ivec2 > resized_framebuffer = std::nullopt;
-};
-
-namespace
-{
-
-auto key_quit_callback(
-    GLFWwindow* const window,
-    int32_t const     key,
-    int32_t const     scancode,
-    int32_t const     action,
-    int32_t const     mods
-) -> void
-{
-    utils::ignore( scancode );
-
-    auto const shift_down = 0 != ( mods & GLFW_MOD_SHIFT );
-    auto const ctrl_down  = 0 != ( mods & GLFW_MOD_CONTROL );
-    auto const q_released = ( GLFW_KEY_Q == key ) && ( GLFW_RELEASE == action );
-
-    if ( q_released && ctrl_down && shift_down )
-    {
-        ::glfwSetWindowShouldClose( window, GLFW_TRUE );
-    }
-}
-
-auto resize_callback( GLFWwindow* const window, int32_t const width, int32_t const height ) -> void
-{
-    auto* const data = static_cast< GlfwWindow::Data* >( ::glfwGetWindowUserPointer( window ) );
-
-    data->resized_framebuffer = glm::ivec2{ width, height };
-}
-
-} // namespace
-
-// This constructor and destructor must be defined in the cpp
-// file since the unique_ptr<Data> requires the full definition
-// of Data when it is instantiated and destroyed.
-GlfwWindow::GlfwWindow( )  = default;
-GlfwWindow::~GlfwWindow( ) = default;
-
-auto GlfwWindow::initialize( WindowSettings const settings ) -> utils::Result< glm::ivec2 >
-{
-    data_ = std::make_unique< Data >( );
-
     // Set the error callback before any GLFW calls to log when things go wrong.
     // The previous callback is ignored because it doesn't need to be restored.
     ltb::utils::ignore( ::glfwSetErrorCallback( default_glfw_error_callback ) );
@@ -110,7 +62,7 @@ auto GlfwWindow::initialize( WindowSettings const settings ) -> utils::Result< g
     }
     // This pointer to a local variable will be invalid when GlfwDeleter is called, but
     // GlfwDeleter does not do anything with the pointer, so it will not cause a problem.
-    data_->glfw = std::unique_ptr< int32_t const, GlfwDeleter >{ &maybe_glfw };
+    glfw_ = std::unique_ptr< int32_t const, GlfwDeleter >{ &maybe_glfw };
 
     ::glfwWindowHint( GLFW_VISIBLE, GLFW_TRUE );
     ::glfwWindowHint( GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_FALSE );
@@ -156,45 +108,87 @@ auto GlfwWindow::initialize( WindowSettings const settings ) -> utils::Result< g
     {
         return LTB_MAKE_UNEXPECTED_ERROR( "glfwCreateWindow() failed" );
     }
-    data_->window = std::unique_ptr< GLFWwindow, GlfwWindowDeleter >{ maybe_window };
+    window_ = std::unique_ptr< GLFWwindow, GlfwWindowDeleter >{ maybe_window };
 
     // Set the current context
-    ::glfwMakeContextCurrent( data_->window.get( ) );
+    ::glfwMakeContextCurrent( window_.get( ) );
     ::glfwSwapInterval( 1 );
 
-    ::glfwSetWindowUserPointer( data_->window.get( ), data_.get( ) );
+    /// \todo(logan): This isn't a safe way to do this. The class could
+    ///               be moved and the pointer will be invalid.
+    ::glfwSetWindowUserPointer( window_.get( ), this );
 
-    // Ignore the old callback.
-    utils::ignore( ::glfwSetKeyCallback( data_->window.get( ), &key_quit_callback ) );
+    utils::ignore(
+        // Ignore the old, returned callback.
+        ::glfwSetKeyCallback( window_.get( ), &GlfwWindow::key_quit_callback )
+    );
 
     // Get and return the current framebuffer size for any graphics APIs using the window.
     auto framebuffer_size = glm::ivec2{ };
-    ::glfwGetFramebufferSize( data_->window.get( ), &framebuffer_size.x, &framebuffer_size.y );
+    ::glfwGetFramebufferSize( window_.get( ), &framebuffer_size.x, &framebuffer_size.y );
 
-    utils::ignore( ::glfwSetFramebufferSizeCallback( data_->window.get( ), &resize_callback ) );
+    utils::ignore(
+        // Ignore the old, returned callback.
+        ::glfwSetFramebufferSizeCallback( window_.get( ), &GlfwWindow::resize_callback )
+    );
 
     return framebuffer_size;
 }
 
 auto GlfwWindow::poll_events( ) -> void
 {
-    data_->resized_framebuffer = std::nullopt;
+    resized_framebuffer_ = std::nullopt;
     ::glfwPollEvents( );
 }
 
 auto GlfwWindow::swap_buffers( ) -> void
 {
-    ::glfwSwapBuffers( data_->window.get( ) );
+    ::glfwSwapBuffers( window_.get( ) );
 }
 
 auto GlfwWindow::should_close( ) const -> bool
 {
-    return ::glfwWindowShouldClose( data_->window.get( ) );
+    return ::glfwWindowShouldClose( window_.get( ) );
 }
 
 auto GlfwWindow::resized( ) const -> std::optional< glm::ivec2 >
 {
-    return data_->resized_framebuffer;
+    return resized_framebuffer_;
+}
+
+auto GlfwWindow::glfw_window( ) -> GLFWwindow*
+{
+    return window_.get( );
+}
+
+auto GlfwWindow::key_quit_callback(
+    GLFWwindow* const window,
+    int32_t const     key,
+    int32_t const     scancode,
+    int32_t const     action,
+    int32_t const     mods
+) -> void
+{
+    utils::ignore( scancode );
+
+    auto const shift_down = 0 != ( mods & GLFW_MOD_SHIFT );
+    auto const ctrl_down  = 0 != ( mods & GLFW_MOD_CONTROL );
+    auto const q_released = ( GLFW_KEY_Q == key ) && ( GLFW_RELEASE == action );
+
+    if ( q_released && ctrl_down && shift_down )
+    {
+        ::glfwSetWindowShouldClose( window, GLFW_TRUE );
+    }
+}
+
+auto GlfwWindow::resize_callback(
+    GLFWwindow* const window,
+    int32_t const     width,
+    int32_t const     height
+) -> void
+{
+    auto* const self           = static_cast< GlfwWindow* >( ::glfwGetWindowUserPointer( window ) );
+    self->resized_framebuffer_ = glm::ivec2{ width, height };
 }
 
 } // namespace ltb::window
