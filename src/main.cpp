@@ -1,6 +1,3 @@
-// ///////////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) Rotor Technologies, Inc. - All Rights Reserved
-// ///////////////////////////////////////////////////////////////////////////////////////
 
 // project
 #include "ltb/gui/glfw_opengl_imgui_setup.hpp"
@@ -15,7 +12,7 @@ namespace ltb
 namespace
 {
 
-auto rotor_main( ) -> utils::Result< void >
+auto app_main( ) -> utils::Result< void >
 {
     auto window = window::GlfwWindow{ };
     auto imgui  = gui::GlfwOpenglImguiSetup{ window };
@@ -32,7 +29,7 @@ auto main( ) -> int
 {
     spdlog::set_level( spdlog::level::debug );
 
-    if ( auto result = ltb::rotor_main( ); !result )
+    if ( auto result = ltb::app_main( ); !result )
     {
         spdlog::error( "{}", result.error( ).error_message( ) );
         return EXIT_FAILURE;

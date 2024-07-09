@@ -7,3 +7,7 @@ TODO
 ## VHF Omnidirectional Range (VOR)
 
 TODO
+
+## Libs
+
+https://github.com/kfrlib/kfr

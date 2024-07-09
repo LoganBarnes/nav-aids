@@ -1,6 +1,3 @@
-// /////////////////////////////////////////////////////////////
-// Copyright (c) Rotor Technologies, Inc. - All Rights Reserved
-// /////////////////////////////////////////////////////////////
 #include "ltb/window/glfw_window.hpp"
 
 // Graphics
@@ -10,8 +7,6 @@
 #include "ltb/utils/ignore.hpp"
 
 // external
-#define GLFW_INCLUDE_NONE
-#include <GLFW/glfw3.h>
 #include <spdlog/spdlog.h>
 
 // standard

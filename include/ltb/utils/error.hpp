@@ -1,6 +1,3 @@
-// ///////////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) Logan Barnes - All Rights Reserved
-// ///////////////////////////////////////////////////////////////////////////////////////
 #pragma once
 
 // external
@@ -25,14 +22,13 @@
 
 ///\brief Macro used to auto-fill line and file information when creating a warning.
 /// \code
-/// ltb::utils::Error error = ROTOR_MAKE_WARNING("Not so bad thing happened!");
+/// ltb::utils::Error error = LTB_MAKE_WARNING("Something happened!");
 /// assert(error.severity() == ltb::utils::Error::Severity::Warning);
 /// \endcode
 #define LTB_MAKE_WARNING( ... )                                                                    \
     ::ltb::utils::Error(                                                                           \
         { __FILE__, __LINE__ },                                                                    \
         ::ltb::utils::Error::Severity::Warning,                                                    \
-        ,                                                                                          \
         fmt::format( __VA_ARGS__ )                                                                 \
     )
 
