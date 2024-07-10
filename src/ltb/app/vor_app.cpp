@@ -14,7 +14,7 @@ auto constexpr base_frequency_range_mhz = math::Range< double >{ .min = 108.0F, 
     .max = speed_of_light_Mm_per_s / ( base_frequency_range_mhz.min )
 };
 
-auto wavelength_from_freq( double wave_speed, float frequency ) -> float
+auto wavelength_from_freq( double const wave_speed, float frequency ) -> float
 {
     return static_cast< float >( wave_speed / static_cast< double >( frequency ) );
 }
