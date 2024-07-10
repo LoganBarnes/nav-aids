@@ -168,14 +168,27 @@ endif ()
 # ##############################################################################
 
 # ##############################################################################
-# Executable
+# Executables
 # ##############################################################################
+
+# Very High Frequency Omnidirectional Range (VOR)
 add_executable(
-  LtbNavApp
-  ${CMAKE_CURRENT_LIST_DIR}/src/main.cpp
+  LtbVorApp
+  ${CMAKE_CURRENT_LIST_DIR}/src/vor_main.cpp
 )
 target_link_libraries(
-  LtbNavApp
+  LtbVorApp
+  PRIVATE
+  LtbNav::LtbNav
+)
+
+# Instrument Landing System (ILS)
+add_executable(
+  LtbIlsApp
+  ${CMAKE_CURRENT_LIST_DIR}/src/ils_main.cpp
+)
+target_link_libraries(
+  LtbIlsApp
   PRIVATE
   LtbNav::LtbNav
 )

@@ -10,16 +10,16 @@
 #include "ltb/ogl/vertex_array.hpp"
 #include "ltb/window/window.hpp"
 
-namespace ltb::ils
+namespace ltb::app
 {
 
 /// \brief The main application window for the HUD app.
-class App
+class IlsApp
 {
 public:
-    explicit App( window::Window& window, gui::ImguiSetup& imgui_setup );
+    explicit IlsApp( window::Window& window, gui::ImguiSetup& imgui_setup );
 
-    auto initialize( ) -> utils::Result< App* >;
+    auto initialize( ) -> utils::Result< IlsApp* >;
     auto run( ) -> utils::Result< void >;
 
 private:
@@ -47,4 +47,4 @@ private:
     auto render_gui( ) const -> void;
 };
 
-} // namespace ltb::ils
+} // namespace ltb::app

@@ -1,4 +1,4 @@
-#include "ltb/ils/app.hpp"
+#include "ltb/app/ils_app.hpp"
 
 // project
 #include "ltb/utils/error_callback.hpp"
@@ -10,7 +10,7 @@
 #include <magic_enum.hpp>
 #include <spdlog/spdlog.h>
 
-namespace ltb::ils
+namespace ltb::app
 {
 namespace
 {
@@ -21,13 +21,13 @@ constexpr auto color_texture_type            = GL_UNSIGNED_BYTE;
 
 } // namespace
 
-App::App( window::Window& window, gui::ImguiSetup& imgui_setup )
+IlsApp::IlsApp( window::Window& window, gui::ImguiSetup& imgui_setup )
     : window_( window )
     , imgui_setup_( imgui_setup )
 {
 }
 
-auto App::initialize( ) -> utils::Result< App* >
+auto IlsApp::initialize( ) -> utils::Result< IlsApp* >
 {
     LTB_CHECK(
         framebuffer_size_,
@@ -105,7 +105,7 @@ auto App::initialize( ) -> utils::Result< App* >
     return this;
 }
 
-auto App::run( ) -> utils::Result< void >
+auto IlsApp::run( ) -> utils::Result< void >
 {
     while ( !window_.should_close( ) )
     {
@@ -143,7 +143,7 @@ auto App::run( ) -> utils::Result< void >
     return utils::success( );
 }
 
-auto App::on_resize( ) const -> void
+auto IlsApp::on_resize( ) const -> void
 {
     constexpr auto mipmap_level = GLint{ 0 };
     tex_image_2d< void >(
@@ -162,7 +162,7 @@ auto App::on_resize( ) const -> void
     );
 }
 
-auto App::render_to_framebuffer( ) const -> void
+auto IlsApp::render_to_framebuffer( ) const -> void
 {
     auto const bound_framebuffer = bind< GL_FRAMEBUFFER >( framebuffer_ );
 
@@ -180,7 +180,7 @@ auto App::render_to_framebuffer( ) const -> void
     );
 }
 
-auto App::render_gui( ) const -> void
+auto IlsApp::render_gui( ) const -> void
 {
     imgui_setup_.new_frame( );
 
@@ -189,4 +189,4 @@ auto App::render_gui( ) const -> void
     imgui_setup_.render( );
 }
 
-} // namespace ltb::ils
+} // namespace ltb::app

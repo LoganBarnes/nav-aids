@@ -1,7 +1,7 @@
 
 // project
+#include "ltb/app/vor_app.hpp"
 #include "ltb/gui/glfw_opengl_imgui_setup.hpp"
-#include "ltb/ils/app.hpp"
 #include "ltb/window/glfw_window.hpp"
 
 // external
@@ -17,9 +17,9 @@ auto app_main( ) -> utils::Result< void >
     auto window = window::GlfwWindow{ };
     auto imgui  = gui::GlfwOpenglImguiSetup{ window };
 
-    auto app = ils::App{ window, imgui };
+    auto app = app::VorApp{ window, imgui };
 
-    return app.initialize( ).and_then( &ils::App::run );
+    return app.initialize( ).and_then( &app::VorApp::run );
 }
 
 } // namespace
