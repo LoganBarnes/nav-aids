@@ -9,7 +9,8 @@ namespace ltb::app
 namespace
 {
 
-constexpr auto speed_of_light_Mm_per_s = 299.7924580; // Megameters per second
+// Megameters per second
+constexpr auto speed_of_light_Mm_per_s = 299.7924580;
 constexpr auto speed_of_sound_mps      = 343.0;
 
 auto constexpr vor_frequency_range_mhz = math::Range< float64 >{ .min = 108.0F, .max = 117.95F };
@@ -20,8 +21,6 @@ auto constexpr vor_wavelength_range_m  = math::Range< float64 >{
 
 constexpr auto reference_audio_frequency_hz = 9960.0F;
 constexpr auto variable_audio_frequency_hz  = 480.0F;
-constexpr auto reference_audio_wavelength_m = speed_of_sound_mps / reference_audio_frequency_hz;
-constexpr auto variable_audio_wavelength_m  = speed_of_sound_mps / variable_audio_frequency_hz;
 
 constexpr auto audio_frequency_range_hz = math::Range< float64 >{
     .min = reference_audio_frequency_hz - variable_audio_frequency_hz,
