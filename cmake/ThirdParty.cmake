@@ -64,6 +64,16 @@ cpmaddpackage(
   DOWNLOAD_ONLY
   TRUE
 )
+cpmaddpackage(
+  NAME
+  implot
+  GITHUB_REPOSITORY
+  epezent/implot
+  GIT_TAG
+  f156599 # master: Jan 22, 2024
+  DOWNLOAD_ONLY
+  TRUE
+)
 cpmaddpackage("gh:Neargye/magic_enum@0.7.3")
 cpmaddpackage(
   NAME
@@ -219,7 +229,41 @@ if (imgui_ADDED)
   target_compile_options(
     imgui
     PRIVATE
-    # Ignore build warning on this third-party code
+    # Ignore build warnings on this third-party code
+    $<$<COMPILE_LANG_AND_ID:CXX,GNU,Clang,AppleClang>:-w>
+  )
+endif ()
+
+if (implot_ADDED)
+  add_library(
+    implot
+    ${implot_SOURCE_DIR}/implot.cpp
+    ${implot_SOURCE_DIR}/implot.h
+    ${implot_SOURCE_DIR}/implot_demo.cpp
+    ${implot_SOURCE_DIR}/implot_internal.h
+    ${implot_SOURCE_DIR}/implot_items.cpp
+  )
+  add_library(
+    implot::implot
+    ALIAS
+    implot
+  )
+  target_link_libraries(
+    implot
+    PUBLIC
+    imgui::imgui
+  )
+  target_include_directories(
+    implot
+    SYSTEM
+    PUBLIC
+    # Mark external include directories as system includes to avoid warnings.
+    $<BUILD_INTERFACE:${implot_SOURCE_DIR}>
+  )
+  target_compile_options(
+    implot
+    PRIVATE
+    # Ignore build warnings on this third-party code
     $<$<COMPILE_LANG_AND_ID:CXX,GNU,Clang,AppleClang>:-w>
   )
 endif ()

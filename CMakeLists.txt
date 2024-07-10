@@ -80,7 +80,7 @@ target_link_libraries(
   # Geometry
   glm::glm
   # Gui
-  imgui::imgui
+  implot::implot
 )
 target_include_directories(
   LtbNav
