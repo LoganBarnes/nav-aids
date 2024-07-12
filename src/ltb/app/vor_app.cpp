@@ -9,14 +9,15 @@ namespace ltb::app
 namespace
 {
 
-// Megameters per second
-constexpr auto speed_of_light_Mm_per_s = 299.7924580;
-constexpr auto speed_of_sound_mps      = 343.0;
+auto constexpr ms_from_s = 1.0e6F;
 
-auto constexpr vor_frequency_range_mhz = math::Range< float64 >{ .min = 108.0F, .max = 117.95F };
-auto constexpr vor_wavelength_range_m  = math::Range< float64 >{
-     .min = speed_of_light_Mm_per_s / ( vor_frequency_range_mhz.max ),
-     .max = speed_of_light_Mm_per_s / ( vor_frequency_range_mhz.min )
+auto constexpr vor_frequency_range_mhz = math::Range< float64 >{
+    .min = 108.0F,
+    .max = 117.95F,
+};
+auto constexpr vor_period_ms = math::Range< float64 >{
+    .min = 1.0F / ( vor_frequency_range_mhz.max ),
+    .max = 1.0F / ( vor_frequency_range_mhz.min )
 };
 
 constexpr auto reference_audio_frequency_hz = 9960.0F;
@@ -26,15 +27,21 @@ constexpr auto audio_frequency_range_hz = math::Range< float64 >{
     .min = reference_audio_frequency_hz - variable_audio_frequency_hz,
     .max = reference_audio_frequency_hz + variable_audio_frequency_hz
 };
-constexpr auto audio_wavelength_range_m = math::Range< float64 >{
-    .min = speed_of_sound_mps / audio_frequency_range_hz.max,
-    .max = speed_of_sound_mps / audio_frequency_range_hz.min
+constexpr auto audio_period_range_ms = math::Range< float64 >{
+    .min = ms_from_s / audio_frequency_range_hz.max,
+    .max = ms_from_s / audio_frequency_range_hz.min
 };
+
+[[maybe_unused]] auto constexpr vor_period_max = vor_period_ms.max;
+[[maybe_unused]] auto constexpr vor_period_min = vor_period_ms.min;
+
+[[maybe_unused]] auto constexpr audio_period_max = audio_period_range_ms.max;
+[[maybe_unused]] auto constexpr audio_period_min = audio_period_range_ms.min;
 
 constexpr auto num_points = 5'000UZ;
 
-auto constexpr wavelength_x_axis_distance = vor_wavelength_range_m.max * 5.0;
-auto const step = wavelength_x_axis_distance / static_cast< float64 >( num_points );
+auto constexpr x_axis_time_ms = 100.0F;
+auto const step               = x_axis_time_ms / static_cast< float64 >( num_points );
 
 template < typename F >
 auto update_frequency_values(
@@ -49,17 +56,17 @@ auto update_frequency_values(
     for ( auto i = 0U; i < size; ++i )
     {
         auto const x  = x_values[ i ];
-        y_values[ i ] = f( x ) * 0.5;
+        y_values[ i ] = f( x );
     }
 }
 
 struct StandardFrequencyFunctor
 {
-    float64 const& base_frequency_wavelength_m_;
+    float64 const& base_frequency_period_s_;
 
     auto operator( )( float64 const x ) const -> float64
     {
-        auto const angle = ( x / base_frequency_wavelength_m_ ) * glm::two_pi< float64 >( );
+        auto const angle = ( x / base_frequency_period_s_ ) * glm::two_pi< float64 >( );
         return std::sin( angle );
     }
 };
@@ -71,15 +78,22 @@ struct AudioFrequencyFunctor
 
     auto operator( )( float64 const x ) const -> float64
     {
-        constexpr auto thirty_hz_wavelength_m = speed_of_sound_mps / 30.0;
+        constexpr auto thirty_hz_period_s = 1.0F / 30.0;
 
-        auto const variable_angle   = ( x / thirty_hz_wavelength_m ) * glm::two_pi< float64 >( );
-        auto const wavelength_scale = ( std::sin( variable_angle ) * 0.5 ) + 0.5;
-        auto const wavelength_m
-            = audio_wavelength_range_m_.min + ( wavelength_scale * audio_range_size_ );
+        auto const variable_angle = ( x / thirty_hz_period_s ) * glm::two_pi< float64 >( );
+        auto const period_scale   = ( std::sin( variable_angle ) * 0.5 ) + 0.5;
+        auto const period_s = audio_wavelength_range_m_.min + ( period_scale * audio_range_size_ );
 
-        auto const base_angle = ( x / wavelength_m ) * glm::two_pi< float64 >( );
+        auto const base_angle = ( x / period_s ) * glm::two_pi< float64 >( );
         return std::sin( base_angle );
+    }
+};
+
+struct AmplitudeModulation
+{
+    auto operator( )( float64 const carrier, float64 const amplitude ) const -> float64
+    {
+        return carrier * ( ( amplitude * 0.5 ) + 0.5 );
     }
 };
 
@@ -152,7 +166,7 @@ auto VorApp::render_gui( ) -> void
 
     utils::ignore( ImGui::DockSpaceOverViewport( ) );
 
-    if ( ImGui::Begin( "Base Frequency (MHz)" ) )
+    if ( ImGui::Begin( "Frequencies" ) )
     {
         if ( ImGui::SliderScalar(
                  "##base_frequency",
@@ -166,10 +180,10 @@ auto VorApp::render_gui( ) -> void
             update_frequencies( );
         }
 
-        if ( ImPlot::BeginPlot( "Fundamental Frequency" ) )
+        if ( ImPlot::BeginPlot( "Carrier Frequency (108.0-117.95 MHz)" ) )
         {
-            ImPlot::SetupAxes( "Length (m)", "Amplitude" );
-            ImPlot::SetupAxesLimits( 0.0F, wavelength_x_axis_distance, -1.0F, +1.0F );
+            ImPlot::SetupAxes( "Time (ms)", "Amplitude" );
+            ImPlot::SetupAxesLimits( 0.0F, x_axis_time_ms, -1.0F, +1.0F );
 
             ImPlot::PlotLine(
                 "f(x)",
@@ -182,8 +196,8 @@ auto VorApp::render_gui( ) -> void
 
         if ( ImPlot::BeginPlot( "Audio Frequency (9960 ±480 Hz)" ) )
         {
-            ImPlot::SetupAxes( "Length (m)", "Amplitude" );
-            ImPlot::SetupAxesLimits( 0.0F, wavelength_x_axis_distance, -1.0F, +1.0F );
+            ImPlot::SetupAxes( "Time (ms)", "Amplitude" );
+            ImPlot::SetupAxesLimits( 0.0F, x_axis_time_ms, -1.0F, +1.0F );
 
             ImPlot::PlotLine(
                 "f(x)",
@@ -194,10 +208,10 @@ auto VorApp::render_gui( ) -> void
             ImPlot::EndPlot( );
         }
 
-        if ( ImPlot::BeginPlot( "Composite Output" ) )
+        if ( ImPlot::BeginPlot( "Amplitude Modulation" ) )
         {
-            ImPlot::SetupAxes( "Length (m)", "Amplitude" );
-            ImPlot::SetupAxesLimits( 0.0F, wavelength_x_axis_distance, -1.0F, +1.0F );
+            ImPlot::SetupAxes( "Time (ms)", "Amplitude" );
+            ImPlot::SetupAxesLimits( 0.0F, x_axis_time_ms, -1.0F, +1.0F );
 
             ImPlot::PlotLine(
                 "f(x)",
@@ -217,17 +231,19 @@ auto VorApp::render_gui( ) -> void
 
 auto VorApp::update_frequencies( ) -> void
 {
-    base_frequency_wavelength_m_ = speed_of_light_Mm_per_s / base_frequency_mhz_;
+    carrier_frequency_period_ms_ = 1.0F / base_frequency_mhz_;
 
     update_frequency_values(
         wavelength_x_values_,
-        StandardFrequencyFunctor{ base_frequency_wavelength_m_ },
+        StandardFrequencyFunctor{ carrier_frequency_period_ms_ },
         base_radio_wave_y_values_
     );
 
+    auto const variable_audio_period_ms = ms_from_s / reference_audio_frequency_hz;
+
     update_frequency_values(
         wavelength_x_values_,
-        AudioFrequencyFunctor{ audio_wavelength_range_m },
+        StandardFrequencyFunctor{ variable_audio_period_ms },
         reference_audio_wave_y_values_
     );
 
@@ -238,7 +254,7 @@ auto VorApp::update_frequencies( ) -> void
             base_radio_wave_y_values_,
             reference_audio_wave_y_values_,
             composite_radio_wave_y_values_.begin( ),
-            std::plus< float64 >( )
+            AmplitudeModulation{ }
         )
     );
 }

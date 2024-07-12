@@ -39,7 +39,7 @@ private:
     std::vector< float64 > wavelength_x_values_ = { };
 
     float64 base_frequency_mhz_          = 117.3F;
-    float64 base_frequency_wavelength_m_ = { };
+    float64 carrier_frequency_period_ms_ = { };
 
     std::vector< float64 > base_radio_wave_y_values_      = { };
     std::vector< float64 > reference_audio_wave_y_values_ = { };
