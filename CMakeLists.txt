@@ -170,6 +170,15 @@ endif ()
 # ##############################################################################
 # Executables
 # ##############################################################################
+add_executable(
+  LtbNavApp
+  ${CMAKE_CURRENT_LIST_DIR}/src/main.cpp
+)
+target_link_libraries(
+  LtbNavApp
+  PRIVATE
+  LtbNav::LtbNav
+)
 
 # Very High Frequency Omnidirectional Range (VOR)
 add_executable(

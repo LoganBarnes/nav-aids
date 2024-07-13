@@ -1,5 +1,8 @@
 #include "ltb/app/vor_app.hpp"
 
+// external
+#include <glm/gtc/constants.hpp>
+
 // standard
 #include <algorithm>
 #include <ranges>
@@ -38,7 +41,7 @@ constexpr auto audio_period_range_ms = math::Range< float64 >{
 [[maybe_unused]] auto constexpr audio_period_max = audio_period_range_ms.max;
 [[maybe_unused]] auto constexpr audio_period_min = audio_period_range_ms.min;
 
-constexpr auto num_points = 5'000UZ;
+constexpr auto num_points = 50'000UZ;
 
 auto constexpr x_axis_time_ms = 100.0F;
 auto const step               = x_axis_time_ms / static_cast< float64 >( num_points );
@@ -126,10 +129,10 @@ auto VorApp::initialize( ) -> utils::Result< VorApp* >
 
     glClearColor( 0.5F, 0.5F, 0.5F, 1.0F );
 
-    wavelength_x_values_.resize( num_points );
+    time_ms_x_values_.resize( num_points );
     for ( auto i = 0U; i < num_points; ++i )
     {
-        wavelength_x_values_[ i ] = static_cast< float64 >( i ) * step;
+        time_ms_x_values_[ i ] = static_cast< float64 >( i ) * step;
     }
 
     update_frequencies( );
@@ -169,9 +172,9 @@ auto VorApp::render_gui( ) -> void
     if ( ImGui::Begin( "Frequencies" ) )
     {
         if ( ImGui::SliderScalar(
-                 "##base_frequency",
+                 "##carrier_frequency",
                  ImGuiDataType_Double,
-                 &base_frequency_mhz_,
+                 &carrier_frequency_mhz_,
                  &vor_frequency_range_mhz.min,
                  &vor_frequency_range_mhz.max,
                  "%.2f"
@@ -180,46 +183,60 @@ auto VorApp::render_gui( ) -> void
             update_frequencies( );
         }
 
-        if ( ImPlot::BeginPlot( "Carrier Frequency (108.0-117.95 MHz)" ) )
+        constexpr auto rows = 2;
+        constexpr auto cols = 1;
+        if ( ImPlot::BeginSubplots(
+                 "##modulation",
+                 rows,
+                 cols,
+                 ImVec2( -1.0F, -1.0F ),
+                 ImPlotSubplotFlags_LinkCols
+             ) )
         {
-            ImPlot::SetupAxes( "Time (ms)", "Amplitude" );
-            ImPlot::SetupAxesLimits( 0.0F, x_axis_time_ms, -1.0F, +1.0F );
 
-            ImPlot::PlotLine(
-                "f(x)",
-                wavelength_x_values_.data( ),
-                base_radio_wave_y_values_.data( ),
-                static_cast< int32 >( num_points )
-            );
-            ImPlot::EndPlot( );
-        }
+            if ( ImPlot::BeginPlot( "Carrier Frequency (108.0-117.95 MHz)" ) )
+            {
+                ImPlot::SetupAxes( "Time (ms)", "Amplitude" );
+                ImPlot::SetupAxesLimits( 0.0F, x_axis_time_ms, -1.0F, +1.0F );
+                // ImPlot::SetupAxesLimits( ImAxis_X1, 0.0F, x_axis_time_ms, ImPlotCond_Once );
+                // ImPlot::SetupAxisLimits( ImAxis_Y1, -1.0F, +1.0F, ImPlotCond_Always );
 
-        if ( ImPlot::BeginPlot( "Audio Frequency (9960 ±480 Hz)" ) )
-        {
-            ImPlot::SetupAxes( "Time (ms)", "Amplitude" );
-            ImPlot::SetupAxesLimits( 0.0F, x_axis_time_ms, -1.0F, +1.0F );
+                // ImPlot::SetupAxisLimitsConstraints( ImAxis_Y1, -1.0F, +1.0F );
+                // ImPlot::SetupAxisZoomConstraints( ImAxis_Y1, -1.0F, +1.0F );
 
-            ImPlot::PlotLine(
-                "f(x)",
-                wavelength_x_values_.data( ),
-                reference_audio_wave_y_values_.data( ),
-                static_cast< int32 >( num_points )
-            );
-            ImPlot::EndPlot( );
-        }
+                ImPlot::PlotLine(
+                    "f(x)",
+                    time_ms_x_values_.data( ),
+                    carrier_wave_y_values_.data( ),
+                    static_cast< int32 >( num_points )
+                );
 
-        if ( ImPlot::BeginPlot( "Amplitude Modulation" ) )
-        {
-            ImPlot::SetupAxes( "Time (ms)", "Amplitude" );
-            ImPlot::SetupAxesLimits( 0.0F, x_axis_time_ms, -1.0F, +1.0F );
+                ImPlot::PlotLine(
+                    "f(x)",
+                    time_ms_x_values_.data( ),
+                    reference_audio_wave_y_values_.data( ),
+                    static_cast< int32 >( num_points )
+                );
+                ImPlot::EndPlot( );
+            }
 
-            ImPlot::PlotLine(
-                "f(x)",
-                wavelength_x_values_.data( ),
-                composite_radio_wave_y_values_.data( ),
-                static_cast< int32 >( num_points )
-            );
-            ImPlot::EndPlot( );
+            if ( ImPlot::BeginPlot( "Amplitude Modulation" ) )
+            {
+                ImPlot::SetupAxes( "Time (ms)", "Amplitude" );
+                // ImPlot::SetupAxesLimits( ImAxis_X1, 0.0F, x_axis_time_ms, ImPlotCond_Once );
+                // ImPlot::SetupAxisLimits( ImAxis_Y1, -1.0F, +1.0F, ImPlotCond_Always );
+                ImPlot::SetupAxesLimits( 0.0F, x_axis_time_ms, -1.0F, +1.0F );
+
+                ImPlot::PlotLine(
+                    "f(x)",
+                    time_ms_x_values_.data( ),
+                    composite_radio_wave_y_values_.data( ),
+                    static_cast< int32 >( num_points )
+                );
+                ImPlot::EndPlot( );
+            }
+
+            ImPlot::EndSubplots( );
         }
     }
     ImGui::End( );
@@ -231,27 +248,27 @@ auto VorApp::render_gui( ) -> void
 
 auto VorApp::update_frequencies( ) -> void
 {
-    carrier_frequency_period_ms_ = 1.0F / base_frequency_mhz_;
+    carrier_frequency_period_ms_ = 1.0F / carrier_frequency_mhz_;
 
     update_frequency_values(
-        wavelength_x_values_,
+        time_ms_x_values_,
         StandardFrequencyFunctor{ carrier_frequency_period_ms_ },
-        base_radio_wave_y_values_
+        carrier_wave_y_values_
     );
 
     auto const variable_audio_period_ms = ms_from_s / reference_audio_frequency_hz;
 
     update_frequency_values(
-        wavelength_x_values_,
+        time_ms_x_values_,
         StandardFrequencyFunctor{ variable_audio_period_ms },
         reference_audio_wave_y_values_
     );
 
-    composite_radio_wave_y_values_.resize( wavelength_x_values_.size( ) );
+    composite_radio_wave_y_values_.resize( time_ms_x_values_.size( ) );
     utils::ignore(
         // Ignore the returned iterator
         std::ranges::transform(
-            base_radio_wave_y_values_,
+            carrier_wave_y_values_,
             reference_audio_wave_y_values_,
             composite_radio_wave_y_values_.begin( ),
             AmplitudeModulation{ }

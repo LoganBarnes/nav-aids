@@ -3,9 +3,6 @@
 namespace ltb::ogl
 {
 
-template < typename T >
-struct UniformSetter;
-
 class Buffer;
 struct BufferData;
 
@@ -22,6 +19,9 @@ struct ShaderProgramData;
 
 class Texture;
 struct TextureData;
+
+template < typename ValueType, GLenum bind_type = GL_INVALID_ENUM >
+class Uniform;
 
 class VertexArray;
 struct VertexArrayData;

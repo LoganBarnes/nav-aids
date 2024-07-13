@@ -13,7 +13,7 @@
 namespace ltb::app
 {
 
-/// \brief The main application window for the HUD app.
+/// \brief The main application window for the ILS app.
 class IlsApp
 {
 public:

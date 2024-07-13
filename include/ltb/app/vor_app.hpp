@@ -16,7 +16,7 @@
 namespace ltb::app
 {
 
-/// \brief The main application window for the HUD app.
+/// \brief The main application window for the VOR app.
 class VorApp
 {
 public:
@@ -33,15 +33,12 @@ private:
 
     ogl::OpenglLoader ogl_loader_ = { };
 
-    // float64                time_seconds_       = 0.01F;
-    // std::vector< float64 > base_time_x_values_ = { };
+    std::vector< float64 > time_ms_x_values_ = { };
 
-    std::vector< float64 > wavelength_x_values_ = { };
-
-    float64 base_frequency_mhz_          = 117.3F;
+    float64 carrier_frequency_mhz_       = 117.3F;
     float64 carrier_frequency_period_ms_ = { };
 
-    std::vector< float64 > base_radio_wave_y_values_      = { };
+    std::vector< float64 > carrier_wave_y_values_         = { };
     std::vector< float64 > reference_audio_wave_y_values_ = { };
     std::vector< float64 > composite_radio_wave_y_values_ = { };
 
