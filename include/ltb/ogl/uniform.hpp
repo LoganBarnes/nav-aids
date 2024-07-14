@@ -14,34 +14,7 @@ namespace ltb::ogl
 {
 
 template < typename ValueType >
-constexpr auto is_uniform_basic_type_v = is_any_same_v<
-    ValueType,
-    int32,
-    uint32,
-    float32,
-    float64,
-    glm::ivec2,
-    glm::uvec2,
-    glm::vec2,
-    glm::dvec2,
-    glm::ivec3,
-    glm::uvec3,
-    glm::vec3,
-    glm::dvec3,
-    glm::ivec4,
-    glm::uvec4,
-    glm::vec4,
-    glm::dvec4,
-    glm::mat2,
-    glm::mat3,
-    glm::mat4,
-    glm::dmat2,
-    glm::dmat3,
-    glm::dmat4 >;
-
-template < typename ValueType >
-constexpr auto is_uniform_scalar_type_v
-    = is_any_same_v< ValueType, int32, uint32, float32, float64 >;
+concept IsUniformScalarType = IsAny< ValueType, int32, uint32, float32, float64 >;
 
 template < typename ValueType >
 class Uniform
@@ -120,7 +93,7 @@ private:
 };
 
 template < typename UniformType, typename ValueType >
-    requires is_uniform_scalar_type_v< ValueType >
+    requires IsUniformScalarType< ValueType >
 auto set_scalar(
     Uniform< UniformType > const& uniform,
     glm::length_t const           size,
@@ -173,7 +146,7 @@ auto set_scalar(
 }
 
 template < typename ValueType >
-    requires is_uniform_scalar_type_v< ValueType >
+    requires IsUniformScalarType< ValueType >
 auto set( Uniform< ValueType > const& uniform, ValueType const& value ) -> void
 {
     set_scalar( uniform, 1, &value, 1 );
@@ -189,7 +162,7 @@ auto set(
 }
 
 template < typename UniformType, typename ValueType >
-    requires is_uniform_scalar_type_v< ValueType >
+    requires IsUniformScalarType< ValueType >
 auto set_matrix(
     Uniform< UniformType > const& uniform,
     glm::length_t const           size,

@@ -11,7 +11,7 @@ namespace ltb::ogl
 {
 
 template < GLenum shader_type >
-    requires is_shader_type_v< shader_type >
+    requires IsShaderType< shader_type >
 auto Shader< shader_type >::initialize( ) -> utils::Result<>
 {
     data_.gl_id = glCreateShader( shader_type );
@@ -29,14 +29,14 @@ auto Shader< shader_type >::initialize( ) -> utils::Result<>
 }
 
 template < GLenum shader_type >
-    requires is_shader_type_v< shader_type >
+    requires IsShaderType< shader_type >
 auto Shader< shader_type >::data( ) const -> ShaderData const&
 {
     return data_;
 }
 
 template < GLenum shader_type >
-    requires is_shader_type_v< shader_type >
+    requires IsShaderType< shader_type >
 auto Shader< shader_type >::load_and_compile( std::filesystem::path const& filename
 ) const -> utils::Result<>
 {

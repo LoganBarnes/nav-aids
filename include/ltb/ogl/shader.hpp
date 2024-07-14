@@ -17,7 +17,7 @@ namespace ltb::ogl
 {
 
 template < GLenum shader_type >
-constexpr auto is_shader_type_v = is_any_v<
+concept IsShaderType = IsAnyOf<
     shader_type,
 #if defined( GL_COMPUTE_SHADER )
     GL_COMPUTE_SHADER,
@@ -36,7 +36,7 @@ struct ShaderData
 };
 
 template < GLenum shader_type >
-    requires is_shader_type_v< shader_type >
+    requires IsShaderType< shader_type >
 class Shader
 {
 public:
@@ -62,7 +62,7 @@ private:
 };
 
 template < GLenum shader_type >
-    requires is_shader_type_v< shader_type >
+    requires IsShaderType< shader_type >
 constexpr auto to_string( ) -> char const*
 {
     switch ( shader_type )

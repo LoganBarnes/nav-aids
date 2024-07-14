@@ -49,10 +49,10 @@ private:
 
 // Specific types for bound texture functions
 template < GLenum bind_type >
-constexpr auto is_tex_parameteri_type = is_any_v< bind_type, GL_TEXTURE_2D, GL_TEXTURE_CUBE_MAP >;
+concept IsTexParameteriType = IsAnyOf< bind_type, GL_TEXTURE_2D, GL_TEXTURE_CUBE_MAP >;
 
 template < GLenum bind_type >
-constexpr auto is_tex_image_2d_type_v = is_any_v<
+concept IsTexImage2dType = IsAnyOf<
     bind_type,
     GL_TEXTURE_2D,
     GL_TEXTURE_1D_ARRAY,
@@ -65,7 +65,7 @@ constexpr auto is_tex_image_2d_type_v = is_any_v<
     GL_TEXTURE_CUBE_MAP_NEGATIVE_Z >;
 
 template < GLenum bind_type >
-constexpr auto is_generate_mipmap_type_v = is_any_v<
+concept IsGenerateMipmapType = IsAnyOf<
     bind_type,
     GL_TEXTURE_1D,
     GL_TEXTURE_2D,
@@ -84,7 +84,7 @@ public:
 
 /// \brief Set a texture parameter.
 template < GLenum bind_type >
-    requires is_tex_parameteri_type< bind_type >
+    requires IsTexParameteriType< bind_type >
 auto tex_parameteri(
     Bound< Texture, bind_type >  bound_texture,
     std::vector< GLenum > const& params,
@@ -109,7 +109,7 @@ auto tex_parameteri(
 /// \param type The type of the input pixel data.
 /// \param level The level-of-detail number. 0 is the base level.
 template < typename PixelData, GLenum bind_type >
-    requires is_tex_image_2d_type_v< bind_type >
+    requires IsTexImage2dType< bind_type >
 auto tex_image_2d(
     Bound< Texture, bind_type > const& bound_texture,
     glm::ivec2 const&                  size,
@@ -139,7 +139,7 @@ auto tex_image_2d(
 /// \param type The type of the input pixel data.
 /// \param level The level-of-detail number. 0 is the base level.
 template < typename PixelData, GLenum bind_type >
-    requires is_tex_image_2d_type_v< bind_type >
+    requires IsTexImage2dType< bind_type >
 auto tex_sub_image_2d(
     Bound< Texture, bind_type > bound_texture,
     math::Range2Di const&       sub_rect,
@@ -170,7 +170,7 @@ auto tex_sub_image_2d(
 
 /// \brief Generate sub-sampled level of detail images for this texture.
 template < GLenum bind_type >
-    requires is_generate_mipmap_type_v< bind_type >
+    requires IsGenerateMipmapType< bind_type >
 auto generate_mipmap( Bound< Texture, bind_type > bound_texture ) -> void
 {
     // This argument is provided to ensure the texture

@@ -44,7 +44,7 @@ private:
 };
 
 template < GLenum bind_type >
-constexpr auto is_buffer_type_v = is_any_v<
+concept IsBufferType = IsAnyOf<
     bind_type,
     GL_ARRAY_BUFFER,
     GL_ATOMIC_COUNTER_BUFFER,
@@ -62,7 +62,7 @@ constexpr auto is_buffer_type_v = is_any_v<
     GL_UNIFORM_BUFFER >;
 
 template < GLenum bind_type >
-constexpr auto is_bind_buffer_range_type_v = is_any_v<
+concept IsBindBufferRangeType = IsAnyOf<
     bind_type,
     GL_ATOMIC_COUNTER_BUFFER,
     GL_TRANSFORM_FEEDBACK_BUFFER,
@@ -74,7 +74,7 @@ constexpr auto is_bind_buffer_range_type_v = is_any_v<
 /// \param num_elements is the number of elements the buffer should store
 /// \param usage is the OpenGL intended usage hint
 template < typename DataType, GLenum bind_type >
-    requires is_buffer_type_v< bind_type >
+    requires IsBufferType< bind_type >
 auto buffer_data(
     Bound< Buffer, bind_type > const& bound_buffer,
     std::size_t const                 num_elements,
@@ -94,7 +94,7 @@ auto buffer_data(
 /// \param data the data to store in the buffer
 /// \param usage is the OpenGL intended usage hint
 template < typename DataType, GLenum bind_type >
-    requires is_buffer_type_v< bind_type >
+    requires IsBufferType< bind_type >
 auto buffer_data(
     Bound< Buffer, bind_type > const& bound_buffer,
     std::vector< DataType > const&    data,
@@ -109,7 +109,7 @@ auto buffer_data(
 /// \param num_elements is the number of elements to copy.
 /// \param start_index is the offset into the buffer where the copy should start.
 template < typename DataType, GLenum bind_type >
-    requires is_buffer_type_v< bind_type >
+    requires IsBufferType< bind_type >
 auto buffer_sub_data(
     Bound< Buffer, bind_type > const& bound_buffer,
     DataType const* const             data,
@@ -129,7 +129,7 @@ auto buffer_sub_data(
 /// \param data is the data to copy to the buffer.
 /// \param start_index is the offset into the buffer where the copy should start.
 template < typename DataType, GLenum bind_type >
-    requires is_buffer_type_v< bind_type >
+    requires IsBufferType< bind_type >
 auto buffer_sub_data(
     Bound< Buffer, bind_type > const& bound_buffer,
     std::vector< DataType > const&    data,
@@ -144,7 +144,7 @@ auto buffer_sub_data(
 /// \param num_elements is the number of elements to copy.
 /// \param start_index is the offset into the buffer where the copy should start.
 template < typename DataType, GLenum bind_type >
-    requires is_buffer_type_v< bind_type >
+    requires IsBufferType< bind_type >
 auto get_buffer_sub_data(
     Bound< Buffer, bind_type > const& bound_buffer,
     DataType* const                   data,
@@ -162,7 +162,7 @@ auto get_buffer_sub_data(
 }
 
 template < GLenum bind_type >
-    requires is_bind_buffer_range_type_v< bind_type >
+    requires IsBindBufferRangeType< bind_type >
 auto bind_buffer_range(
     Bound< Buffer, bind_type > const& bound_buffer,
     GLuint const                      index,

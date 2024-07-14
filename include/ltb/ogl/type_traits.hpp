@@ -4,28 +4,21 @@
 #include "opengl.hpp"
 
 // standard
-#include <type_traits>
+#include <concepts>
 
 namespace ltb::ogl
 {
 
-// template<typename T, typename ... U>
-// concept IsAnyOf = (std::same_as<T, U> || ...);
-
 template < GLenum T, GLenum... Ts >
-class IsAny : public std::bool_constant< ( ( T == Ts ) || ... ) >
-{
-};
+concept IsAnyOf = std::bool_constant< ( ( T == Ts ) || ... ) >::value;
 
-template < GLenum T, GLenum... Ts >
-constexpr auto is_any_v = IsAny< T, Ts... >::value;
+// template < GLenum T, GLenum... Ts >
+// constexpr auto is_any_v = IsAnyOf< T, Ts... >::value;
 
 template < typename T, typename... Ts >
-class IsAnySame : public std::bool_constant< ( ( std::is_same_v< T, Ts > ) || ... ) >
-{
-};
+concept IsAny = ( std::same_as< T, Ts > || ... );
 
-template < typename T, typename... Ts >
-constexpr auto is_any_same_v = IsAnySame< T, Ts... >::value;
+// template < typename T, typename... Ts >
+// constexpr auto is_any_same_v = IsAny< T, Ts... >::value;
 
 } // namespace ltb::ogl

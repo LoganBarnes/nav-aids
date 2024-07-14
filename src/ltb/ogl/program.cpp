@@ -16,7 +16,7 @@ namespace
 {
 
 template < typename IndexType >
-    requires is_index_type_v< IndexType >
+    requires IsIndexType< IndexType >
 [[nodiscard( "Compile-time constant" )]]
 constexpr auto index_type( ) -> GLenum
 {
@@ -96,7 +96,7 @@ auto draw(
 }
 
 template < typename IndexType >
-    requires is_index_type_v< IndexType >
+    requires IsIndexType< IndexType >
 auto draw(
     Bound< Program > const&                         bound_program,
     Bound< VertexArray > const&                     bound_vertex_array,
@@ -132,7 +132,7 @@ auto draw_instanced(
 }
 
 template < typename IndexType >
-    requires is_index_type_v< IndexType >
+    requires IsIndexType< IndexType >
 auto draw_instanced(
     Bound< Program > const&                         bound_program,
     Bound< VertexArray > const&                     bound_vertex_array,

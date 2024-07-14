@@ -38,7 +38,7 @@ auto to_string( GLubyte const* str ) -> std::string;
 auto get_string( GLenum name ) -> std::string;
 
 template < GLenum bind_type >
-constexpr auto is_bindable_buffer_v = is_any_v<
+concept IsBindableBuffer = IsAnyOf<
     bind_type,
     GL_ARRAY_BUFFER,
     GL_ATOMIC_COUNTER_BUFFER,
@@ -54,7 +54,7 @@ constexpr auto is_bindable_buffer_v = is_any_v<
     GL_UNIFORM_BUFFER >;
 
 template < GLenum bind_type >
-constexpr auto is_bindable_texture_v = is_any_v<
+concept IsBindableTexture = IsAnyOf<
     bind_type,
     GL_TEXTURE_1D,
     GL_TEXTURE_2D,
@@ -69,16 +69,16 @@ constexpr auto is_bindable_texture_v = is_any_v<
     GL_TEXTURE_2D_MULTISAMPLE_ARRAY >;
 
 template < GLenum bind_type >
-constexpr auto is_bindable_framebuffer_v
-    = is_any_v< bind_type, GL_FRAMEBUFFER, GL_DRAW_FRAMEBUFFER, GL_READ_FRAMEBUFFER >;
+concept IsBindableFramebuffer
+    = IsAnyOf< bind_type, GL_FRAMEBUFFER, GL_DRAW_FRAMEBUFFER, GL_READ_FRAMEBUFFER >;
 
 template < GLenum bind_type >
-constexpr auto is_bindable_v
-    = is_bindable_buffer_v< bind_type > || is_bindable_texture_v< bind_type >
-   || is_bindable_framebuffer_v< bind_type >;
+concept IsBindable = IsBindableBuffer< bind_type > || IsBindableTexture< bind_type >
+                  || IsBindableFramebuffer< bind_type >;
 
 template < GLenum bind_type >
-    requires is_bindable_v< bind_type >
+    requires IsBindable< bind_type >
+[[nodiscard( "Const getter" )]]
 constexpr auto binding_getter_type( ) -> GLenum
 {
     switch ( bind_type )
@@ -153,6 +153,7 @@ constexpr auto binding_getter_type( ) -> GLenum
 }
 
 template < typename Object >
+[[nodiscard( "Const getter" )]]
 constexpr auto binding_getter_type( ) -> GLenum
 {
     if constexpr ( std::is_same_v< Object, VertexArray > )
