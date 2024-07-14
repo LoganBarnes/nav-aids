@@ -29,6 +29,7 @@ private:
     // Framebuffers and textures to store the wave field.
     static constexpr auto framebuffer_count_ = 2UZ;
 
+    glm::ivec2                                         framebuffer_size_        = { };
     std::array< ogl::Texture, framebuffer_count_ >     wave_field_textures_     = { };
     std::array< ogl::Framebuffer, framebuffer_count_ > wave_field_framebuffers_ = { };
 

@@ -138,12 +138,14 @@ auto AntennaApp::destroy( ) -> void
 
 auto AntennaApp::resize( glm::ivec2 const framebuffer_size ) -> void
 {
+    framebuffer_size_ = framebuffer_size;
+
     for ( auto i = 0UZ; i < framebuffer_count_; ++i )
     {
         constexpr auto mipmap_level = GLint{ 0 };
         tex_image_2d< void >(
             ogl::bind< GL_TEXTURE_2D >( wave_field_textures_[ i ] ),
-            framebuffer_size,
+            framebuffer_size_,
             nullptr,
             wave_texture_internal_format,
             wave_texture_format,
@@ -175,13 +177,7 @@ auto AntennaApp::update_framebuffer( ) -> void
     auto const bound_framebuffer
         = ogl::bind< GL_FRAMEBUFFER >( wave_field_framebuffers_[ current_wave_field_ ] );
 
-    auto const viewport_size    = ImGui::GetMainViewport( )->Size;
-    auto const framebuffer_size = glm::ivec2{
-        static_cast< int32 >( viewport_size.x ),
-        static_cast< int32 >( viewport_size.y ),
-    };
-
-    glViewport( 0, 0, framebuffer_size.x, framebuffer_size.y );
+    glViewport( 0, 0, framebuffer_size_.x, framebuffer_size_.y );
     glClear( GL_COLOR_BUFFER_BIT );
 
     propagate_waves( );
@@ -197,9 +193,8 @@ auto AntennaApp::propagate_waves( ) -> void
     auto const bound_texture = bind< GL_TEXTURE_2D >( previous_state );
     set( std::get< 0 >( wave_pipeline_.uniforms ), bound_texture, active_tex );
 
-    auto const bound_program = ogl::bind( wave_pipeline_.program );
     ogl::draw(
-        bound_program,
+        ogl::bind( wave_pipeline_.program ),
         bind( wave_pipeline_.vertex_array ),
         fullscreen_draw_mode,
         draw_start_vertex,
@@ -235,13 +230,7 @@ auto AntennaApp::render_antennas( ) -> void
 
 auto AntennaApp::display_wave_field( ) -> void
 {
-    auto const viewport_size    = ImGui::GetMainViewport( )->Size;
-    auto const framebuffer_size = glm::ivec2{
-        static_cast< int32 >( viewport_size.x ),
-        static_cast< int32 >( viewport_size.y ),
-    };
-
-    glViewport( 0, 0, framebuffer_size.x, framebuffer_size.y );
+    glViewport( 0, 0, framebuffer_size_.x, framebuffer_size_.y );
     glClear( GL_COLOR_BUFFER_BIT );
 
     // Render the wave field.
