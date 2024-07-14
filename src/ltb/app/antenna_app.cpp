@@ -14,9 +14,12 @@ namespace ltb::app
 namespace
 {
 
-constexpr auto color_texture_internal_format = GL_RGBA;
-constexpr auto color_texture_format          = GL_RGBA;
-constexpr auto color_texture_type            = GL_UNSIGNED_BYTE;
+auto constexpr wave_texture_internal_format = GL_RGBA32F;
+auto constexpr wave_texture_format          = GL_RGBA;
+auto constexpr wave_texture_type            = GL_FLOAT;
+
+auto constexpr wave_texture_filter = GL_NEAREST;
+auto constexpr wave_texture_wrap   = GL_CLAMP_TO_EDGE;
 
 auto constexpr draw_start_vertex       = 0;
 auto constexpr fullscreen_draw_mode    = GL_TRIANGLE_STRIP;
@@ -31,19 +34,10 @@ auto AntennaApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Resul
         wave_field_textures_[ i ].initialize( );
         wave_field_framebuffers_[ i ].initialize( );
 
-        // Attach the color texture to the framebuffer.
-        constexpr auto null_depth_texture = std::nullopt;
-        framebuffer_texture_2d< GL_TEXTURE_2D >(
-            bind< GL_FRAMEBUFFER >( wave_field_framebuffers_[ i ] ),
-            { wave_field_textures_[ i ] },
-            // No depth texture needed for 2D rendering.
-            null_depth_texture
-        );
-
         // Specify the color texture parameters.
         auto const bound_texture = bind< GL_TEXTURE_2D >( wave_field_textures_[ i ] );
-        tex_parameteri( bound_texture, ogl::TexParams::filter( ), GL_LINEAR );
-        tex_parameteri( bound_texture, ogl::TexParams::wrap( ), GL_CLAMP_TO_EDGE );
+        tex_parameteri( bound_texture, ogl::TexParams::filter( ), wave_texture_filter );
+        tex_parameteri( bound_texture, ogl::TexParams::wrap( ), wave_texture_wrap );
     }
 
     auto const shader_dir = config::shader_dir_path( );
@@ -117,7 +111,8 @@ auto AntennaApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Resul
 
     resize( framebuffer_size );
 
-    glClearColor( 0.5F, 0.5F, 0.5F, 1.0F );
+    glClearColor( 0.0F, 0.0F, 0.0F, 1.0F );
+    glDisable( GL_DEPTH_TEST );
 
     start_time_ = std::chrono::steady_clock::now( );
     return utils::success( );
@@ -131,7 +126,15 @@ auto AntennaApp::render( ) -> void
 
 auto AntennaApp::configure_gui( ) -> void {}
 
-auto AntennaApp::destroy( ) -> void {}
+auto AntennaApp::destroy( ) -> void
+{
+    display_pipeline_.destroy( );
+    antennas_ = { };
+    antenna_pipeline_.destroy( );
+    wave_pipeline_.destroy( );
+    wave_field_framebuffers_ = { };
+    wave_field_textures_     = { };
+}
 
 auto AntennaApp::resize( glm::ivec2 const framebuffer_size ) -> void
 {
@@ -142,10 +145,19 @@ auto AntennaApp::resize( glm::ivec2 const framebuffer_size ) -> void
             ogl::bind< GL_TEXTURE_2D >( wave_field_textures_[ i ] ),
             framebuffer_size,
             nullptr,
-            color_texture_internal_format,
-            color_texture_format,
-            color_texture_type,
+            wave_texture_internal_format,
+            wave_texture_format,
+            wave_texture_type,
             mipmap_level
+        );
+
+        // Attach the color texture to the framebuffer.
+        constexpr auto null_depth_texture = std::nullopt;
+        framebuffer_texture_2d< GL_TEXTURE_2D >(
+            bind< GL_FRAMEBUFFER >( wave_field_framebuffers_[ i ] ),
+            { wave_field_textures_[ i ] },
+            // No depth texture needed for 2D rendering.
+            null_depth_texture
         );
 
         LTB_CHECK_OR(
@@ -163,13 +175,13 @@ auto AntennaApp::update_framebuffer( ) -> void
     auto const bound_framebuffer
         = ogl::bind< GL_FRAMEBUFFER >( wave_field_framebuffers_[ current_wave_field_ ] );
 
-    auto const viewport_size = ImGui::GetMainViewport( )->Size;
-    glViewport(
-        0,
-        0,
+    auto const viewport_size    = ImGui::GetMainViewport( )->Size;
+    auto const framebuffer_size = glm::ivec2{
         static_cast< int32 >( viewport_size.x ),
-        static_cast< int32 >( viewport_size.y )
-    );
+        static_cast< int32 >( viewport_size.y ),
+    };
+
+    glViewport( 0, 0, framebuffer_size.x, framebuffer_size.y );
     glClear( GL_COLOR_BUFFER_BIT );
 
     propagate_waves( );
@@ -182,9 +194,8 @@ auto AntennaApp::propagate_waves( ) -> void
     auto const  active_tex     = GLint{ 0 };
     previous_state.active_tex( active_tex );
 
-    set( std::get< 0 >( wave_pipeline_.uniforms ),
-         bind< GL_TEXTURE_2D >( previous_state ),
-         active_tex );
+    auto const bound_texture = bind< GL_TEXTURE_2D >( previous_state );
+    set( std::get< 0 >( wave_pipeline_.uniforms ), bound_texture, active_tex );
 
     auto const bound_program = ogl::bind( wave_pipeline_.program );
     ogl::draw(
@@ -224,13 +235,13 @@ auto AntennaApp::render_antennas( ) -> void
 
 auto AntennaApp::display_wave_field( ) -> void
 {
-    auto const viewport_size = ImGui::GetMainViewport( )->Size;
-    glViewport(
-        0,
-        0,
+    auto const viewport_size    = ImGui::GetMainViewport( )->Size;
+    auto const framebuffer_size = glm::ivec2{
         static_cast< int32 >( viewport_size.x ),
-        static_cast< int32 >( viewport_size.y )
-    );
+        static_cast< int32 >( viewport_size.y ),
+    };
+
+    glViewport( 0, 0, framebuffer_size.x, framebuffer_size.y );
     glClear( GL_COLOR_BUFFER_BIT );
 
     // Render the wave field.
@@ -238,13 +249,11 @@ auto AntennaApp::display_wave_field( ) -> void
     auto const  active_tex    = GLint{ 0 };
     current_state.active_tex( active_tex );
 
-    set( std::get< 0 >( display_pipeline_.uniforms ),
-         bind< GL_TEXTURE_2D >( current_state ),
-         active_tex );
+    auto const bound_texture = bind< GL_TEXTURE_2D >( current_state );
+    set( std::get< 0 >( display_pipeline_.uniforms ), bound_texture, active_tex );
 
-    auto const bound_display_program = ogl::bind( display_pipeline_.program );
     ogl::draw(
-        bound_display_program,
+        bind( display_pipeline_.program ),
         bind( display_pipeline_.vertex_array ),
         fullscreen_draw_mode,
         draw_start_vertex,

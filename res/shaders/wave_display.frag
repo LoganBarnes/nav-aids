@@ -1,6 +1,6 @@
 #version 410
 
-out vec2 texture_coordinates;
+in vec2 texture_coordinates;
 
 uniform sampler2D wave_texture;
 

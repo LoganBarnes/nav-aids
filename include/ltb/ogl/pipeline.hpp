@@ -77,6 +77,16 @@ public:
 
         return utils::success( );
     }
+
+    auto destroy( ) -> void
+    {
+        vertex_array  = { };
+        vertex_buffer = { };
+
+        program         = { };
+        fragment_shader = { };
+        vertex_shader   = { };
+    }
 };
 
 } // namespace ltb::ogl
