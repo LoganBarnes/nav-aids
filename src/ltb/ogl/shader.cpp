@@ -49,7 +49,16 @@ auto Shader< shader_type >::load_and_compile( std::filesystem::path const& filen
     auto const  shader_str    = Shadinclude::load( filename.string( ) );
     char const* shader_source = shader_str.c_str( );
 
-    auto id = data( ).gl_id;
+    if ( shader_str.empty( ) )
+    {
+        return LTB_MAKE_UNEXPECTED_ERROR(
+            "Shader '{}' ({}): File is empty",
+            filename.filename( ).string( ),
+            to_string< shader_type >( )
+        );
+    }
+
+    auto const id = data( ).gl_id;
 
     // Compile shader
     glShaderSource( id, 1, &shader_source, nullptr );
@@ -63,6 +72,15 @@ auto Shader< shader_type >::load_and_compile( std::filesystem::path const& filen
     {
         auto log_length = GLint{ 0 };
         glGetShaderiv( id, GL_INFO_LOG_LENGTH, &log_length );
+
+        if ( 0 == log_length )
+        {
+            return LTB_MAKE_UNEXPECTED_ERROR(
+                "Shader '{}' ({}): Compilation failed for unknown reason",
+                filename.filename( ).string( ),
+                to_string< shader_type >( )
+            );
+        }
 
         auto gl_error = std::vector< char >( static_cast< size_t >( log_length ) );
         glGetShaderInfoLog( id, log_length, nullptr, gl_error.data( ) );

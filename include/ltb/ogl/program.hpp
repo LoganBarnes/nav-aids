@@ -73,6 +73,11 @@ auto Program::attach_and_link( Shader< ShaderTypes > const&... shaders ) const -
         auto log_length = GLint{ 0 };
         glGetProgramiv( id, GL_INFO_LOG_LENGTH, &log_length );
 
+        if ( 0 == log_length )
+        {
+            return LTB_MAKE_UNEXPECTED_ERROR( "Program linking failed for unknown reason" );
+        }
+
         auto gl_error = std::vector< char >( static_cast< size_t >( log_length ) );
         glGetProgramInfoLog( id, log_length, nullptr, gl_error.data( ) );
 

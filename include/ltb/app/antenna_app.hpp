@@ -3,12 +3,8 @@
 // project
 #include "ltb/app/app.hpp"
 #include "ltb/gui/imgui_setup.hpp"
-#include "ltb/ogl/buffer.hpp"
 #include "ltb/ogl/framebuffer.hpp"
-#include "ltb/ogl/program.hpp"
-#include "ltb/ogl/shader.hpp"
-#include "ltb/ogl/uniform.hpp"
-#include "ltb/ogl/vertex_array.hpp"
+#include "ltb/ogl/pipeline.hpp"
 #include "ltb/window/window.hpp"
 
 namespace ltb::app
@@ -28,17 +24,22 @@ public:
     auto resize( glm::ivec2 framebuffer_size ) -> void override;
 
 private:
-    ogl::Shader< GL_VERTEX_SHADER >   wave_vertex_shader_   = { };
-    ogl::Shader< GL_FRAGMENT_SHADER > wave_fragment_shader_ = { };
-    ogl::Program                      wave_program_         = { };
+    std::chrono::steady_clock::time_point start_time_ = { };
 
-    ogl::Shader< GL_VERTEX_SHADER >   antenna_vertex_shader_   = { };
-    ogl::Shader< GL_FRAGMENT_SHADER > antenna_fragment_shader_ = { };
-    ogl::Program                      antenna_program_         = { };
+    // Framebuffers and textures to store the wave field.
+    static constexpr auto framebuffer_count_ = 2UZ;
 
-    ogl::Uniform< glm::mat4 > projection_from_world_uniform_
-        = ogl::Uniform< glm::mat4 >{ antenna_program_ };
-    ogl::Uniform< float32 > time_uniform_ = ogl::Uniform< float32 >{ antenna_program_ };
+    std::array< ogl::Texture, framebuffer_count_ >     wave_field_textures_     = { };
+    std::array< ogl::Framebuffer, framebuffer_count_ > wave_field_framebuffers_ = { };
+
+    uint32 previous_wave_field_ = 1UZ;
+    uint32 current_wave_field_  = 0UZ;
+
+    // Program to propagate the wave field.
+    ogl::Pipeline< ogl::Texture > wave_pipeline_ = { };
+
+    // Program to set antenna positions and strength.
+    ogl::Pipeline< glm::mat4, float32 > antenna_pipeline_ = { };
 
     struct Antenna
     {
@@ -48,16 +49,13 @@ private:
 
     std::vector< Antenna > antennas_ = { };
 
-    ogl::Buffer      antenna_vertex_buffer_ = { };
-    ogl::VertexArray antenna_vertex_array_  = { };
+    // Program to display the wave field.
+    ogl::Pipeline< ogl::Texture > display_pipeline_ = { };
 
-    static constexpr auto framebuffer_count_ = 2UZ;
-
-    std::array< ogl::Texture, framebuffer_count_ >     wave_field_textures_     = { };
-    std::array< ogl::Framebuffer, framebuffer_count_ > wave_field_framebuffers_ = { };
-    uint32                                             current_wave_field_      = 0;
-
-    auto draw( ) -> utils::Result< void >;
+    auto update_framebuffer( ) -> void;
+    auto propagate_waves( ) -> void;
+    auto render_antennas( ) -> void;
+    auto display_wave_field( ) -> void;
 };
 
 } // namespace ltb::app

@@ -18,81 +18,14 @@ constexpr auto color_texture_internal_format = GL_RGBA;
 constexpr auto color_texture_format          = GL_RGBA;
 constexpr auto color_texture_type            = GL_UNSIGNED_BYTE;
 
+auto constexpr draw_start_vertex       = 0;
+auto constexpr fullscreen_draw_mode    = GL_TRIANGLE_STRIP;
+auto constexpr fullscreen_vertex_count = 4;
+
 } // namespace
 
 auto AntennaApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Result< void >
 {
-    auto const shader_dir = config::shader_dir_path( );
-
-    LTB_CHECK( wave_vertex_shader_.initialize( ) );
-    LTB_CHECK( wave_fragment_shader_.initialize( ) );
-    LTB_CHECK( wave_program_.initialize( ) );
-    LTB_CHECK( wave_vertex_shader_.load_and_compile( shader_dir / "wave.vert" ) );
-    LTB_CHECK( wave_fragment_shader_.load_and_compile( shader_dir / "wave.frag" ) );
-    LTB_CHECK( wave_program_.attach_and_link( wave_vertex_shader_, wave_fragment_shader_ ) );
-
-    LTB_CHECK( antenna_vertex_shader_.initialize( ) );
-    LTB_CHECK( antenna_fragment_shader_.initialize( ) );
-    LTB_CHECK( antenna_program_.initialize( ) );
-
-    LTB_CHECK( antenna_vertex_shader_.load_and_compile( shader_dir / "antenna.vert" ) );
-    LTB_CHECK( antenna_fragment_shader_.load_and_compile( shader_dir / "antenna.frag" ) );
-    LTB_CHECK( antenna_program_.attach_and_link( antenna_vertex_shader_, antenna_fragment_shader_ )
-    );
-    LTB_CHECK( projection_from_world_uniform_.initialize( "projection_from_world" ) );
-    LTB_CHECK( time_uniform_.initialize( "time" ) );
-
-    antennas_ = std::vector{
-        Antenna{ .world_position = { 0.0F, -1.0F }, .antenna_power = 1.0F },
-        Antenna{ .world_position = { 0.0F, +1.0F }, .antenna_power = 1.0F },
-    };
-
-    antenna_vertex_buffer_.initialize( );
-    antenna_vertex_array_.initialize( );
-
-    // Store the vertex data in a GPU buffer.
-    ogl::buffer_data(
-        ogl::bind< GL_ARRAY_BUFFER >( antenna_vertex_buffer_ ),
-        antennas_,
-        GL_STATIC_DRAW
-    );
-
-    LTB_CHECK(
-        auto const world_position_attrib,
-        antenna_program_.get_attribute_location( "world_position" )
-    );
-    LTB_CHECK(
-        auto const antenna_power_attrib,
-        antenna_program_.get_attribute_location( "antenna_power" )
-    );
-
-    constexpr Antenna const* const null_antenna_ptr = nullptr;
-    // Tightly packed.
-    constexpr auto total_vertex_stride = 0U;
-    // Not instanced
-    constexpr auto attrib_divisor = 0U;
-
-    ogl::set_attributes< void >(
-        ogl::bind( antenna_vertex_array_ ),
-        ogl::bind< GL_ARRAY_BUFFER >( antenna_vertex_buffer_ ),
-        {
-            {
-                .attribute_location      = world_position_attrib,
-                .num_coordinates         = glm::vec2::length( ),
-                .data_type               = GL_FLOAT,
-                .initial_offset_into_vbo = &( null_antenna_ptr->world_position ),
-            },
-            {
-                .attribute_location      = antenna_power_attrib,
-                .num_coordinates         = 1,
-                .data_type               = GL_FLOAT,
-                .initial_offset_into_vbo = &( null_antenna_ptr->antenna_power ),
-            },
-        },
-        total_vertex_stride,
-        attrib_divisor
-    );
-
     for ( auto i = 0UZ; i < framebuffer_count_; ++i )
     {
         wave_field_textures_[ i ].initialize( );
@@ -113,40 +46,92 @@ auto AntennaApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Resul
         tex_parameteri( bound_texture, ogl::TexParams::wrap( ), GL_CLAMP_TO_EDGE );
     }
 
+    auto const shader_dir = config::shader_dir_path( );
+
+    LTB_CHECK( wave_pipeline_.initialize(
+        shader_dir / "fullscreen.vert",
+        shader_dir / "wave.frag",
+        "previous_state"
+    ) );
+
+    LTB_CHECK( antenna_pipeline_.initialize(
+        shader_dir / "antenna.vert",
+        shader_dir / "antenna.frag",
+        "projection_from_world",
+        "time"
+    ) );
+
+    antennas_ = std::vector{
+        Antenna{ .world_position = { 0.0F, -0.5F }, .antenna_power = 1.0F },
+        Antenna{ .world_position = { 0.0F, +0.5F }, .antenna_power = 1.0F },
+    };
+
+    // Store the vertex data in a GPU buffer.
+    ogl::buffer_data(
+        ogl::bind< GL_ARRAY_BUFFER >( antenna_pipeline_.vertex_buffer ),
+        antennas_,
+        GL_STATIC_DRAW
+    );
+
+    LTB_CHECK(
+        auto const world_position_attrib,
+        antenna_pipeline_.program.get_attribute_location( "world_position" )
+    );
+    LTB_CHECK(
+        auto const antenna_power_attrib,
+        antenna_pipeline_.program.get_attribute_location( "antenna_power" )
+    );
+
+    constexpr Antenna const* const null_antenna_ptr = nullptr;
+    // Tightly packed.
+    constexpr auto total_vertex_stride = sizeof( Antenna );
+    // Not instanced
+    constexpr auto attrib_divisor = 0U;
+
+    ogl::set_attributes< void >(
+        ogl::bind( antenna_pipeline_.vertex_array ),
+        ogl::bind< GL_ARRAY_BUFFER >( antenna_pipeline_.vertex_buffer ),
+        {
+            {
+                .attribute_location      = world_position_attrib,
+                .num_coordinates         = glm::vec2::length( ),
+                .data_type               = GL_FLOAT,
+                .initial_offset_into_vbo = &( null_antenna_ptr->world_position ),
+            },
+            {
+                .attribute_location      = antenna_power_attrib,
+                .num_coordinates         = 1,
+                .data_type               = GL_FLOAT,
+                .initial_offset_into_vbo = &( null_antenna_ptr->antenna_power ),
+            },
+        },
+        total_vertex_stride,
+        attrib_divisor
+    );
+
+    LTB_CHECK( display_pipeline_.initialize(
+        shader_dir / "fullscreen.vert",
+        shader_dir / "wave_display.frag",
+        "wave_texture"
+    ) );
+
     resize( framebuffer_size );
 
     glClearColor( 0.5F, 0.5F, 0.5F, 1.0F );
+
+    start_time_ = std::chrono::steady_clock::now( );
     return utils::success( );
 }
 
 auto AntennaApp::render( ) -> void
 {
-    auto const viewport_size = ImGui::GetMainViewport( )->Size;
-
-    glViewport(
-        0,
-        0,
-        static_cast< int32 >( viewport_size.x ),
-        static_cast< int32 >( viewport_size.y )
-    );
-    glClear( GL_COLOR_BUFFER_BIT );
-
-    LTB_CHECK_OR( draw( ), utils::log_error );
+    update_framebuffer( );
+    display_wave_field( );
 }
 
 auto AntennaApp::configure_gui( ) -> void {}
 
-auto AntennaApp::destroy( ) -> void
-{
-    wave_field_framebuffers_ = { };
-    wave_field_textures_     = { };
-
-    antenna_vertex_array_  = { };
-    antenna_vertex_buffer_ = { };
-    wave_program_          = { };
-    wave_fragment_shader_  = { };
-    wave_vertex_shader_    = { };
-}
+auto AntennaApp::destroy( ) -> void {}
 
 auto AntennaApp::resize( glm::ivec2 const framebuffer_size ) -> void
 {
@@ -170,18 +155,101 @@ auto AntennaApp::resize( glm::ivec2 const framebuffer_size ) -> void
     }
 }
 
-auto AntennaApp::draw( ) -> utils::Result< void >
+auto AntennaApp::update_framebuffer( ) -> void
 {
+    previous_wave_field_ = current_wave_field_;
+    current_wave_field_  = ( current_wave_field_ + 1UZ ) % framebuffer_count_;
+
+    auto const bound_framebuffer
+        = ogl::bind< GL_FRAMEBUFFER >( wave_field_framebuffers_[ current_wave_field_ ] );
+
+    auto const viewport_size = ImGui::GetMainViewport( )->Size;
+    glViewport(
+        0,
+        0,
+        static_cast< int32 >( viewport_size.x ),
+        static_cast< int32 >( viewport_size.y )
+    );
+    glClear( GL_COLOR_BUFFER_BIT );
+
+    propagate_waves( );
+    render_antennas( );
+}
+
+auto AntennaApp::propagate_waves( ) -> void
+{
+    auto const& previous_state = wave_field_textures_[ previous_wave_field_ ];
+    auto const  active_tex     = GLint{ 0 };
+    previous_state.active_tex( active_tex );
+
+    set( std::get< 0 >( wave_pipeline_.uniforms ),
+         bind< GL_TEXTURE_2D >( previous_state ),
+         active_tex );
+
+    auto const bound_program = ogl::bind( wave_pipeline_.program );
+    ogl::draw(
+        bound_program,
+        bind( wave_pipeline_.vertex_array ),
+        fullscreen_draw_mode,
+        draw_start_vertex,
+        fullscreen_vertex_count
+    );
+}
+
+auto AntennaApp::render_antennas( ) -> void
+{
+    // Time since start in seconds.
+    using Duration = std::chrono::duration< float32 >;
+
+    auto const current_time     = std::chrono::steady_clock::now( );
+    auto const elapsed_duration = current_time - start_time_;
+    auto const elapsed_time_s = std::chrono::duration_cast< Duration >( elapsed_duration ).count( );
+
+    // Camera projection matrix.
     auto constexpr proj_from_world = glm::identity< glm::mat4 >( );
 
     // Render the wave field.
-    ogl::set( projection_from_world_uniform_, proj_from_world );
-    ogl::set( time_uniform_, 0.0F );
+    set( std::get< 0 >( antenna_pipeline_.uniforms ), proj_from_world );
+    set( std::get< 1 >( antenna_pipeline_.uniforms ), elapsed_time_s );
 
-    auto const bound_program = ogl::bind( antenna_program_ );
-    ogl::draw( bound_program, bind( antenna_vertex_array_ ), GL_LINES, 0, 2 );
+    auto const bound_program = ogl::bind( antenna_pipeline_.program );
+    ogl::draw(
+        bound_program,
+        bind( antenna_pipeline_.vertex_array ),
+        GL_LINES,
+        draw_start_vertex,
+        static_cast< GLsizei >( antennas_.size( ) )
+    );
+}
 
-    return utils::success( );
+auto AntennaApp::display_wave_field( ) -> void
+{
+    auto const viewport_size = ImGui::GetMainViewport( )->Size;
+    glViewport(
+        0,
+        0,
+        static_cast< int32 >( viewport_size.x ),
+        static_cast< int32 >( viewport_size.y )
+    );
+    glClear( GL_COLOR_BUFFER_BIT );
+
+    // Render the wave field.
+    auto const& current_state = wave_field_textures_[ current_wave_field_ ];
+    auto const  active_tex    = GLint{ 0 };
+    current_state.active_tex( active_tex );
+
+    set( std::get< 0 >( display_pipeline_.uniforms ),
+         bind< GL_TEXTURE_2D >( current_state ),
+         active_tex );
+
+    auto const bound_display_program = ogl::bind( display_pipeline_.program );
+    ogl::draw(
+        bound_display_program,
+        bind( display_pipeline_.vertex_array ),
+        fullscreen_draw_mode,
+        draw_start_vertex,
+        fullscreen_vertex_count
+    );
 }
 
 } // namespace ltb::app

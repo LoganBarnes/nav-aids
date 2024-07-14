@@ -1,9 +1,13 @@
 #version 410
 
-in vec2 clip_position;
+out vec2 texture_coordinates;
 
-out vec4 out_color;
+uniform sampler2D previous_state;
+
+out vec4 current_value;
 
 void main() {
-    out_color = vec4(clip_position * 0.5F + 0.5F, 1.0F, 1.0F);
+    vec4 previous_value = texture(previous_state, texture_coordinates);
+
+    current_value = previous_value;
 }

@@ -4,11 +4,11 @@ namespace ltb::ogl
 {
 
 auto set(
-    Uniform< Buffer, GL_SHADER_STORAGE_BUFFER > const& uniform,
-    Bound< Buffer, GL_SHADER_STORAGE_BUFFER > const&   buffer,
-    GLuint                                             binding,
-    GLintptr                                           byte_offset,
-    GLsizeiptr                                         size_in_bytes
+    Uniform< Buffer > const&                         uniform,
+    Bound< Buffer, GL_SHADER_STORAGE_BUFFER > const& buffer,
+    GLuint                                           binding,
+    GLintptr                                         byte_offset,
+    GLsizeiptr                                       size_in_bytes
 ) -> void
 {
     glShaderStorageBlockBinding( uniform.program_id( ), uniform.block_index( ), binding );

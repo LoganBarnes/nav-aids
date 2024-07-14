@@ -1,4 +1,3 @@
-
 // Constants
 const uint color_mode_white        = 0;
 const uint color_mode_position     = 1;
@@ -16,7 +15,7 @@ const uint shading_mode_cook_torrance = 2;/// \todo
 //layout(binding = 1) uniform sampler2D tex_sampler;
 
 layout(push_constant) uniform Display {
-    layout(offset = 112) vec4 color; // offset must be the size of previous push_constants
+    layout(offset = 112) vec4 color;// offset must be the size of previous push_constants
     uint color_mode;
     uint shading_mode;
 } display;

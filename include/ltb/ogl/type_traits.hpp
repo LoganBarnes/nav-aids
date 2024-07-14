@@ -9,6 +9,9 @@
 namespace ltb::ogl
 {
 
+// template<typename T, typename ... U>
+// concept IsAnyOf = (std::same_as<T, U> || ...);
+
 template < GLenum T, GLenum... Ts >
 class IsAny : public std::bool_constant< ( ( T == Ts ) || ... ) >
 {

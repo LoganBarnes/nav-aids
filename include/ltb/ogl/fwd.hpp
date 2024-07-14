@@ -20,7 +20,7 @@ struct ShaderProgramData;
 class Texture;
 struct TextureData;
 
-template < typename ValueType, GLenum bind_type = GL_INVALID_ENUM >
+template < typename ValueType >
 class Uniform;
 
 class VertexArray;

@@ -43,11 +43,11 @@ template < typename ValueType >
 constexpr auto is_uniform_scalar_type_v
     = is_any_same_v< ValueType, int32, uint32, float32, float64 >;
 
-template < typename ValueType, GLenum bind_type >
+template < typename ValueType >
 class Uniform
 {
 public:
-    explicit Uniform( Program& program )
+    explicit( false ) Uniform( Program& program )
         : program_( program )
     {
     }
@@ -63,9 +63,17 @@ public:
         return utils::success( );
     }
 
-    auto program_id( ) const -> GLuint { return program_.data( ).gl_id; }
+    [[nodiscard( "Const getter" )]]
+    auto program_id( ) const -> GLuint
+    {
+        return program_.data( ).gl_id;
+    }
 
-    auto location( ) const -> GLint { return location_; }
+    [[nodiscard( "Const getter" )]]
+    auto location( ) const -> GLint
+    {
+        return location_;
+    }
 
 private:
     Program& program_;
@@ -73,7 +81,7 @@ private:
 };
 
 template <>
-class Uniform< Buffer, GL_SHADER_STORAGE_BUFFER >
+class Uniform< Buffer >
 {
 public:
     explicit Uniform( Program& program )
@@ -94,9 +102,17 @@ public:
         return utils::success( );
     }
 
-    auto program_id( ) const -> GLuint { return program_.data( ).gl_id; }
+    [[nodiscard( "Const getter" )]]
+    auto program_id( ) const -> GLuint
+    {
+        return program_.data( ).gl_id;
+    }
 
-    auto block_index( ) const -> GLuint { return block_index_; }
+    [[nodiscard( "Const getter" )]]
+    auto block_index( ) const -> GLuint
+    {
+        return block_index_;
+    }
 
 private:
     Program& program_;
@@ -216,18 +232,18 @@ auto set(
 }
 
 auto set(
-    Uniform< Buffer, GL_SHADER_STORAGE_BUFFER > const& uniform,
-    Bound< Buffer, GL_SHADER_STORAGE_BUFFER > const&   buffer,
-    GLuint                                             binding,
-    GLintptr                                           byte_offset,
-    GLsizeiptr                                         size_in_bytes
+    Uniform< Buffer > const&                         uniform,
+    Bound< Buffer, GL_SHADER_STORAGE_BUFFER > const& buffer,
+    GLuint                                           binding,
+    GLintptr                                         byte_offset,
+    GLsizeiptr                                       size_in_bytes
 ) -> void;
 
 template < GLenum bind_type >
 auto set(
-    Uniform< Texture, bind_type > const& uniform,
-    Bound< Texture, bind_type > const&   bound_texture,
-    GLint const                          active_tex
+    Uniform< Texture > const&          uniform,
+    Bound< Texture, bind_type > const& bound_texture,
+    GLint const                        active_tex
 ) -> void
 {
     // This argument is only provided to ensure the texture
