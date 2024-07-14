@@ -41,49 +41,11 @@ auto IlsApp::initialize( ) -> utils::Result< IlsApp* >
     LTB_CHECK( ogl_loader_.initialize( ) );
     LTB_CHECK( imgui_setup_.initialize( ) );
 
-    LTB_CHECK( vertex_shader_.initialize( ) );
-    LTB_CHECK( fragment_shader_.initialize( ) );
-    LTB_CHECK( program_.initialize( ) );
-    vertex_buffer_.initialize( );
-    vertex_array_.initialize( );
+    auto const shader_dir = config::shader_dir_path( );
+    LTB_CHECK( pipeline_.initialize( shader_dir / "fullscreen.vert", shader_dir / "tmp.frag" ) );
+
     color_texture_.initialize( );
     framebuffer_.initialize( );
-
-    auto const shader_dir = config::shader_dir_path( );
-
-    LTB_CHECK( vertex_shader_.load_and_compile( shader_dir / "tmp.vert" ) );
-    LTB_CHECK( fragment_shader_.load_and_compile( shader_dir / "tmp.frag" ) );
-    LTB_CHECK( program_.attach_and_link( vertex_shader_, fragment_shader_ ) );
-
-    // Store the vertex data in a GPU buffer.
-    ogl::buffer_data(
-        ogl::bind< GL_ARRAY_BUFFER >( vertex_buffer_ ),
-        std::vector< glm::vec2 >{
-            { -1.0F, -1.0F },
-            { +1.0F, -1.0F },
-            { -1.0F, +1.0F },
-            { +1.0F, +1.0F },
-        },
-        GL_STATIC_DRAW
-    );
-
-    // Tightly packed.
-    constexpr auto total_vertex_stride = 0U;
-    // Not instanced
-    constexpr auto attrib_divisor = 0U;
-
-    ogl::set_attributes< glm::vec2 >(
-        ogl::bind( vertex_array_ ),
-        ogl::bind< GL_ARRAY_BUFFER >( vertex_buffer_ ),
-        { {
-            .attribute_location      = 0,
-            .num_coordinates         = glm::vec2::length( ),
-            .data_type               = GL_FLOAT,
-            .initial_offset_into_vbo = nullptr,
-        } },
-        total_vertex_stride,
-        attrib_divisor
-    );
 
     // Attach the color texture to the framebuffer.
     constexpr auto null_depth_texture = std::nullopt;
@@ -172,8 +134,8 @@ auto IlsApp::render_to_framebuffer( ) const -> void
     auto constexpr start_index  = 0;
     auto constexpr vertex_count = 4;
     ogl::draw(
-        bind( program_ ),
-        bind( vertex_array_ ),
+        bind( pipeline_.program ),
+        bind( pipeline_.vertex_array ),
         GL_TRIANGLE_STRIP,
         start_index,
         vertex_count

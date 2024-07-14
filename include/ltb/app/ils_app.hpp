@@ -2,12 +2,9 @@
 
 // project
 #include "ltb/gui/imgui_setup.hpp"
-#include "ltb/ogl/buffer.hpp"
 #include "ltb/ogl/framebuffer.hpp"
 #include "ltb/ogl/opengl_loader.hpp"
-#include "ltb/ogl/program.hpp"
-#include "ltb/ogl/shader.hpp"
-#include "ltb/ogl/vertex_array.hpp"
+#include "ltb/ogl/pipeline.hpp"
 #include "ltb/window/window.hpp"
 
 namespace ltb::app
@@ -32,11 +29,7 @@ private:
     ogl::OpenglLoader ogl_loader_ = { };
 
     // OpenGL rendering objects
-    ogl::Shader< GL_VERTEX_SHADER >   vertex_shader_   = { };
-    ogl::Shader< GL_FRAGMENT_SHADER > fragment_shader_ = { };
-    ogl::Program                      program_         = { };
-    ogl::Buffer                       vertex_buffer_   = { };
-    ogl::VertexArray                  vertex_array_    = { };
+    ogl::Pipeline<> pipeline_ = { };
 
     // OpenGL display objects
     ogl::Texture     color_texture_ = { };

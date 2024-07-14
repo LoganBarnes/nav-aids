@@ -2,7 +2,7 @@
 
 in float wave_power;
 
-uniform float time;
+uniform float time = 0.0F;
 
 out vec4 out_wave;
 
