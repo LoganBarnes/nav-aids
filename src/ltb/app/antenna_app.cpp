@@ -14,13 +14,6 @@ namespace ltb::app
 namespace
 {
 
-auto constexpr wave_texture_internal_format = GL_RGBA32F;
-auto constexpr wave_texture_format          = GL_RGBA;
-auto constexpr wave_texture_type            = GL_FLOAT;
-
-auto constexpr wave_texture_filter = GL_NEAREST;
-auto constexpr wave_texture_wrap   = GL_CLAMP_TO_EDGE;
-
 auto constexpr draw_start_vertex       = 0;
 auto constexpr fullscreen_draw_mode    = GL_TRIANGLE_STRIP;
 auto constexpr fullscreen_vertex_count = 4;
@@ -29,16 +22,8 @@ auto constexpr fullscreen_vertex_count = 4;
 
 auto AntennaApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Result< void >
 {
-    for ( auto i = 0UZ; i < framebuffer_count_; ++i )
-    {
-        wave_field_textures_[ i ].initialize( );
-        wave_field_framebuffers_[ i ].initialize( );
-
-        // Specify the color texture parameters.
-        auto const bound_texture = bind< GL_TEXTURE_2D >( wave_field_textures_[ i ] );
-        tex_parameteri( bound_texture, ogl::TexParams::filter( ), wave_texture_filter );
-        tex_parameteri( bound_texture, ogl::TexParams::wrap( ), wave_texture_wrap );
-    }
+    framebuffer_size_ = framebuffer_size;
+    LTB_CHECK( wave_field_chain_.initialize( framebuffer_size_ ) );
 
     auto const shader_dir = config::shader_dir_path( );
 
@@ -109,8 +94,6 @@ auto AntennaApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Resul
         "wave_texture"
     ) );
 
-    resize( framebuffer_size );
-
     glClearColor( 0.0F, 0.0F, 0.0F, 1.0F );
     glDisable( GL_DEPTH_TEST );
 
@@ -132,50 +115,21 @@ auto AntennaApp::destroy( ) -> void
     antennas_ = { };
     antenna_pipeline_.destroy( );
     wave_pipeline_.destroy( );
-    wave_field_framebuffers_ = { };
-    wave_field_textures_     = { };
+    wave_field_chain_ = { };
 }
 
 auto AntennaApp::resize( glm::ivec2 const framebuffer_size ) -> void
 {
     framebuffer_size_ = framebuffer_size;
-
-    for ( auto i = 0UZ; i < framebuffer_count_; ++i )
-    {
-        constexpr auto mipmap_level = GLint{ 0 };
-        tex_image_2d< void >(
-            ogl::bind< GL_TEXTURE_2D >( wave_field_textures_[ i ] ),
-            framebuffer_size_,
-            nullptr,
-            wave_texture_internal_format,
-            wave_texture_format,
-            wave_texture_type,
-            mipmap_level
-        );
-
-        // Attach the color texture to the framebuffer.
-        constexpr auto null_depth_texture = std::nullopt;
-        framebuffer_texture_2d< GL_TEXTURE_2D >(
-            bind< GL_FRAMEBUFFER >( wave_field_framebuffers_[ i ] ),
-            { wave_field_textures_[ i ] },
-            // No depth texture needed for 2D rendering.
-            null_depth_texture
-        );
-
-        LTB_CHECK_OR(
-            check_framebuffer_status( bind< GL_FRAMEBUFFER >( wave_field_framebuffers_[ i ] ) ),
-            utils::log_error
-        );
-    }
+    LTB_CHECK_OR( wave_field_chain_.resize( framebuffer_size_ ), utils::log_error );
 }
 
 auto AntennaApp::update_framebuffer( ) -> void
 {
-    previous_wave_field_ = current_wave_field_;
-    current_wave_field_  = ( current_wave_field_ + 1UZ ) % framebuffer_count_;
+    wave_field_chain_.swap( );
 
     auto const bound_framebuffer
-        = ogl::bind< GL_FRAMEBUFFER >( wave_field_framebuffers_[ current_wave_field_ ] );
+        = ogl::bind< GL_FRAMEBUFFER >( wave_field_chain_.get_framebuffer< 0 >( ) );
 
     glViewport( 0, 0, framebuffer_size_.x, framebuffer_size_.y );
     glClear( GL_COLOR_BUFFER_BIT );
@@ -186,7 +140,7 @@ auto AntennaApp::update_framebuffer( ) -> void
 
 auto AntennaApp::propagate_waves( ) -> void
 {
-    auto const& previous_state = wave_field_textures_[ previous_wave_field_ ];
+    auto const& previous_state = wave_field_chain_.get_texture< 1 >( );
     auto const  active_tex     = GLint{ 0 };
     previous_state.active_tex( active_tex );
 
@@ -234,7 +188,7 @@ auto AntennaApp::display_wave_field( ) -> void
     glClear( GL_COLOR_BUFFER_BIT );
 
     // Render the wave field.
-    auto const& current_state = wave_field_textures_[ current_wave_field_ ];
+    auto const& current_state = wave_field_chain_.get_texture< 0 >( );
     auto const  active_tex    = GLint{ 0 };
     current_state.active_tex( active_tex );
 

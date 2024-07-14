@@ -3,7 +3,7 @@
 // project
 #include "ltb/app/app.hpp"
 #include "ltb/gui/imgui_setup.hpp"
-#include "ltb/ogl/framebuffer.hpp"
+#include "ltb/ogl/framebuffer_chain.hpp"
 #include "ltb/ogl/pipeline.hpp"
 #include "ltb/window/window.hpp"
 
@@ -27,14 +27,10 @@ private:
     std::chrono::steady_clock::time_point start_time_ = { };
 
     // Framebuffers and textures to store the wave field.
-    static constexpr auto framebuffer_count_ = 2UZ;
+    static constexpr auto framebuffer_count_ = 3UZ;
 
-    glm::ivec2                                         framebuffer_size_        = { };
-    std::array< ogl::Texture, framebuffer_count_ >     wave_field_textures_     = { };
-    std::array< ogl::Framebuffer, framebuffer_count_ > wave_field_framebuffers_ = { };
-
-    uint32 previous_wave_field_ = 1UZ;
-    uint32 current_wave_field_  = 0UZ;
+    glm::ivec2                                  framebuffer_size_ = { };
+    ogl::FramebufferChain< framebuffer_count_ > wave_field_chain_ = { };
 
     // Program to propagate the wave field.
     ogl::Pipeline< ogl::Texture > wave_pipeline_ = { };
