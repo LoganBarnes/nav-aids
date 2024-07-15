@@ -61,16 +61,10 @@ public:
         LTB_CHECK( fragment_shader.load_and_compile( fragment_shader_path ) );
         LTB_CHECK( program.attach_and_link( vertex_shader, fragment_shader ) );
 
-        // Initialize all uniforms and check for errors
-        if ( auto failed_result = FailedResult{ };
-             ( ( failed_result(
-                   std::get< Uniform< UniformTypes > >( uniforms ),
-                   std::forward< UniformNames >( uniform_names )
-               ) )
-               || ... ) )
-        {
-            return failed_result.result;
-        }
+        LTB_CHECK( initialize_uniforms(
+            std::index_sequence_for< UniformTypes... >{ },
+            std::forward< UniformNames >( uniform_names )...
+        ) );
 
         vertex_buffer.initialize( );
         vertex_array.initialize( );
@@ -86,6 +80,22 @@ public:
         program         = { };
         fragment_shader = { };
         vertex_shader   = { };
+    }
+
+private:
+    template < typename... UniformNames, size_t... Is >
+    auto initialize_uniforms( std::index_sequence< Is... >, UniformNames&&... uniform_names )
+    {
+        if ( auto failed_result = FailedResult{ };
+             ( ( failed_result(
+                   std::get< Is >( uniforms ),
+                   std::forward< UniformNames >( uniform_names )
+               ) )
+               || ... ) )
+        {
+            return failed_result.result;
+        }
+        return utils::success( );
     }
 };
 

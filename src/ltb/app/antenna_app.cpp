@@ -30,19 +30,24 @@ auto AntennaApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Resul
     LTB_CHECK( wave_pipeline_.initialize(
         shader_dir / "fullscreen.vert",
         shader_dir / "wave.frag",
-        "previous_state"
+        "state_size",
+        "prev_state",
+        "curr_state"
     ) );
 
     LTB_CHECK( antenna_pipeline_.initialize(
         shader_dir / "antenna.vert",
         shader_dir / "antenna.frag",
         "projection_from_world",
-        "time"
+        "time_s",
+        "frequency_hz"
     ) );
 
     antennas_ = std::vector{
-        Antenna{ .world_position = { 0.0F, -0.5F }, .antenna_power = 1.0F },
-        Antenna{ .world_position = { 0.0F, +0.5F }, .antenna_power = 1.0F },
+        Antenna{ .world_position = { -0.01F, -0.5F }, .antenna_power = 100.0F },
+        Antenna{ .world_position = { +0.01F, -0.5F }, .antenna_power = 100.0F },
+        Antenna{ .world_position = { -0.01F, +0.5F }, .antenna_power = 100.0F },
+        Antenna{ .world_position = { +0.01F, +0.5F }, .antenna_power = 100.0F },
     };
 
     // Store the vertex data in a GPU buffer.
@@ -140,12 +145,22 @@ auto AntennaApp::update_framebuffer( ) -> void
 
 auto AntennaApp::propagate_waves( ) -> void
 {
-    auto const& previous_state = wave_field_chain_.get_texture< 1 >( );
-    auto const  active_tex     = GLint{ 0 };
-    previous_state.active_tex( active_tex );
+    set( std::get< 0 >( wave_pipeline_.uniforms ), glm::vec2( framebuffer_size_ ) );
 
-    auto const bound_texture = bind< GL_TEXTURE_2D >( previous_state );
-    set( std::get< 0 >( wave_pipeline_.uniforms ), bound_texture, active_tex );
+    auto const& previous_state = wave_field_chain_.get_texture< 2 >( );
+    auto const& current_state  = wave_field_chain_.get_texture< 2 >( );
+
+    auto const active_tex_0 = GLint{ 0 };
+    auto const active_tex_1 = GLint{ 1 };
+
+    previous_state.active_tex( active_tex_0 );
+    current_state.active_tex( active_tex_1 );
+
+    auto const bound_prev_texture = bind< GL_TEXTURE_2D >( previous_state );
+    set( std::get< 1 >( wave_pipeline_.uniforms ), bound_prev_texture, active_tex_0 );
+
+    auto const bound_curr_texture = bind< GL_TEXTURE_2D >( current_state );
+    set( std::get< 2 >( wave_pipeline_.uniforms ), bound_curr_texture, active_tex_1 );
 
     ogl::draw(
         ogl::bind( wave_pipeline_.program ),
@@ -169,14 +184,16 @@ auto AntennaApp::render_antennas( ) -> void
     auto constexpr proj_from_world = glm::identity< glm::mat4 >( );
 
     // Render the wave field.
+    auto constexpr antenna_frequency_hz = 2.0F;
     set( std::get< 0 >( antenna_pipeline_.uniforms ), proj_from_world );
     set( std::get< 1 >( antenna_pipeline_.uniforms ), elapsed_time_s );
+    set( std::get< 2 >( antenna_pipeline_.uniforms ), antenna_frequency_hz );
 
     auto const bound_program = ogl::bind( antenna_pipeline_.program );
     ogl::draw(
         bound_program,
         bind( antenna_pipeline_.vertex_array ),
-        GL_LINES,
+        GL_TRIANGLE_STRIP,
         draw_start_vertex,
         static_cast< GLsizei >( antennas_.size( ) )
     );

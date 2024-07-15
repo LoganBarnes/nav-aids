@@ -85,6 +85,9 @@ auto AppRunner::render_gui( ) -> void
             }
             ImGui::EndMenu( );
         }
+
+        ImGui::Text( "(%.1f FPS)", ImGui::GetIO( ).Framerate );
+
         ImGui::EndMainMenuBar( );
     }
 
