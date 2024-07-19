@@ -63,6 +63,7 @@ private:
 
 template < GLenum shader_type >
     requires IsShaderType< shader_type >
+[[nodiscard( "Use string" )]]
 constexpr auto to_string( ) -> char const*
 {
     switch ( shader_type )

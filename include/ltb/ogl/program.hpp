@@ -38,10 +38,6 @@ public:
     template < GLenum... ShaderTypes >
     auto attach_and_link( Shader< ShaderTypes > const&... shaders ) const -> utils::Result<>;
 
-    /// \brief Get the shader attribute location.
-    [[nodiscard( "Const getter" )]]
-    auto get_attribute_location( std::string const& name ) const -> utils::Result< GLuint >;
-
     static auto static_bind( Program const& program ) -> void;
     static auto static_bind( GLuint raw_gl_id ) -> void;
 

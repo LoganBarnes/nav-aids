@@ -3,8 +3,9 @@
 // project
 #include "ltb/ogl/buffer.hpp"
 #include "ltb/ogl/program.hpp"
+#include "ltb/ogl/program_attribute.hpp"
+#include "ltb/ogl/program_uniform.hpp"
 #include "ltb/ogl/shader.hpp"
-#include "ltb/ogl/uniform.hpp"
 #include "ltb/ogl/vertex_array.hpp"
 
 // standard
@@ -14,30 +15,77 @@
 namespace ltb::ogl
 {
 
-template < typename... UniformTypes >
-class Pipeline
+template < typename... >
+struct Attributes
+{
+};
+
+template < typename... >
+struct Uniforms
+{
+};
+
+template < typename... NameTypes >
+struct AttributeNames
+{
+    std::tuple< NameTypes... > names;
+};
+
+template < typename... NameTypes >
+auto attribute_names( NameTypes&&... names )
+{
+    return AttributeNames{ .names = std::make_tuple( std::forward< NameTypes >( names )... ) };
+}
+
+template < typename... NameTypes >
+struct UniformNames
+{
+    std::tuple< NameTypes... > names;
+};
+
+template < typename... NameTypes >
+auto uniform_names( NameTypes&&... names )
+{
+    return UniformNames{ .names = std::make_tuple( std::forward< NameTypes >( names )... ) };
+}
+
+template < typename Attributes, typename Uniforms >
+class Pipeline;
+
+template < typename... AttributeTypes, typename... UniformTypes >
+class Pipeline< Attributes< AttributeTypes... >, Uniforms< UniformTypes... > >
 {
 public:
     ogl::Shader< GL_VERTEX_SHADER >   vertex_shader   = { };
     ogl::Shader< GL_FRAGMENT_SHADER > fragment_shader = { };
     ogl::Program                      program         = { };
 
-    std::tuple< ogl::Uniform< UniformTypes >... > uniforms = {
+    std::tuple< Attribute< AttributeTypes >... > attributes = {
+        ogl::Attribute< AttributeTypes >{ program }...,
+    };
+
+    std::tuple< Uniform< UniformTypes >... > uniforms = {
         ogl::Uniform< UniformTypes >{ program }...,
     };
 
     ogl::Buffer      vertex_buffer = { };
     ogl::VertexArray vertex_array  = { };
 
-    template < typename... UniformNames >
+    template < typename... AttributeNameTypes, typename... UniformNameTypes >
     auto initialize(
-        std::filesystem::path const& vertex_shader_path,
-        std::filesystem::path const& fragment_shader_path,
-        UniformNames&&... uniform_names
+        std::filesystem::path const&            vertex_shader_path,
+        std::filesystem::path const&            fragment_shader_path,
+        AttributeNames< AttributeNameTypes... > attribute_names,
+        UniformNames< UniformNameTypes... >     uniform_names
     ) -> utils::Result<>
     {
         static_assert(
-            sizeof...( UniformTypes ) == sizeof...( uniform_names ),
+            sizeof...( AttributeTypes ) == sizeof...( AttributeNameTypes ),
+            "Number of attribute types must match number of attribute names."
+        );
+
+        static_assert(
+            sizeof...( UniformTypes ) == sizeof...( UniformNameTypes ),
             "Number of uniform types must match number of uniform names."
         );
 
@@ -49,9 +97,16 @@ public:
         LTB_CHECK( fragment_shader.load_and_compile( fragment_shader_path ) );
         LTB_CHECK( program.attach_and_link( vertex_shader, fragment_shader ) );
 
-        LTB_CHECK( initialize_uniforms(
+        LTB_CHECK( initialize_tuple(
+            std::index_sequence_for< AttributeTypes... >{ },
+            attributes,
+            attribute_names.names
+        ) );
+
+        LTB_CHECK( initialize_tuple(
             std::index_sequence_for< UniformTypes... >{ },
-            std::forward< UniformNames >( uniform_names )...
+            uniforms,
+            uniform_names.names
         ) );
 
         vertex_buffer.initialize( );
@@ -75,23 +130,23 @@ private:
     {
         utils::Result<> result;
 
-        template < typename UniformType >
-        auto operator( )( ogl::Uniform< UniformType >& uniform, std::string const& name ) -> bool
+        template < typename Type >
+        auto operator( )( Type& type, std::string_view name ) -> bool
         {
-            result = uniform.initialize( name );
+            result = type.initialize( name );
             return !result;
         }
     };
 
-    template < typename... UniformNames, size_t... Is >
-    auto initialize_uniforms( std::index_sequence< Is... >, UniformNames&&... uniform_names )
+    template < size_t... Is, typename... Types, typename... NameTypes >
+    auto initialize_tuple(
+        std::index_sequence< Is... >,
+        std::tuple< Types... >&           types,
+        std::tuple< NameTypes... > const& names
+    ) -> utils::Result<>
     {
         if ( auto failed_result = FailedResult{ };
-             ( ( failed_result(
-                   std::get< Is >( uniforms ),
-                   std::forward< UniformNames >( uniform_names )
-               ) )
-               || ... ) )
+             ( ( failed_result( std::get< Is >( types ), std::get< Is >( names ) ) ) || ... ) )
         {
             return failed_result.result;
         }

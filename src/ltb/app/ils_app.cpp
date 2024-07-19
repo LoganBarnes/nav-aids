@@ -42,7 +42,12 @@ auto IlsApp::initialize( ) -> utils::Result< IlsApp* >
     LTB_CHECK( imgui_setup_.initialize( ) );
 
     auto const shader_dir = config::shader_dir_path( );
-    LTB_CHECK( pipeline_.initialize( shader_dir / "fullscreen.vert", shader_dir / "tmp.frag" ) );
+    LTB_CHECK( pipeline_.initialize(
+        shader_dir / "fullscreen.vert",
+        shader_dir / "tmp.frag",
+        ogl::attribute_names( ),
+        ogl::uniform_names( )
+    ) );
 
     color_texture_.initialize( );
     framebuffer_.initialize( );

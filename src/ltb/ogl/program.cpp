@@ -69,16 +69,6 @@ auto Program::static_bind( GLuint const raw_gl_id ) -> void
     glUseProgram( raw_gl_id );
 }
 
-auto Program::get_attribute_location( std::string const& name ) const -> utils::Result< GLuint >
-{
-    auto const loc = glGetAttribLocation( data( ).gl_id, name.c_str( ) );
-    if ( loc < 0 )
-    {
-        return LTB_MAKE_UNEXPECTED_ERROR( "Cannot find attrib location for '{}'", name );
-    }
-    return static_cast< GLuint >( loc );
-}
-
 auto draw(
     Bound< Program > const&     bound_program,
     Bound< VertexArray > const& bound_vertex_array,

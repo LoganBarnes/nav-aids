@@ -14,9 +14,6 @@ namespace ltb::ogl
 {
 
 template < typename ValueType >
-concept IsUniformScalarType = IsAny< ValueType, int32, uint32, float32, float64 >;
-
-template < typename ValueType >
 class Uniform
 {
 public:
@@ -25,7 +22,7 @@ public:
     // NOLINTNEXTLINE(*-explicit-constructor)
     explicit( false ) Uniform( Program& program );
 
-    auto initialize( std::string const& name ) -> utils::Result<>;
+    auto initialize( std::string_view name ) -> utils::Result<>;
 
     [[nodiscard( "Const getter" )]]
     auto program_id( ) const -> GLuint;
@@ -46,11 +43,11 @@ Uniform< ValueType >::Uniform( Program& program )
 }
 
 template < typename ValueType >
-auto Uniform< ValueType >::initialize( std::string const& name ) -> utils::Result<>
+auto Uniform< ValueType >::initialize( std::string_view name ) -> utils::Result<>
 {
     static_assert( static_cast< LocationType >( GL_INVALID_INDEX ) == -1 );
 
-    location_ = glGetUniformLocation( program_.data( ).gl_id, name.c_str( ) );
+    location_ = glGetUniformLocation( program_.data( ).gl_id, name.data( ) );
     if ( location_ < 0 )
     {
         return LTB_MAKE_UNEXPECTED_ERROR( "Uniform '{}' not found in program.", name );
@@ -70,6 +67,9 @@ auto Uniform< ValueType >::location( ) const -> LocationType
 {
     return location_;
 }
+
+template < typename ValueType >
+concept IsUniformScalarType = IsAny< ValueType, int32, uint32, float32, float64 >;
 
 template < typename UniformType, typename ValueType >
     requires IsUniformScalarType< ValueType >

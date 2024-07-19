@@ -33,10 +33,14 @@ private:
     ogl::FramebufferChain< framebuffer_count_ > wave_field_chain_ = { };
 
     // Program to propagate the wave field.
-    ogl::Pipeline< glm::vec2, ogl::Texture, ogl::Texture > wave_pipeline_ = { };
+    ogl::Pipeline< ogl::Attributes<>, ogl::Uniforms< glm::vec2, ogl::Texture, ogl::Texture > >
+        wave_pipeline_ = { };
 
     // Program to set antenna positions and strength.
-    ogl::Pipeline< glm::mat4, float32, float32 > antenna_pipeline_ = { };
+    ogl::Pipeline<
+        ogl::Attributes< glm::vec2, float32 >,
+        ogl::Uniforms< glm::mat4, float32, float32 > >
+        antenna_pipeline_ = { };
 
     struct Antenna
     {
@@ -47,7 +51,7 @@ private:
     std::vector< Antenna > antennas_ = { };
 
     // Program to display the wave field.
-    ogl::Pipeline< ogl::Texture > display_pipeline_ = { };
+    ogl::Pipeline< ogl::Attributes<>, ogl::Uniforms< ogl::Texture > > display_pipeline_ = { };
 
     auto update_framebuffer( ) -> void;
     auto propagate_waves( ) -> void;

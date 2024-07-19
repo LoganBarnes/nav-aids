@@ -1,12 +1,12 @@
-#include "ltb/ogl/uniform.hpp"
+#include "ltb/ogl/program_uniform.hpp"
 
 namespace ltb::ogl
 {
 
 template <>
-auto Uniform< Buffer >::initialize( std::string const& name ) -> utils::Result<>
+auto Uniform< Buffer >::initialize( std::string_view name ) -> utils::Result<>
 {
-    location_ = glGetProgramResourceIndex( program_id( ), GL_SHADER_STORAGE_BLOCK, name.c_str( ) );
+    location_ = glGetProgramResourceIndex( program_id( ), GL_SHADER_STORAGE_BLOCK, name.data( ) );
     if ( GL_INVALID_INDEX == location_ )
     {
         return LTB_MAKE_UNEXPECTED_ERROR( "Uniform '{}' not found in program.", name );
@@ -18,9 +18,9 @@ auto Uniform< Buffer >::initialize( std::string const& name ) -> utils::Result<>
 auto set(
     Uniform< Buffer > const&                         uniform,
     Bound< Buffer, GL_SHADER_STORAGE_BUFFER > const& buffer,
-    GLuint                                           binding,
-    GLintptr                                         byte_offset,
-    GLsizeiptr                                       size_in_bytes
+    GLuint const                                     binding,
+    GLintptr const                                   byte_offset,
+    GLsizeiptr const                                 size_in_bytes
 ) -> void
 {
     glShaderStorageBlockBinding( uniform.program_id( ), uniform.location( ), binding );
