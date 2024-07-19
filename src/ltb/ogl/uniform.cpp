@@ -3,6 +3,18 @@
 namespace ltb::ogl
 {
 
+template <>
+auto Uniform< Buffer >::initialize( std::string const& name ) -> utils::Result<>
+{
+    location_ = glGetProgramResourceIndex( program_id( ), GL_SHADER_STORAGE_BLOCK, name.c_str( ) );
+    if ( GL_INVALID_INDEX == location_ )
+    {
+        return LTB_MAKE_UNEXPECTED_ERROR( "Uniform '{}' not found in program.", name );
+    }
+
+    return utils::success( );
+}
+
 auto set(
     Uniform< Buffer > const&                         uniform,
     Bound< Buffer, GL_SHADER_STORAGE_BUFFER > const& buffer,
@@ -11,7 +23,7 @@ auto set(
     GLsizeiptr                                       size_in_bytes
 ) -> void
 {
-    glShaderStorageBlockBinding( uniform.program_id( ), uniform.block_index( ), binding );
+    glShaderStorageBlockBinding( uniform.program_id( ), uniform.location( ), binding );
 
     ogl::bind_buffer_range( buffer, binding, byte_offset, size_in_bytes );
 }

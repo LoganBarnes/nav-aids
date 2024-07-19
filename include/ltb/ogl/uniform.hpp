@@ -20,77 +20,56 @@ template < typename ValueType >
 class Uniform
 {
 public:
-    explicit( false ) Uniform( Program& program )
-        : program_( program )
-    {
-    }
+    using LocationType = std::conditional_t< std::is_same_v< ValueType, Buffer >, GLuint, GLint >;
 
-    auto initialize( std::string const& name ) -> utils::Result<>
-    {
-        location_ = glGetUniformLocation( program_.data( ).gl_id, name.c_str( ) );
-        if ( location_ < 0 )
-        {
-            return LTB_MAKE_UNEXPECTED_ERROR( "Uniform '{}' not found in program.", name );
-        }
+    // NOLINTNEXTLINE(*-explicit-constructor)
+    explicit( false ) Uniform( Program& program );
 
-        return utils::success( );
-    }
+    auto initialize( std::string const& name ) -> utils::Result<>;
 
     [[nodiscard( "Const getter" )]]
-    auto program_id( ) const -> GLuint
-    {
-        return program_.data( ).gl_id;
-    }
+    auto program_id( ) const -> GLuint;
 
     [[nodiscard( "Const getter" )]]
-    auto location( ) const -> GLint
-    {
-        return location_;
-    }
+    auto location( ) const -> LocationType;
 
 private:
     Program& program_;
-    GLint    location_ = -1;
+
+    LocationType location_ = static_cast< LocationType >( GL_INVALID_INDEX );
 };
 
-template <>
-class Uniform< Buffer >
+template < typename ValueType >
+Uniform< ValueType >::Uniform( Program& program )
+    : program_( program )
 {
-public:
-    explicit Uniform( Program& program )
-        : program_( program )
+}
+
+template < typename ValueType >
+auto Uniform< ValueType >::initialize( std::string const& name ) -> utils::Result<>
+{
+    static_assert( static_cast< LocationType >( GL_INVALID_INDEX ) == -1 );
+
+    location_ = glGetUniformLocation( program_.data( ).gl_id, name.c_str( ) );
+    if ( location_ < 0 )
     {
+        return LTB_MAKE_UNEXPECTED_ERROR( "Uniform '{}' not found in program.", name );
     }
 
-    auto initialize( std::string const& name ) -> utils::Result<>
-    {
-        block_index_
-            = glGetProgramResourceIndex( program_id( ), GL_SHADER_STORAGE_BLOCK, name.c_str( ) );
+    return utils::success( );
+}
 
-        if ( GL_INVALID_INDEX == block_index_ )
-        {
-            return LTB_MAKE_UNEXPECTED_ERROR( "Uniform '{}' not found in program.", name );
-        }
+template < typename ValueType >
+auto Uniform< ValueType >::program_id( ) const -> GLuint
+{
+    return program_.data( ).gl_id;
+}
 
-        return utils::success( );
-    }
-
-    [[nodiscard( "Const getter" )]]
-    auto program_id( ) const -> GLuint
-    {
-        return program_.data( ).gl_id;
-    }
-
-    [[nodiscard( "Const getter" )]]
-    auto block_index( ) const -> GLuint
-    {
-        return block_index_;
-    }
-
-private:
-    Program& program_;
-    GLuint   block_index_ = GL_INVALID_INDEX;
-};
+template < typename ValueType >
+auto Uniform< ValueType >::location( ) const -> LocationType
+{
+    return location_;
+}
 
 template < typename UniformType, typename ValueType >
     requires IsUniformScalarType< ValueType >

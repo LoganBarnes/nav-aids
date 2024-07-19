@@ -14,18 +14,6 @@
 namespace ltb::ogl
 {
 
-struct FailedResult
-{
-    utils::Result<> result;
-
-    template < typename UniformType >
-    auto operator( )( ogl::Uniform< UniformType >& uniform, std::string const& name ) -> bool
-    {
-        result = uniform.initialize( name );
-        return !result;
-    }
-};
-
 template < typename... UniformTypes >
 class Pipeline
 {
@@ -83,6 +71,18 @@ public:
     }
 
 private:
+    struct FailedResult
+    {
+        utils::Result<> result;
+
+        template < typename UniformType >
+        auto operator( )( ogl::Uniform< UniformType >& uniform, std::string const& name ) -> bool
+        {
+            result = uniform.initialize( name );
+            return !result;
+        }
+    };
+
     template < typename... UniformNames, size_t... Is >
     auto initialize_uniforms( std::index_sequence< Is... >, UniformNames&&... uniform_names )
     {
