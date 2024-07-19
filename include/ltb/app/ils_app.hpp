@@ -29,7 +29,9 @@ private:
     ogl::OpenglLoader ogl_loader_ = { };
 
     // OpenGL rendering objects
-    ogl::Pipeline< ogl::Attributes<>, ogl::Uniforms<> > pipeline_ = { };
+    // ogl::Pipeline< ogl::Attributes<>, ogl::Uniforms<> > pipeline_ = {
+    //     ogl::attribute_names( ),
+    // };
 
     // OpenGL display objects
     ogl::Texture     color_texture_ = { };

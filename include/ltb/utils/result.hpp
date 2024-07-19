@@ -173,6 +173,27 @@ using Result = tl::expected< T, E >;
 
 auto success( ) -> Result< void >;
 
+/// \brief A helper class to map Result<T> to Result<void>.
+/// \code
+/// auto MyClass::create_things() -> Result<void> {
+///     return create_thing1()
+///            .and_then(&MyClass::create_thing2)
+///            .and_then(&MyClass::create_thing3)
+///            .map(ToVoid{}); // <- map to void before returning
+/// }
+/// auto MyClass::create_thing1() -> Result<MyClass*> { ... }
+/// auto MyClass::create_thing2() -> Result<MyClass*> { ... }
+/// auto MyClass::create_thing3() -> Result<MyClass*> { ... }
+/// \endcode
+struct ToVoid
+{
+    template < typename T >
+    auto operator( )( T&& ) const -> void
+    {
+        // Simply converting to void type, nothing to do here.
+    }
+};
+
 /// Convert a result to a void result
 template < typename E >
 auto to_void( utils::Result< void, E > const& result ) -> utils::Result< void >

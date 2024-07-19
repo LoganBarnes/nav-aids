@@ -41,13 +41,12 @@ auto IlsApp::initialize( ) -> utils::Result< IlsApp* >
     LTB_CHECK( ogl_loader_.initialize( ) );
     LTB_CHECK( imgui_setup_.initialize( ) );
 
-    auto const shader_dir = config::shader_dir_path( );
-    LTB_CHECK( pipeline_.initialize(
-        shader_dir / "fullscreen.vert",
-        shader_dir / "tmp.frag",
-        ogl::attribute_names( ),
-        ogl::uniform_names( )
-    ) );
+    // auto const shader_dir = config::shader_dir_path( );
+    // LTB_CHECK( pipeline_.initialize(
+    //     shader_dir / "fullscreen.vert",
+    //     shader_dir / "tmp.frag",
+    //     ogl::uniform_names( )
+    // ) );
 
     color_texture_.initialize( );
     framebuffer_.initialize( );
@@ -136,15 +135,15 @@ auto IlsApp::render_to_framebuffer( ) const -> void
     glViewport( 0, 0, framebuffer_size_.x, framebuffer_size_.y );
     glClear( GL_COLOR_BUFFER_BIT );
 
-    auto constexpr start_index  = 0;
-    auto constexpr vertex_count = 4;
-    ogl::draw(
-        bind( pipeline_.program ),
-        bind( pipeline_.vertex_array ),
-        GL_TRIANGLE_STRIP,
-        start_index,
-        vertex_count
-    );
+    // auto constexpr start_index  = 0;
+    // auto constexpr vertex_count = 4;
+    // ogl::draw(
+    //     bind( pipeline_.program ),
+    //     bind( pipeline_.vertex_array ),
+    //     GL_TRIANGLE_STRIP,
+    //     start_index,
+    //     vertex_count
+    // );
 }
 
 auto IlsApp::render_gui( ) const -> void

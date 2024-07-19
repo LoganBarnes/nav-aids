@@ -14,8 +14,8 @@ struct ProgramData;
 
 struct ShaderData;
 
-class ShaderProgram;
-struct ShaderProgramData;
+// class ShaderProgram;
+// struct ShaderProgramData;
 
 class Texture;
 struct TextureData;

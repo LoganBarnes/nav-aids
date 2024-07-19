@@ -40,7 +40,8 @@ template < GLenum shader_type >
 class Shader
 {
 public:
-    Shader( ) = default;
+    // NOLINTNEXTLINE(google-explicit-constructor)
+    explicit( false ) Shader( std::filesystem::path filename );
 
     /// \brief Initialize the shader object. This must
     ///        be called before using the shader.
@@ -50,16 +51,21 @@ public:
     [[nodiscard( "Const getter" )]]
     auto data( ) const -> ShaderData const&;
 
-    /// \brief Creates and compiles a new OpenGL shader by reading in the given file.
-    /// \param shader_type is the GLenum type passed to `glShaderCreate()`
-    /// \param filename is the name of the shader file.
-    [[nodiscard( "Check Errors" )]]
-    auto load_and_compile( std::filesystem::path const& filename ) const -> utils::Result<>;
-
 private:
+    std::filesystem::path   filename_;
     ShaderData              data_    = { };
     std::shared_ptr< void > deleter_ = nullptr;
+
+    auto create_shader( ) -> utils::Result< Shader* >;
+    auto load_and_compile( ) -> utils::Result< Shader* >;
 };
+
+template < GLenum shader_type >
+    requires IsShaderType< shader_type >
+Shader< shader_type >::Shader( std::filesystem::path filename )
+    : filename_( std::move( filename ) )
+{
+}
 
 template < GLenum shader_type >
     requires IsShaderType< shader_type >

@@ -86,9 +86,9 @@ target_include_directories(
   LtbNav
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
+  $<BUILD_INTERFACE:${LTB_NAV_GENERATED_DIR}>
   PRIVATE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>
-  $<BUILD_INTERFACE:${LTB_NAV_GENERATED_DIR}>
 )
 target_include_directories(
   LtbNav

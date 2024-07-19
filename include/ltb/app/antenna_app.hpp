@@ -7,6 +7,9 @@
 #include "ltb/ogl/pipeline.hpp"
 #include "ltb/window/window.hpp"
 
+// generated
+#include "ltb/ltb_config.hpp"
+
 namespace ltb::app
 {
 
@@ -33,25 +36,52 @@ private:
     ogl::FramebufferChain< framebuffer_count_ > wave_field_chain_ = { };
 
     // Program to propagate the wave field.
-    ogl::Pipeline< ogl::Attributes<>, ogl::Uniforms< glm::vec2, ogl::Texture, ogl::Texture > >
-        wave_pipeline_ = { };
+    // using WavePipeline = ogl::
+    //     Pipeline< ogl::Attributes<>, ogl::Uniforms< glm::vec2, ogl::Texture, ogl::Texture > >;
+    // WavePipeline wave_pipeline_ = {
+    //     ogl::attribute_names( ),
+    // };
 
     // Program to set antenna positions and strength.
-    ogl::Pipeline<
-        ogl::Attributes< glm::vec2, float32 >,
-        ogl::Uniforms< glm::mat4, float32, float32 > >
-        antenna_pipeline_ = { };
-
     struct Antenna
     {
         glm::vec2 world_position;
         float32   antenna_power;
     };
 
+    struct AntennaPipeline
+    {
+        ogl::Shader< GL_VERTEX_SHADER > vertex_shader
+            = { config::shader_dir_path( ) / "antenna.vert" };
+        ogl::Shader< GL_FRAGMENT_SHADER > fragment_shader
+            = { config::shader_dir_path( ) / "antenna.frag" };
+
+        ogl::Program program = { };
+
+        ogl::Attribute< decltype( Antenna::world_position ) > world_position_attribute
+            = { program, "world_position" };
+        ogl::Attribute< decltype( Antenna::antenna_power ) > antenna_power_attribute
+            = { program, "antenna_power" };
+
+
+
+        ogl::Buffer      vertex_buffer = { };
+        ogl::VertexArray vertex_array  = { };
+    } antenna_pipeline_;
+
+    // using AntennaPipeline = ogl::Pipeline<
+    //     ogl::Attributes< decltype( Antenna::world_position ), decltype( Antenna::antenna_power ) >,
+    //     ogl::Uniforms< glm::mat4, float32, float32 > >;
+    // AntennaPipeline antenna_pipeline_ = {
+    //     ogl::attribute_names( "world_position", "antenna_power" ),
+    // };
+
     std::vector< Antenna > antennas_ = { };
 
     // Program to display the wave field.
-    ogl::Pipeline< ogl::Attributes<>, ogl::Uniforms< ogl::Texture > > display_pipeline_ = { };
+    // ogl::Pipeline< ogl::Attributes<>, ogl::Uniforms< ogl::Texture > > display_pipeline_ = {
+    //     ogl::attribute_names( ),
+    // };
 
     auto update_framebuffer( ) -> void;
     auto propagate_waves( ) -> void;

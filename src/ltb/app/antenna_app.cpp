@@ -3,9 +3,6 @@
 // project
 #include "ltb/utils/error_callback.hpp"
 
-// generated
-#include "ltb/ltb_config.hpp"
-
 // external
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -25,21 +22,18 @@ auto AntennaApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Resul
     framebuffer_size_ = framebuffer_size;
     LTB_CHECK( wave_field_chain_.initialize( framebuffer_size_ ) );
 
-    auto const shader_dir = config::shader_dir_path( );
+    // LTB_CHECK( wave_pipeline_.initialize(
+    //     shader_dir / "fullscreen.vert",
+    //     shader_dir / "wave.frag",
+    //     ogl::uniform_names( "state_size", "prev_state", "curr_state" )
+    // ) );
 
-    LTB_CHECK( wave_pipeline_.initialize(
-        shader_dir / "fullscreen.vert",
-        shader_dir / "wave.frag",
-        ogl::attribute_names( ),
-        ogl::uniform_names( "state_size", "prev_state", "curr_state" )
+    LTB_CHECK( ogl::initialize_program(
+        antenna_pipeline_.program,
+        antenna_pipeline_.vertex_shader,
+        antenna_pipeline_.fragment_shader
     ) );
-
-    LTB_CHECK( antenna_pipeline_.initialize(
-        shader_dir / "antenna.vert",
-        shader_dir / "antenna.frag",
-        ogl::attribute_names( "world_position", "antenna_power" ),
-        ogl::uniform_names( "projection_from_world", "time_s", "frequency_hz" )
-    ) );
+    // ogl::uniform_names( "projection_from_world", "time_s", "frequency_hz" )
 
     antennas_ = std::vector{
         Antenna{ .world_position = { -0.01F, -0.5F }, .antenna_power = 100.0F },
@@ -66,15 +60,15 @@ auto AntennaApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Resul
         ogl::bind< GL_ARRAY_BUFFER >( antenna_pipeline_.vertex_buffer ),
         {
             {
-                .attribute_location = std::get< 0 >( antenna_pipeline_.attributes ).location( ),
-                .num_coordinates    = glm::vec2::length( ),
-                .data_type          = GL_FLOAT,
+                .attribute_location      = antenna_pipeline_.world_position_attribute.location( ),
+                .num_coordinates         = decltype( null_antenna_ptr->world_position )::length( ),
+                .data_type               = GL_FLOAT,
                 .initial_offset_into_vbo = &( null_antenna_ptr->world_position ),
             },
             {
-                .attribute_location = std::get< 1 >( antenna_pipeline_.attributes ).location( ),
-                .num_coordinates    = 1,
-                .data_type          = GL_FLOAT,
+                .attribute_location      = antenna_pipeline_.antenna_power_attribute.location( ),
+                .num_coordinates         = 1,
+                .data_type               = GL_FLOAT,
                 .initial_offset_into_vbo = &( null_antenna_ptr->antenna_power ),
             },
         },
@@ -82,12 +76,11 @@ auto AntennaApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Resul
         attrib_divisor
     );
 
-    LTB_CHECK( display_pipeline_.initialize(
-        shader_dir / "fullscreen.vert",
-        shader_dir / "wave_display.frag",
-        ogl::attribute_names( ),
-        ogl::uniform_names( "wave_texture" )
-    ) );
+    // LTB_CHECK( display_pipeline_.initialize(
+    //     shader_dir / "fullscreen.vert",
+    //     shader_dir / "wave_display.frag",
+    //     ogl::uniform_names( "wave_texture" )
+    // ) );
 
     glClearColor( 0.0F, 0.0F, 0.0F, 1.0F );
     glDisable( GL_DEPTH_TEST );
@@ -106,10 +99,14 @@ auto AntennaApp::configure_gui( ) -> void {}
 
 auto AntennaApp::destroy( ) -> void
 {
-    display_pipeline_.destroy( );
+    // display_pipeline_.destroy( );
     antennas_ = { };
-    antenna_pipeline_.destroy( );
-    wave_pipeline_.destroy( );
+
+    antenna_pipeline_.vertex_array  = { };
+    antenna_pipeline_.vertex_buffer = { };
+    antenna_pipeline_.program       = { };
+
+    // wave_pipeline_.destroy( );
     wave_field_chain_ = { };
 }
 
@@ -135,57 +132,57 @@ auto AntennaApp::update_framebuffer( ) -> void
 
 auto AntennaApp::propagate_waves( ) -> void
 {
-    ogl::set( std::get< 0 >( wave_pipeline_.uniforms ), glm::vec2( framebuffer_size_ ) );
+    // ogl::set( std::get< 0 >( wave_pipeline_.uniforms ), glm::vec2( framebuffer_size_ ) );
 
-    auto const& previous_state = wave_field_chain_.get_texture< 2 >( );
-    auto const& current_state  = wave_field_chain_.get_texture< 2 >( );
+    // auto const& previous_state = wave_field_chain_.get_texture< 2 >( );
+    // auto const& current_state  = wave_field_chain_.get_texture< 2 >( );
 
-    auto const active_tex_0 = GLint{ 0 };
-    auto const active_tex_1 = GLint{ 1 };
+    // auto const active_tex_0 = GLint{ 0 };
+    // auto const active_tex_1 = GLint{ 1 };
 
-    previous_state.active_tex( active_tex_0 );
-    current_state.active_tex( active_tex_1 );
+    // previous_state.active_tex( active_tex_0 );
+    // current_state.active_tex( active_tex_1 );
 
-    auto const bound_prev_texture = bind< GL_TEXTURE_2D >( previous_state );
-    ogl::set( std::get< 1 >( wave_pipeline_.uniforms ), bound_prev_texture, active_tex_0 );
+    // auto const bound_prev_texture = bind< GL_TEXTURE_2D >( previous_state );
+    // ogl::set( std::get< 1 >( wave_pipeline_.uniforms ), bound_prev_texture, active_tex_0 );
 
-    auto const bound_curr_texture = bind< GL_TEXTURE_2D >( current_state );
-    ogl::set( std::get< 2 >( wave_pipeline_.uniforms ), bound_curr_texture, active_tex_1 );
+    // auto const bound_curr_texture = bind< GL_TEXTURE_2D >( current_state );
+    // ogl::set( std::get< 2 >( wave_pipeline_.uniforms ), bound_curr_texture, active_tex_1 );
 
-    ogl::draw(
-        ogl::bind( wave_pipeline_.program ),
-        ogl::bind( wave_pipeline_.vertex_array ),
-        fullscreen_draw_mode,
-        draw_start_vertex,
-        fullscreen_vertex_count
-    );
+    // ogl::draw(
+    //     ogl::bind( wave_pipeline_.program ),
+    //     ogl::bind( wave_pipeline_.vertex_array ),
+    //     fullscreen_draw_mode,
+    //     draw_start_vertex,
+    //     fullscreen_vertex_count
+    // );
 }
 
 auto AntennaApp::render_antennas( ) -> void
 {
     // Time since start in seconds.
-    using Duration = std::chrono::duration< float32 >;
-
-    auto const current_time     = std::chrono::steady_clock::now( );
-    auto const elapsed_duration = current_time - start_time_;
-    auto const elapsed_time_s = std::chrono::duration_cast< Duration >( elapsed_duration ).count( );
+    // using Duration = std::chrono::duration< float32 >;
+    //
+    // auto const current_time     = std::chrono::steady_clock::now( );
+    // auto const elapsed_duration = current_time - start_time_;
+    // auto const elapsed_time_s = std::chrono::duration_cast< Duration >( elapsed_duration ).count( );
 
     // Camera projection matrix.
-    auto constexpr proj_from_world = glm::identity< glm::mat4 >( );
+    // auto constexpr proj_from_world = glm::identity< glm::mat4 >( );
 
     // Render the wave field.
-    auto constexpr antenna_frequency_hz = 2.0F;
-    ogl::set( std::get< 0 >( antenna_pipeline_.uniforms ), proj_from_world );
-    ogl::set( std::get< 1 >( antenna_pipeline_.uniforms ), elapsed_time_s );
-    ogl::set( std::get< 2 >( antenna_pipeline_.uniforms ), antenna_frequency_hz );
-
-    ogl::draw(
-        ogl::bind( antenna_pipeline_.program ),
-        ogl::bind( antenna_pipeline_.vertex_array ),
-        GL_TRIANGLE_STRIP,
-        draw_start_vertex,
-        static_cast< GLsizei >( antennas_.size( ) )
-    );
+    // auto constexpr antenna_frequency_hz = 2.0F;
+    // ogl::set( std::get< 0 >( antenna_pipeline_.uniforms ), proj_from_world );
+    // ogl::set( std::get< 1 >( antenna_pipeline_.uniforms ), elapsed_time_s );
+    // ogl::set( std::get< 2 >( antenna_pipeline_.uniforms ), antenna_frequency_hz );
+    //
+    // ogl::draw(
+    //     ogl::bind( antenna_pipeline_.program ),
+    //     ogl::bind( antenna_pipeline_.vertex_array ),
+    //     GL_TRIANGLE_STRIP,
+    //     draw_start_vertex,
+    //     static_cast< GLsizei >( antennas_.size( ) )
+    // );
 }
 
 auto AntennaApp::display_wave_field( ) -> void
@@ -198,16 +195,16 @@ auto AntennaApp::display_wave_field( ) -> void
     auto const  active_tex    = GLint{ 0 };
     current_state.active_tex( active_tex );
 
-    auto const bound_texture = bind< GL_TEXTURE_2D >( current_state );
-    ogl::set( std::get< 0 >( display_pipeline_.uniforms ), bound_texture, active_tex );
+    // auto const bound_texture = bind< GL_TEXTURE_2D >( current_state );
+    // ogl::set( std::get< 0 >( display_pipeline_.uniforms ), bound_texture, active_tex );
 
-    ogl::draw(
-        ogl::bind( display_pipeline_.program ),
-        ogl::bind( display_pipeline_.vertex_array ),
-        fullscreen_draw_mode,
-        draw_start_vertex,
-        fullscreen_vertex_count
-    );
+    // ogl::draw(
+    //     ogl::bind( display_pipeline_.program ),
+    //     ogl::bind( display_pipeline_.vertex_array ),
+    //     fullscreen_draw_mode,
+    //     draw_start_vertex,
+    //     fullscreen_vertex_count
+    // );
 }
 
 } // namespace ltb::app
