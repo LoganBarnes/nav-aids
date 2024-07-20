@@ -22,10 +22,11 @@ auto AntennaApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Resul
     framebuffer_size_ = framebuffer_size;
     LTB_CHECK( wave_field_chain_.initialize( framebuffer_size_ ) );
 
-    LTB_CHECK( ogl::initialize( wave_pipeline_.program, wave_pipeline_ ) );
+    LTB_CHECK( ogl::initialize_pipeline( wave_pipeline_.program, wave_pipeline_ ) );
     wave_pipeline_.vertex_array.initialize( );
 
-    LTB_CHECK( ogl::initialize( antenna_pipeline_.program, antenna_pipeline_ ) );
+    // Make this initialize everything in the struct by default?
+    LTB_CHECK( ogl::initialize_pipeline( antenna_pipeline_.program, antenna_pipeline_ ) );
 
     antennas_ = std::vector{
         Antenna{ .world_position = { -0.01F, -0.5F }, .antenna_power = 100.0F },
@@ -70,7 +71,7 @@ auto AntennaApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Resul
         attrib_divisor
     );
 
-    LTB_CHECK( ogl::initialize( display_pipeline_.program, display_pipeline_ ) );
+    LTB_CHECK( ogl::initialize_pipeline( display_pipeline_.program, display_pipeline_ ) );
     display_pipeline_.vertex_array.initialize( );
 
     glClearColor( 0.0F, 0.0F, 0.0F, 1.0F );
