@@ -35,12 +35,23 @@ private:
     glm::ivec2                                  framebuffer_size_ = { };
     ogl::FramebufferChain< framebuffer_count_ > wave_field_chain_ = { };
 
-    // Program to propagate the wave field.
-    // using WavePipeline = ogl::
-    //     Pipeline< ogl::Attributes<>, ogl::Uniforms< glm::vec2, ogl::Texture, ogl::Texture > >;
-    // WavePipeline wave_pipeline_ = {
-    //     ogl::attribute_names( ),
-    // };
+    struct WavePipeline
+    {
+        ogl::Shader< GL_VERTEX_SHADER > vertex_shader
+            = { config::shader_dir_path( ) / "fullscreen.vert" };
+        ogl::Shader< GL_FRAGMENT_SHADER > fragment_shader
+            = { config::shader_dir_path( ) / "wave.frag" };
+
+        ogl::Program program = { };
+
+        ogl::Uniform< glm::vec2 >    state_size_uniform = { program, "state_size" };
+        ogl::Uniform< ogl::Texture > prev_state_uniform = { program, "prev_state" };
+        ogl::Uniform< ogl::Texture > curr_state_uniform = { program, "curr_state" };
+
+        ogl::VertexArray vertex_array = { };
+    };
+
+    WavePipeline wave_pipeline_ = { };
 
     // Program to set antenna positions and strength.
     struct Antenna
@@ -63,25 +74,33 @@ private:
         ogl::Attribute< decltype( Antenna::antenna_power ) > antenna_power_attribute
             = { program, "antenna_power" };
 
-
+        ogl::Uniform< glm::mat4 > clip_from_world_uniform = { program, "clip_from_world" };
+        ogl::Uniform< float32 >   time_s_uniform          = { program, "time_s" };
+        ogl::Uniform< float32 >   frequency_hz_uniform    = { program, "frequency_hz" };
 
         ogl::Buffer      vertex_buffer = { };
         ogl::VertexArray vertex_array  = { };
-    } antenna_pipeline_;
+    };
 
-    // using AntennaPipeline = ogl::Pipeline<
-    //     ogl::Attributes< decltype( Antenna::world_position ), decltype( Antenna::antenna_power ) >,
-    //     ogl::Uniforms< glm::mat4, float32, float32 > >;
-    // AntennaPipeline antenna_pipeline_ = {
-    //     ogl::attribute_names( "world_position", "antenna_power" ),
-    // };
+    AntennaPipeline antenna_pipeline_ = { };
 
     std::vector< Antenna > antennas_ = { };
 
-    // Program to display the wave field.
-    // ogl::Pipeline< ogl::Attributes<>, ogl::Uniforms< ogl::Texture > > display_pipeline_ = {
-    //     ogl::attribute_names( ),
-    // };
+    struct DisplayPipeline
+    {
+        ogl::Shader< GL_VERTEX_SHADER > vertex_shader
+            = { config::shader_dir_path( ) / "fullscreen.vert" };
+        ogl::Shader< GL_FRAGMENT_SHADER > fragment_shader
+            = { config::shader_dir_path( ) / "wave_display.frag" };
+
+        ogl::Program program = { };
+
+        ogl::Uniform< ogl::Texture > wave_texture_uniform = { program, "wave_texture" };
+
+        ogl::VertexArray vertex_array = { };
+    };
+
+    DisplayPipeline display_pipeline_ = { };
 
     auto update_framebuffer( ) -> void;
     auto propagate_waves( ) -> void;

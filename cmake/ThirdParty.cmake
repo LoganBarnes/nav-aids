@@ -74,6 +74,7 @@ cpmaddpackage(
   DOWNLOAD_ONLY
   TRUE
 )
+cpmaddpackage("gh:apolukhin/pfr_non_boost#2.2.0")
 cpmaddpackage("gh:Neargye/magic_enum@0.7.3")
 cpmaddpackage(
   NAME

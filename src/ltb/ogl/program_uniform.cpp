@@ -4,13 +4,14 @@ namespace ltb::ogl
 {
 
 template <>
-auto Uniform< Buffer >::initialize( std::string_view name ) -> utils::Result<>
+auto Uniform< Buffer >::initialize( ) -> utils::Result<>
 {
-    location_ = glGetProgramResourceIndex( program_id( ), GL_SHADER_STORAGE_BLOCK, name.data( ) );
+    location_ = glGetProgramResourceIndex( program_id( ), GL_SHADER_STORAGE_BLOCK, name_.c_str( ) );
     if ( GL_INVALID_INDEX == location_ )
     {
-        return LTB_MAKE_UNEXPECTED_ERROR( "Uniform '{}' not found in program.", name );
+        return LTB_MAKE_UNEXPECTED_ERROR( "Uniform '{}' not found in program.", name_ );
     }
+    spdlog::debug( "Buffer uniform '{}' location: {}", name_, location_ );
 
     return utils::success( );
 }

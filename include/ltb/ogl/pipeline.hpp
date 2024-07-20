@@ -6,214 +6,188 @@
 #include "ltb/ogl/program_attribute.hpp"
 #include "ltb/ogl/program_uniform.hpp"
 #include "ltb/ogl/shader.hpp"
+#include "ltb/ogl/type_traits.hpp"
 #include "ltb/ogl/vertex_array.hpp"
+
+// external
+#include <pfr.hpp>
+#include <spdlog/spdlog.h>
 
 // standard
 #include <filesystem>
 #include <tuple>
+#include <utility>
 
 namespace ltb::ogl
 {
+
+template < template < typename... > typename TemplateType, typename Other >
+class AreSameTemplate : public std::false_type
+{
+};
+
+template < template < typename... > typename TemplateType, typename... Types >
+class AreSameTemplate< TemplateType, TemplateType< Types... >& > : public std::true_type
+{
+};
+
+template < template < GLenum... > typename TemplateType, typename Other >
+class AreSameEnumTemplate : public std::false_type
+{
+};
+
+template < template < GLenum... > typename TemplateType, GLenum... types >
+class AreSameEnumTemplate< TemplateType, TemplateType< types... >& > : public std::true_type
+{
+};
+
+template < template < typename... > typename TemplateType, typename Other >
+constexpr auto are_same_template_v = AreSameTemplate< TemplateType, Other >::value;
+
+template < template < GLenum... > typename TemplateType, typename Other >
+constexpr auto are_same_enum_template_v = AreSameEnumTemplate< TemplateType, Other >::value;
+
+template < template < typename... > typename TemplateType >
+struct GetElement
+{
+    template < typename Type >
+    auto operator( )( Type& el ) const
+    {
+        if constexpr ( are_same_template_v< TemplateType, decltype( el ) > )
+        {
+            return std::tuple< Type& >( el );
+        }
+        else
+        {
+            return std::make_tuple( );
+        }
+    }
+};
+
+template < template < typename... > typename TemplateType >
+struct ExtractFromTuple
+{
+    GetElement< TemplateType > get_element;
+
+    template < typename... Types >
+    auto operator( )( Types&... tuple_elements )
+    {
+        return std::tuple_cat( get_element( tuple_elements )... );
+    }
+};
+
+template < template < typename... > typename TemplateType, typename... Ts >
+constexpr auto extract_from_tuple( std::tuple< Ts&... > tuple )
+{
+    return std::apply( ExtractFromTuple< TemplateType >{ }, std::move( tuple ) );
+}
+
+template < template < GLenum... > typename TemplateType >
+struct GetEnumElement
+{
+    template < typename Type >
+    auto operator( )( Type& el ) const
+    {
+        if constexpr ( are_same_enum_template_v< TemplateType, decltype( el ) > )
+        {
+            return std::tuple< Type& >( el );
+        }
+        else
+        {
+            return std::make_tuple( );
+        }
+    }
+};
+
+template < template < GLenum... > typename TemplateType >
+struct ExtractFromEnumTuple
+{
+    GetEnumElement< TemplateType > get_element;
+
+    template < typename... Types >
+    auto operator( )( Types&... tuple_elements )
+    {
+        return std::tuple_cat( get_element( tuple_elements )... );
+    }
+};
+
+template < template < GLenum... > typename TemplateType, typename... Ts >
+constexpr auto extract_from_tuple( std::tuple< Ts&... > tuple )
+{
+    return std::apply( ExtractFromEnumTuple< TemplateType >{ }, std::move( tuple ) );
+}
+
+struct Initialize
+{
+    utils::Result<> result;
+
+    template < typename Type >
+    auto operator( )( Type& object ) -> bool
+    {
+        result = object.initialize( );
+        return !result;
+    }
+};
+
+template < typename... Objs, std::size_t... Is >
+auto initialize_tuple( std::tuple< Objs&... >& tuple, std::index_sequence< Is... > )
+    -> utils::Result<>
+{
+    if ( auto failed_result = Initialize{ }; ( failed_result( std::get< Is >( tuple ) ) || ... ) )
+    {
+        return failed_result.result;
+    }
+    return utils::success( );
+}
+
+template < typename... Objs >
+auto initialize_tuple( std::tuple< Objs&... >& tuple ) -> utils::Result<>
+{
+    return initialize_tuple( tuple, std::index_sequence_for< Objs... >( ) );
+}
 
 struct FailedResult
 {
     utils::Result<> result;
 
     template < typename Type >
-    auto operator( )( Type& initializable ) -> bool
+    auto operator( )( Type& object ) -> bool
     {
-        result = initializable.initialize( );
+        result = object.initialize( );
         return !result;
     }
 };
 
-// struct FailedResult
-// {
-//     utils::Result<> result;
-//
-//     template < typename Type >
-//     auto operator( )( Type& type, std::string_view name ) -> bool
-//     {
-//         result = type.initialize( name );
-//         return !result;
-//     }
-//
-//     template < typename Type >
-//     auto operator( )( Type& type ) -> bool
-//     {
-//         result = type.initialize( );
-//         return !result;
-//     }
-//
-//     template < GLenum shader_type >
-//     auto operator( )( Shader< shader_type >& shader ) -> bool
-//     {
-//         result = shader.initialize( );
-//         return !result;
-//     }
-// };
+template < GLenum... shader_types, std::size_t... Is >
+auto initialize( Program& program, std::tuple< Shader< shader_types >&... >& shaders, std::index_sequence< Is... > )
+    -> utils::Result<>
+{
+    LTB_CHECK( initialize_tuple( shaders ) );
+    LTB_CHECK( program.initialize( ) );
+    LTB_CHECK( program.attach_and_link( std::get< Is >( shaders )... ) );
 
-// template < typename... >
-// struct Attributes
-// {
-// };
-//
-// template < typename... >
-// struct Uniforms
-// {
-// };
-//
-// template < typename... NameTypes >
-// struct AttributeNames
-// {
-//     std::tuple< NameTypes... > names;
-// };
-//
-// template < typename... NameTypes >
-// auto attribute_names( NameTypes&&... names )
-// {
-//     return AttributeNames{ .names = std::make_tuple( std::forward< NameTypes >( names )... ) };
-// }
-//
-// template < typename... NameTypes >
-// struct UniformNames
-// {
-//     std::tuple< NameTypes... > names;
-// };
-//
-// template < typename... NameTypes >
-// auto uniform_names( NameTypes&&... names )
-// {
-//     return UniformNames{ .names = std::make_tuple( std::forward< NameTypes >( names )... ) };
-// }
-//
-// template < typename... AttributeTypes, size_t... Is, typename... AttributeNameTypes >
-// auto make_attribute_tuple(
-//     Program& program,
-//     std::index_sequence< Is... >,
-//     std::tuple< AttributeNameTypes... > const& attribute_names
-// )
-// {
-//     return std::tuple< Attribute< AttributeTypes >... >{
-//         Attribute< AttributeTypes >{ program, std::get< Is >( attribute_names ) }...
-//     };
-// }
-
-//
-// template < typename Attributes, typename Uniforms >
-// class Pipeline;
-//
-// template < typename... AttributeTypes, typename... UniformTypes >
-// class Pipeline< Attributes< AttributeTypes... >, Uniforms< UniformTypes... > >
-// {
-// public:
-//     template < typename... AttributeNameTypes >
-//     Pipeline( AttributeNames< AttributeNameTypes... > const& attribute_names )
-//         : attributes{ make_attribute_tuple< AttributeTypes... >(
-//               program,
-//               std::index_sequence_for< AttributeTypes... >{ },
-//               attribute_names.names
-//           ) }
-//     {
-//     }
-//
-//     // ogl::Shader< GL_VERTEX_SHADER >   vertex_shader   = { };
-//     // ogl::Shader< GL_FRAGMENT_SHADER > fragment_shader = { };
-//     ogl::Program                      program         = { };
-//
-//     using Attributes = std::tuple< Attribute< AttributeTypes >... >;
-//     using Uniforms   = std::tuple< Uniform< UniformTypes >... >;
-//
-//     Attributes attributes;
-//     Uniforms   uniforms = { ogl::Uniform< UniformTypes >{ program }... };
-//
-//     ogl::Buffer      vertex_buffer = { };
-//     ogl::VertexArray vertex_array  = { };
-//
-//     template < typename... UniformNameTypes >
-//     auto initialize(
-//         std::filesystem::path const&        vertex_shader_path,
-//         std::filesystem::path const&        fragment_shader_path,
-//         UniformNames< UniformNameTypes... > uniform_names
-//     ) -> utils::Result<>
-//     {
-//         static_assert(
-//             sizeof...( UniformTypes ) == sizeof...( UniformNameTypes ),
-//             "Number of uniform types must match number of uniform names."
-//         );
-//
-//         LTB_CHECK( vertex_shader.initialize( ) );
-//         LTB_CHECK( fragment_shader.initialize( ) );
-//         LTB_CHECK( program.initialize( ) );
-//
-//         LTB_CHECK( vertex_shader.load_and_compile( vertex_shader_path ) );
-//         LTB_CHECK( fragment_shader.load_and_compile( fragment_shader_path ) );
-//         LTB_CHECK( program.attach_and_link( vertex_shader, fragment_shader ) );
-//
-//         LTB_CHECK( initialize_tuple( std::index_sequence_for< AttributeTypes... >{ }, attributes )
-//         );
-//
-//         LTB_CHECK( initialize_tuple(
-//             std::index_sequence_for< UniformTypes... >{ },
-//             uniforms,
-//             uniform_names.names
-//         ) );
-//
-//         vertex_buffer.initialize( );
-//         vertex_array.initialize( );
-//
-//         return utils::success( );
-//     }
-//
-//     auto destroy( ) -> void
-//     {
-//         vertex_array  = { };
-//         vertex_buffer = { };
-//
-//         program         = { };
-//         fragment_shader = { };
-//         vertex_shader   = { };
-//     }
-//
-// private:
-//     template < size_t... Is, typename... Types, typename... NameTypes >
-//     auto initialize_tuple(
-//         std::index_sequence< Is... >,
-//         std::tuple< Types... >&           types,
-//         std::tuple< NameTypes... > const& names
-//     ) -> utils::Result<>
-//     {
-//         if ( auto failed_result = FailedResult{ };
-//              ( ( failed_result( std::get< Is >( types ), std::get< Is >( names ) ) ) || ... ) )
-//         {
-//             return failed_result.result;
-//         }
-//         return utils::success( );
-//     }
-//
-//     template < size_t... Is, typename... Types >
-//     auto initialize_tuple( std::index_sequence< Is... >, std::tuple< Types... >& types )
-//         -> utils::Result<>
-//     {
-//         if ( auto failed_result = FailedResult{ };
-//              ( ( failed_result( std::get< Is >( types ) ) ) || ... ) )
-//         {
-//             return failed_result.result;
-//         }
-//         return utils::success( );
-//     }
-// };
+    return utils::success( );
+}
 
 template < GLenum... shader_types >
-auto initialize_program( Program& program, Shader< shader_types >&... shaders ) -> utils::Result<>
+auto initialize( Program& program, std::tuple< Shader< shader_types >&... >& shaders )
+    -> utils::Result<>
 {
-    if ( auto failed_result = FailedResult{ }; ( ( failed_result( shaders ) ) || ... ) )
-    {
-        return failed_result.result;
-    }
+    return initialize( program, shaders, std::index_sequence_for< Shader< shader_types >... >( ) );
+}
 
-    LTB_CHECK( program.initialize( ) );
-    LTB_CHECK( program.attach_and_link( shaders... ) );
+template < typename Pipeline >
+auto initialize( Program& program, Pipeline& pipeline ) -> utils::Result<>
+{
+    auto const& tuple = pfr::structure_tie( pipeline );
+
+    auto shaders    = extract_from_tuple< Shader >( tuple );
+    auto attributes = extract_from_tuple< Attribute >( tuple );
+    auto uniforms   = extract_from_tuple< Uniform >( tuple );
+
+    LTB_CHECK( initialize( program, shaders ) );
+    LTB_CHECK( initialize_tuple( attributes ) );
+    LTB_CHECK( initialize_tuple( uniforms ) );
 
     return utils::success( );
 }

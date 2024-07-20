@@ -33,5 +33,5 @@ void main()
     next_value *= alpha;
     next_value += 2.0F * curr_value - prev_value;
 
-//    next_value = curr_value;
+    //    next_value = curr_value;
 }

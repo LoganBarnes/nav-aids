@@ -73,6 +73,7 @@ target_link_libraries(
   # C++ Utils
   Threads::Threads
   tl::expected
+  Boost::pfr
   magic_enum::magic_enum
   range-v3::range-v3
   spdlog::spdlog

@@ -79,7 +79,8 @@ class [[nodiscard]] expected;
 #define DETAIL_LTB_CHECK1( unique_name, func )                                                     \
     do                                                                                             \
     {                                                                                              \
-        if ( auto unique_name = to_void( func ); /* check for error -> */ !unique_name )           \
+        if ( auto unique_name = ltb::utils::to_void( func );                                       \
+             /* check for error -> */ !unique_name )                                               \
         {                                                                                          \
             return tl::make_unexpected( unique_name.error( ) );                                    \
         }                                                                                          \
@@ -205,7 +206,7 @@ auto to_void( utils::Result< void, E > const& result ) -> utils::Result< void >
 template < typename T, typename E >
 auto to_void( utils::Result< T, E > const& result ) -> utils::Result< void >
 {
-    return result.map( []( auto const& ) {} );
+    return result.map( ToVoid{ } );
 }
 
 } // namespace ltb::utils

@@ -4,6 +4,9 @@
 #include "ltb/ogl/fwd.hpp"
 #include "ltb/ogl/program.hpp"
 
+// external
+#include <spdlog/spdlog.h>
+
 namespace ltb::ogl
 {
 
@@ -42,6 +45,7 @@ auto Attribute< ValueType >::initialize( ) -> utils::Result<>
         return LTB_MAKE_UNEXPECTED_ERROR( "Cannot find attribute location for '{}'", name_ );
     }
     location_ = static_cast< GLuint >( location );
+    spdlog::debug( "Attribute '{}' location: {}", name_, location_ );
 
     return utils::success( );
 }

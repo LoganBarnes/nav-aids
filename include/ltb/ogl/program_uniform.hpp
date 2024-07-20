@@ -9,6 +9,7 @@
 // external
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <spdlog/spdlog.h>
 
 namespace ltb::ogl
 {
@@ -19,10 +20,9 @@ class Uniform
 public:
     using LocationType = std::conditional_t< std::is_same_v< ValueType, Buffer >, GLuint, GLint >;
 
-    // NOLINTNEXTLINE(*-explicit-constructor)
-    explicit( false ) Uniform( Program& program );
+    Uniform( Program& program, std::string name );
 
-    auto initialize( std::string_view name ) -> utils::Result<>;
+    auto initialize( ) -> utils::Result<>;
 
     [[nodiscard( "Const getter" )]]
     auto program_id( ) const -> GLuint;
@@ -31,27 +31,29 @@ public:
     auto location( ) const -> LocationType;
 
 private:
-    Program& program_;
-
+    Program&     program_;
+    std::string  name_;
     LocationType location_ = static_cast< LocationType >( GL_INVALID_INDEX );
 };
 
 template < typename ValueType >
-Uniform< ValueType >::Uniform( Program& program )
+Uniform< ValueType >::Uniform( Program& program, std::string name )
     : program_( program )
+    , name_( std::move( name ) )
 {
 }
 
 template < typename ValueType >
-auto Uniform< ValueType >::initialize( std::string_view name ) -> utils::Result<>
+auto Uniform< ValueType >::initialize( ) -> utils::Result<>
 {
     static_assert( static_cast< LocationType >( GL_INVALID_INDEX ) == -1 );
 
-    location_ = glGetUniformLocation( program_.data( ).gl_id, name.data( ) );
+    location_ = glGetUniformLocation( program_.data( ).gl_id, name_.c_str( ) );
     if ( location_ < 0 )
     {
-        return LTB_MAKE_UNEXPECTED_ERROR( "Uniform '{}' not found in program.", name );
+        return LTB_MAKE_UNEXPECTED_ERROR( "Uniform '{}' not found in program.", name_ );
     }
+    spdlog::debug( "Uniform '{}' location: {}", name_, location_ );
 
     return utils::success( );
 }
