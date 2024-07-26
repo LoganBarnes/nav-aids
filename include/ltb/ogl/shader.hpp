@@ -47,6 +47,10 @@ public:
     ///        be called before using the shader.
     auto initialize( ) -> utils::Result<>;
 
+    /// \brief Check if the shader object has been initialized.
+    [[nodiscard( "Const getter" )]]
+    auto is_initialized( ) const -> bool;
+
     /// \brief The raw settings stored for this shader.
     [[nodiscard( "Const getter" )]]
     auto data( ) const -> ShaderData const&;

@@ -21,6 +21,9 @@ public:
     auto initialize( ) -> utils::Result<>;
 
     [[nodiscard( "Const getter" )]]
+    auto is_initialized( ) const -> bool;
+
+    [[nodiscard( "Const getter" )]]
     auto location( ) const -> GLuint;
 
 private:
@@ -48,6 +51,12 @@ auto Attribute< ValueType >::initialize( ) -> utils::Result<>
     spdlog::debug( "Attribute '{}' location: {}", name_, location_ );
 
     return utils::success( );
+}
+
+template < typename ValueType >
+auto Attribute< ValueType >::is_initialized( ) const -> bool
+{
+    return location_ != GL_INVALID_INDEX;
 }
 
 template < typename ValueType >

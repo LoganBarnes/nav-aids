@@ -29,7 +29,11 @@ public:
 
     /// \brief Initialize the buffer object. This must
     ///        be called before using the buffer.
-    auto initialize( ) -> void;
+    auto initialize( ) -> utils::Result<>;
+
+    /// \brief Check if the buffer object has been initialized.
+    [[nodiscard( "Const getter" )]]
+    auto is_initialized( ) const -> bool;
 
     /// \brief The raw settings stored for this buffer
     [[nodiscard( "Const getter" )]]

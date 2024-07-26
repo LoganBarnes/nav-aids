@@ -6,12 +6,19 @@
 namespace ltb::ogl
 {
 
-auto Buffer::initialize( ) -> void
+auto Buffer::initialize( ) -> utils::Result<>
 {
     glGenBuffers( 1, &data_.gl_id );
 
     spdlog::debug( "glGenBuffers({})", data_.gl_id );
     deleter_ = make_array_deleter( { data_.gl_id }, glDeleteBuffers, "glDeleteBuffers" );
+
+    return utils::success( );
+}
+
+auto Buffer::is_initialized( ) const -> bool
+{
+    return data( ).gl_id != 0U;
 }
 
 auto Buffer::data( ) const -> BufferData const&

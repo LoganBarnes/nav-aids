@@ -27,7 +27,11 @@ public:
 
     /// \brief Initialize the vertex array object. This must
     ///        be called before using the vertex array.
-    auto initialize( ) -> void;
+    auto initialize( ) -> utils::Result<>;
+
+    /// \brief Check if the vertex array object has been initialized.
+    [[nodiscard( "Const getter" )]]
+    auto is_initialized( ) const -> bool;
 
     /// \brief The raw settings stored for this vertex array
     [[nodiscard( "Const getter" )]]

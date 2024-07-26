@@ -25,6 +25,9 @@ public:
     auto initialize( ) -> utils::Result<>;
 
     [[nodiscard( "Const getter" )]]
+    auto is_initialized( ) const -> bool;
+
+    [[nodiscard( "Const getter" )]]
     auto program_id( ) const -> GLuint;
 
     [[nodiscard( "Const getter" )]]
@@ -56,6 +59,12 @@ auto Uniform< ValueType >::initialize( ) -> utils::Result<>
     spdlog::debug( "Uniform '{}' location: {}", name_, location_ );
 
     return utils::success( );
+}
+
+template < typename ValueType >
+auto Uniform< ValueType >::is_initialized( ) const -> bool
+{
+    return location_ != static_cast< LocationType >( GL_INVALID_INDEX );
 }
 
 template < typename ValueType >

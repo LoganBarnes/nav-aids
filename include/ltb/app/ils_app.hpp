@@ -3,8 +3,8 @@
 // project
 #include "ltb/gui/imgui_setup.hpp"
 #include "ltb/ogl/framebuffer.hpp"
+#include "ltb/ogl/initializable.hpp"
 #include "ltb/ogl/opengl_loader.hpp"
-#include "ltb/ogl/pipeline.hpp"
 #include "ltb/window/window.hpp"
 
 namespace ltb::app

@@ -19,6 +19,13 @@ auto Shader< shader_type >::initialize( ) -> utils::Result<>
 
 template < GLenum shader_type >
     requires IsShaderType< shader_type >
+auto Shader< shader_type >::is_initialized( ) const -> bool
+{
+    return data( ).gl_id != 0U;
+}
+
+template < GLenum shader_type >
+    requires IsShaderType< shader_type >
 auto Shader< shader_type >::data( ) const -> ShaderData const&
 {
     return data_;
