@@ -70,6 +70,7 @@ auto initialize( std::tuple< Objects&... > const& objects ) -> utils::Result<>
     return initialize( objects, std::index_sequence_for< Objects... >( ) );
 }
 
+/// \warning This function can increase compilation time a bit.
 template < typename Object >
 auto initialize( Object& object ) -> utils::Result<>
 {
