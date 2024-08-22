@@ -1,6 +1,7 @@
 #include "ltb/app/antenna_app.hpp"
 
 // project
+#include "ltb/ogl/program_attribute.hpp"
 #include "ltb/utils/error_callback.hpp"
 
 // external
@@ -35,8 +36,6 @@ auto AntennaApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Resul
         antenna_pipeline_.vertex_shader,
         antenna_pipeline_.fragment_shader,
         antenna_pipeline_.program,
-        antenna_pipeline_.world_position_attribute,
-        antenna_pipeline_.antenna_power_attribute,
         antenna_pipeline_.clip_from_world_uniform,
         antenna_pipeline_.time_s_uniform,
         antenna_pipeline_.frequency_hz_uniform,
@@ -64,18 +63,28 @@ auto AntennaApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Resul
     // Not instanced
     constexpr auto attrib_divisor = 0U;
 
+    auto antenna_world_position_attribute = ogl::Attribute< decltype( Antenna::world_position ) >{
+        antenna_pipeline_.program,
+        "world_position",
+    };
+    auto antenna_power_attribute = ogl::Attribute< decltype( Antenna::antenna_power ) >{
+        antenna_pipeline_.program,
+        "antenna_power",
+    };
+    LTB_CHECK( ogl::initialize( antenna_world_position_attribute, antenna_power_attribute ) );
+
     ogl::set_attributes< void >(
         ogl::bind( antenna_pipeline_.vertex_array ),
         ogl::bind< GL_ARRAY_BUFFER >( antenna_pipeline_.vertex_buffer ),
         {
             {
-                .attribute_location      = antenna_pipeline_.world_position_attribute.location( ),
+                .attribute_location      = antenna_world_position_attribute.location( ),
                 .num_coordinates         = decltype( null_antenna_ptr->world_position )::length( ),
                 .data_type               = GL_FLOAT,
                 .initial_offset_into_vbo = &( null_antenna_ptr->world_position ),
             },
             {
-                .attribute_location      = antenna_pipeline_.antenna_power_attribute.location( ),
+                .attribute_location      = antenna_power_attribute.location( ),
                 .num_coordinates         = 1,
                 .data_type               = GL_FLOAT,
                 .initial_offset_into_vbo = &( null_antenna_ptr->antenna_power ),

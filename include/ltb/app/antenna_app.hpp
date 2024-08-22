@@ -75,11 +75,6 @@ private:
 
         ogl::Program program = { vertex_shader, fragment_shader };
 
-        ogl::Attribute< decltype( Antenna::world_position ) > world_position_attribute
-            = { program, "world_position" };
-        ogl::Attribute< decltype( Antenna::antenna_power ) > antenna_power_attribute
-            = { program, "antenna_power" };
-
         ogl::Uniform< glm::mat4 > clip_from_world_uniform = { program, "clip_from_world" };
         ogl::Uniform< float32 >   time_s_uniform          = { program, "time_s" };
         ogl::Uniform< float32 >   frequency_hz_uniform    = { program, "frequency_hz" };
