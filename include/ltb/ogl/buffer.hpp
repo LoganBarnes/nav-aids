@@ -29,9 +29,9 @@ public:
 
     /// \brief Initialize the buffer object. This must
     ///        be called before using the buffer.
-    auto initialize( ) -> void;
+    auto initialize( ) -> utils::Result<>;
 
-    /// \brief Returns whether the buffer has been successfully initialized.
+    /// \brief Check if the buffer has been successfully initialized.
     [[nodiscard( "Const getter" )]]
     auto is_initialized( ) const -> bool;
 

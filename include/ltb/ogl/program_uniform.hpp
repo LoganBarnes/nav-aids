@@ -4,8 +4,6 @@
 #include "ltb/ogl/buffer.hpp"
 #include "ltb/ogl/program.hpp"
 #include "ltb/ogl/texture.hpp"
-#include "ltb/ogl/type_traits.hpp"
-#include "ltb/utils/types.hpp"
 
 // external
 #include <glm/glm.hpp>

@@ -43,7 +43,7 @@ public:
     ///        be called before using the shader.
     auto initialize( ) -> utils::Result<>;
 
-    /// \brief Returns whether the shader has been successfully initialized.
+    /// \brief Check if the shader has been successfully initialized.
     [[nodiscard( "Const getter" )]]
     auto is_initialized( ) const -> bool;
 

@@ -4,7 +4,7 @@
 #include "ltb/app/app.hpp"
 #include "ltb/gui/imgui_setup.hpp"
 #include "ltb/ogl/framebuffer_chain.hpp"
-#include "ltb/ogl/pipeline.hpp"
+#include "ltb/ogl/initializable.hpp"
 #include "ltb/window/window.hpp"
 
 // generated
@@ -35,23 +35,29 @@ private:
     glm::ivec2                                  framebuffer_size_ = { };
     ogl::FramebufferChain< framebuffer_count_ > wave_field_chain_ = { };
 
+    ogl::Shader< GL_VERTEX_SHADER > fullscreen_vertex_shader_
+        = { config::shader_dir_path( ) / "fullscreen.vert" };
+    ogl::VertexArray fullscreen_vertex_array_ = { };
+
     struct WavePipeline
     {
-        ogl::Shader< GL_VERTEX_SHADER > vertex_shader
-            = { config::shader_dir_path( ) / "fullscreen.vert" };
+        ogl::Shader< GL_VERTEX_SHADER >&  vertex_shader;
         ogl::Shader< GL_FRAGMENT_SHADER > fragment_shader
             = { config::shader_dir_path( ) / "wave.frag" };
 
-        ogl::Program program = { };
+        ogl::Program program = { vertex_shader, fragment_shader };
 
         ogl::Uniform< glm::vec2 >    state_size_uniform = { program, "state_size" };
         ogl::Uniform< ogl::Texture > prev_state_uniform = { program, "prev_state" };
         ogl::Uniform< ogl::Texture > curr_state_uniform = { program, "curr_state" };
 
-        ogl::VertexArray vertex_array = { };
+        ogl::VertexArray& vertex_array;
     };
 
-    WavePipeline wave_pipeline_ = { };
+    WavePipeline wave_pipeline_ = {
+        .vertex_shader = fullscreen_vertex_shader_,
+        .vertex_array  = fullscreen_vertex_array_,
+    };
 
     // Program to set antenna positions and strength.
     struct Antenna
@@ -67,12 +73,7 @@ private:
         ogl::Shader< GL_FRAGMENT_SHADER > fragment_shader
             = { config::shader_dir_path( ) / "antenna.frag" };
 
-        ogl::Program program = { };
-
-        ogl::Attribute< decltype( Antenna::world_position ) > world_position_attribute
-            = { program, "world_position" };
-        ogl::Attribute< decltype( Antenna::antenna_power ) > antenna_power_attribute
-            = { program, "antenna_power" };
+        ogl::Program program = { vertex_shader, fragment_shader };
 
         ogl::Uniform< glm::mat4 > clip_from_world_uniform = { program, "clip_from_world" };
         ogl::Uniform< float32 >   time_s_uniform          = { program, "time_s" };
@@ -88,19 +89,21 @@ private:
 
     struct DisplayPipeline
     {
-        ogl::Shader< GL_VERTEX_SHADER > vertex_shader
-            = { config::shader_dir_path( ) / "fullscreen.vert" };
+        ogl::Shader< GL_VERTEX_SHADER >&  vertex_shader;
         ogl::Shader< GL_FRAGMENT_SHADER > fragment_shader
             = { config::shader_dir_path( ) / "wave_display.frag" };
 
-        ogl::Program program = { };
+        ogl::Program program = { vertex_shader, fragment_shader };
 
         ogl::Uniform< ogl::Texture > wave_texture_uniform = { program, "wave_texture" };
 
-        ogl::VertexArray vertex_array = { };
+        ogl::VertexArray& vertex_array;
     };
 
-    DisplayPipeline display_pipeline_ = { };
+    DisplayPipeline display_pipeline_ = {
+        .vertex_shader = fullscreen_vertex_shader_,
+        .vertex_array  = fullscreen_vertex_array_,
+    };
 
     auto update_framebuffer( ) -> void;
     auto propagate_waves( ) -> void;

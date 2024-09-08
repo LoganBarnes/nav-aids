@@ -1,6 +1,7 @@
 #include "ltb/app/antenna_app.hpp"
 
 // project
+#include "ltb/ogl/program_attribute.hpp"
 #include "ltb/utils/error_callback.hpp"
 
 // external
@@ -22,11 +23,25 @@ auto AntennaApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Resul
     framebuffer_size_ = framebuffer_size;
     LTB_CHECK( wave_field_chain_.initialize( framebuffer_size_ ) );
 
-    LTB_CHECK( ogl::initialize_pipeline( wave_pipeline_.program, wave_pipeline_ ) );
-    wave_pipeline_.vertex_array.initialize( );
-
-    // Make this initialize everything in the struct by default?
-    LTB_CHECK( ogl::initialize_pipeline( antenna_pipeline_.program, antenna_pipeline_ ) );
+    LTB_CHECK( ogl::initialize(
+        wave_pipeline_.vertex_shader,
+        wave_pipeline_.fragment_shader,
+        wave_pipeline_.program,
+        wave_pipeline_.state_size_uniform,
+        wave_pipeline_.prev_state_uniform,
+        wave_pipeline_.curr_state_uniform,
+        wave_pipeline_.vertex_array
+    ) );
+    LTB_CHECK( ogl::initialize(
+        antenna_pipeline_.vertex_shader,
+        antenna_pipeline_.fragment_shader,
+        antenna_pipeline_.program,
+        antenna_pipeline_.clip_from_world_uniform,
+        antenna_pipeline_.time_s_uniform,
+        antenna_pipeline_.frequency_hz_uniform,
+        antenna_pipeline_.vertex_buffer,
+        antenna_pipeline_.vertex_array
+    ) );
 
     antennas_ = std::vector{
         Antenna{ .world_position = { -0.01F, -0.5F }, .antenna_power = 100.0F },
@@ -36,7 +51,6 @@ auto AntennaApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Resul
     };
 
     // Store the vertex data in a GPU buffer.
-    antenna_pipeline_.vertex_buffer.initialize( );
     ogl::buffer_data(
         ogl::bind< GL_ARRAY_BUFFER >( antenna_pipeline_.vertex_buffer ),
         antennas_,
@@ -49,19 +63,28 @@ auto AntennaApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Resul
     // Not instanced
     constexpr auto attrib_divisor = 0U;
 
-    antenna_pipeline_.vertex_array.initialize( );
+    auto antenna_world_position_attribute = ogl::Attribute< decltype( Antenna::world_position ) >{
+        antenna_pipeline_.program,
+        "world_position",
+    };
+    auto antenna_power_attribute = ogl::Attribute< decltype( Antenna::antenna_power ) >{
+        antenna_pipeline_.program,
+        "antenna_power",
+    };
+    LTB_CHECK( ogl::initialize( antenna_world_position_attribute, antenna_power_attribute ) );
+
     ogl::set_attributes< void >(
         ogl::bind( antenna_pipeline_.vertex_array ),
         ogl::bind< GL_ARRAY_BUFFER >( antenna_pipeline_.vertex_buffer ),
         {
             {
-                .attribute_location      = antenna_pipeline_.world_position_attribute.location( ),
+                .attribute_location      = antenna_world_position_attribute.location( ),
                 .num_coordinates         = decltype( null_antenna_ptr->world_position )::length( ),
                 .data_type               = GL_FLOAT,
                 .initial_offset_into_vbo = &( null_antenna_ptr->world_position ),
             },
             {
-                .attribute_location      = antenna_pipeline_.antenna_power_attribute.location( ),
+                .attribute_location      = antenna_power_attribute.location( ),
                 .num_coordinates         = 1,
                 .data_type               = GL_FLOAT,
                 .initial_offset_into_vbo = &( null_antenna_ptr->antenna_power ),
@@ -71,8 +94,13 @@ auto AntennaApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Resul
         attrib_divisor
     );
 
-    LTB_CHECK( ogl::initialize_pipeline( display_pipeline_.program, display_pipeline_ ) );
-    display_pipeline_.vertex_array.initialize( );
+    LTB_CHECK( ogl::initialize(
+        display_pipeline_.vertex_shader,
+        display_pipeline_.fragment_shader,
+        display_pipeline_.program,
+        display_pipeline_.wave_texture_uniform,
+        display_pipeline_.vertex_array
+    ) );
 
     glClearColor( 0.0F, 0.0F, 0.0F, 1.0F );
     glDisable( GL_DEPTH_TEST );
@@ -91,8 +119,7 @@ auto AntennaApp::configure_gui( ) -> void {}
 
 auto AntennaApp::destroy( ) -> void
 {
-    wave_pipeline_.vertex_array = { };
-    display_pipeline_.program   = { };
+    display_pipeline_.program = { };
 
     antennas_ = { };
 
@@ -100,10 +127,11 @@ auto AntennaApp::destroy( ) -> void
     antenna_pipeline_.vertex_buffer = { };
     antenna_pipeline_.program       = { };
 
-    wave_pipeline_.vertex_array = { };
-    wave_pipeline_.program      = { };
+    wave_pipeline_.program = { };
 
     wave_field_chain_ = { };
+
+    fullscreen_vertex_array_ = { };
 }
 
 auto AntennaApp::resize( glm::ivec2 const framebuffer_size ) -> void

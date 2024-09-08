@@ -36,6 +36,28 @@ constexpr auto index_type( ) -> GLenum
     }
 }
 
+struct AttachShaderVisitor
+{
+    Program& program;
+
+    template < GLenum shader_type >
+    auto operator( )( std::reference_wrapper< Shader< shader_type > const > shader ) const
+    {
+        glAttachShader( program.data( ).gl_id, shader.get( ).data( ).gl_id );
+    }
+};
+
+struct DetachShaderVisitor
+{
+    Program& program;
+
+    template < GLenum shader_type >
+    auto operator( )( std::reference_wrapper< Shader< shader_type > const > shader ) const
+    {
+        glDetachShader( program.data( ).gl_id, shader.get( ).data( ).gl_id );
+    }
+};
+
 } // namespace
 
 auto Program::initialize( ) -> utils::Result<>
@@ -48,6 +70,43 @@ auto Program::initialize( ) -> utils::Result<>
 
     spdlog::debug( "glCreateProgram({})", data_.gl_id );
     deleter_ = ogl::make_deleter( data_.gl_id, glDeleteProgram, "glDeleteProgram" );
+
+    auto const program_id = data( ).gl_id;
+
+    // Attach all shaders to program.
+    for ( auto const& shader : shaders_ )
+    {
+        std::visit( AttachShaderVisitor{ *this }, shader );
+    }
+
+    // Attempt to link program.
+    glLinkProgram( program_id );
+
+    // Shaders are no longer needed after linking.
+    for ( auto const& shader : shaders_ )
+    {
+        std::visit( DetachShaderVisitor{ *this }, shader );
+    }
+
+    // Check program for linking errors.
+    auto result = GLint{ GL_FALSE };
+    glGetProgramiv( program_id, GL_LINK_STATUS, &result );
+
+    if ( GL_FALSE == result )
+    {
+        auto log_length = GLint{ 0 };
+        glGetProgramiv( program_id, GL_INFO_LOG_LENGTH, &log_length );
+
+        if ( 0 == log_length )
+        {
+            return LTB_MAKE_UNEXPECTED_ERROR( "Program linking failed for unknown reason" );
+        }
+
+        auto gl_error = std::vector< char >( static_cast< size_t >( log_length ) );
+        glGetProgramInfoLog( program_id, log_length, nullptr, gl_error.data( ) );
+
+        return LTB_MAKE_UNEXPECTED_ERROR( "Program: {}", gl_error.data( ) );
+    }
 
     return utils::success( );
 }

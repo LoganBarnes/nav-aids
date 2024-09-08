@@ -9,6 +9,8 @@
 // standard
 #include <filesystem>
 #include <memory>
+#include <optional>
+#include <variant>
 
 namespace ltb::ogl
 {
@@ -19,16 +21,28 @@ struct ProgramData
     GLuint gl_id = 0U;
 };
 
+using AnyShader = std::variant<
+#if defined( GL_COMPUTE_SHADER )
+    std::reference_wrapper< Shader< GL_COMPUTE_SHADER > const >,
+#endif
+    std::reference_wrapper< Shader< GL_VERTEX_SHADER > const >,
+    std::reference_wrapper< Shader< GL_TESS_CONTROL_SHADER > const >,
+    std::reference_wrapper< Shader< GL_TESS_EVALUATION_SHADER > const >,
+    std::reference_wrapper< Shader< GL_GEOMETRY_SHADER > const >,
+    std::reference_wrapper< Shader< GL_FRAGMENT_SHADER > const > >;
+
 class Program
 {
 public:
-    Program( ) = default;
+    template < GLenum... ShaderTypes >
+    // NOLINTNEXTLINE(google-explicit-constructor)
+    explicit( false ) Program( Shader< ShaderTypes > const&... shaders );
 
     /// \brief Initialize the program object. This must
     ///        be called before using the program.
     auto initialize( ) -> utils::Result<>;
 
-    /// \brief Returns whether the program has been successfully initialized.
+    /// \brief Check if the program has been successfully initialized.
     [[nodiscard( "Const getter" )]]
     auto is_initialized( ) const -> bool;
 
@@ -36,53 +50,19 @@ public:
     [[nodiscard( "Const getter" )]]
     auto data( ) const -> ProgramData const&;
 
-    /// \brief Attach and link the given shaders to the program.
-    template < GLenum... ShaderTypes >
-    auto attach_and_link( Shader< ShaderTypes > const&... shaders ) const -> utils::Result<>;
-
     static auto static_bind( Program const& program ) -> void;
     static auto static_bind( GLuint raw_gl_id ) -> void;
 
 private:
-    ProgramData             data_    = { };
-    std::shared_ptr< void > deleter_ = nullptr;
+    std::vector< AnyShader > shaders_ = { };
+    ProgramData              data_    = { };
+    std::shared_ptr< void >  deleter_ = nullptr;
 };
 
 template < GLenum... ShaderTypes >
-auto Program::attach_and_link( Shader< ShaderTypes > const&... shaders ) const -> utils::Result<>
+Program::Program( Shader< ShaderTypes > const&... shaders )
+    : shaders_( { std::cref( shaders )... } )
 {
-    auto const id = data( ).gl_id;
-
-    // Attach all shaders to program.
-    ( glAttachShader( id, shaders.data( ).gl_id ), ... );
-
-    // Attempt to link program.
-    glLinkProgram( id );
-
-    // Shaders are no longer needed after linking.
-    ( glDetachShader( id, shaders.data( ).gl_id ), ... );
-
-    // Check program for linking errors.
-    auto result = GLint{ GL_FALSE };
-    glGetProgramiv( id, GL_LINK_STATUS, &result );
-
-    if ( GL_FALSE == result )
-    {
-        auto log_length = GLint{ 0 };
-        glGetProgramiv( id, GL_INFO_LOG_LENGTH, &log_length );
-
-        if ( 0 == log_length )
-        {
-            return LTB_MAKE_UNEXPECTED_ERROR( "Program linking failed for unknown reason" );
-        }
-
-        auto gl_error = std::vector< char >( static_cast< size_t >( log_length ) );
-        glGetProgramInfoLog( id, log_length, nullptr, gl_error.data( ) );
-
-        return LTB_MAKE_UNEXPECTED_ERROR( "Program: {}", gl_error.data( ) );
-    }
-
-    return utils::success( );
 }
 
 template < typename IndexType >

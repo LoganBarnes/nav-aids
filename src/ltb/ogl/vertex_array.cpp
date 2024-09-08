@@ -6,17 +6,19 @@
 namespace ltb::ogl
 {
 
-auto VertexArray::initialize( ) -> void
+auto VertexArray::initialize( ) -> utils::Result<>
 {
     glGenVertexArrays( 1, &data_.gl_id );
 
     spdlog::debug( "glGenVertexArrays({})", data_.gl_id );
     deleter_ = make_array_deleter( { data_.gl_id }, glDeleteVertexArrays, "glDeleteVertexArrays" );
+
+    return utils::success( );
 }
 
 auto VertexArray::is_initialized( ) const -> bool
 {
-    return 0U != data_.gl_id;
+    return 0U != data( ).gl_id;
 }
 
 auto VertexArray::data( ) const -> VertexArrayData const&

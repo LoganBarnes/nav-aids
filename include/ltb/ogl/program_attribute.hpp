@@ -62,6 +62,12 @@ auto Attribute< ValueType >::initialize( ) -> utils::Result<>
 }
 
 template < typename ValueType >
+auto Attribute< ValueType >::is_initialized( ) const -> bool
+{
+    return location_ != GL_INVALID_INDEX;
+}
+
+template < typename ValueType >
 auto Attribute< ValueType >::location( ) const -> GLuint
 {
     return location_;
