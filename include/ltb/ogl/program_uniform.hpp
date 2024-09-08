@@ -2,9 +2,10 @@
 
 // project
 #include "ltb/ogl/buffer.hpp"
-#include "ltb/ogl/fwd.hpp"
 #include "ltb/ogl/program.hpp"
 #include "ltb/ogl/texture.hpp"
+#include "ltb/ogl/type_traits.hpp"
+#include "ltb/utils/types.hpp"
 
 // external
 #include <glm/glm.hpp>
@@ -14,21 +15,31 @@
 namespace ltb::ogl
 {
 
+/// \brief Type alias for boolean integer values.
+/// \details Raw boolean values cannot be passed to OpenGL without a
+///          conversion and this type can be used to make that explicit.
+using BoolInt = int32;
+
 template < typename ValueType >
 class Uniform
 {
 public:
     using LocationType = std::conditional_t< std::is_same_v< ValueType, Buffer >, GLuint, GLint >;
 
+    /// \brief Constructs a uniform with the given program and name.
     Uniform( Program& program, std::string name );
 
+    /// \brief Initializes the uniform by querying its location in the program.
     auto initialize( ) -> utils::Result<>;
 
-    [[nodiscard( "Const getter" )]]
-    auto program_id( ) const -> GLuint;
+    /// \brief Returns whether the uniform has been successfully initialized.
+    [[nodiscard( "Const getter" )]] auto is_initialized( ) const -> bool;
 
-    [[nodiscard( "Const getter" )]]
-    auto location( ) const -> LocationType;
+    /// \brief Returns the OpenGL ID of the parent program.
+    [[nodiscard( "Const getter" )]] auto program_id( ) const -> GLuint;
+
+    /// \brief Returns the location of the uniform in the program.
+    [[nodiscard( "Const getter" )]] auto location( ) const -> LocationType;
 
 private:
     Program&     program_;
@@ -46,6 +57,11 @@ Uniform< ValueType >::Uniform( Program& program, std::string name )
 template < typename ValueType >
 auto Uniform< ValueType >::initialize( ) -> utils::Result<>
 {
+    LTB_CHECK_VALID(
+        program_.is_initialized( ),
+        "Uniform program has not been successfully initialized."
+    );
+
     static_assert( static_cast< LocationType >( GL_INVALID_INDEX ) == -1 );
 
     location_ = glGetUniformLocation( program_.data( ).gl_id, name_.c_str( ) );
@@ -56,6 +72,15 @@ auto Uniform< ValueType >::initialize( ) -> utils::Result<>
     spdlog::debug( "Uniform '{}' location: {}", name_, location_ );
 
     return utils::success( );
+}
+
+template <>
+auto Uniform< Buffer >::initialize( ) -> utils::Result<>;
+
+template < typename ValueType >
+auto Uniform< ValueType >::is_initialized( ) const -> bool
+{
+    return location_ != static_cast< LocationType >( GL_INVALID_INDEX );
 }
 
 template < typename ValueType >
@@ -70,14 +95,24 @@ auto Uniform< ValueType >::location( ) const -> LocationType
     return location_;
 }
 
+namespace detail
+{
+
+// Only specific types are allowed for uniform values:
+// https://registry.khronos.org/OpenGL-Refpages/es3.1/html/glProgramUniform.xhtml
 template < typename ValueType >
 concept IsUniformScalarType = IsAny< ValueType, int32, uint32, float32, float64 >;
 
-template < typename UniformType, typename ValueType >
-    requires IsUniformScalarType< ValueType >
-auto set_scalar(
+// Only specific sizes are allowed for vec values:
+// https://registry.khronos.org/OpenGL-Refpages/es3.1/html/glProgramUniform.xhtml
+template < glm::length_t size >
+concept IsScalarSize = ( 1 <= size && size <= 4 );
+
+template < glm::length_t size, typename UniformType, typename ValueType >
+    requires IsUniformScalarType< ValueType > && IsScalarSize< size >
+
+auto set_scalar_or_vec(
     Uniform< UniformType > const& uniform,
-    glm::length_t const           size,
     ValueType const*              values,
     GLsizei const                 count
 ) -> void
@@ -126,27 +161,21 @@ auto set_scalar(
     }
 }
 
+// Only specific types are allowed for matrix uniform values:
+// https://registry.khronos.org/OpenGL-Refpages/es3.1/html/glProgramUniform.xhtml
 template < typename ValueType >
-    requires IsUniformScalarType< ValueType >
-auto set( Uniform< ValueType > const& uniform, ValueType const& value ) -> void
-{
-    set_scalar( uniform, 1, &value, 1 );
-}
+concept IsUniformMatrixType = IsAny< ValueType, float32, float64 >;
 
-template < glm::length_t Size, typename ValueType >
-auto set(
-    Uniform< glm::vec< Size, ValueType > > const& uniform,
-    glm::vec< Size, ValueType > const&            value
-) -> void
-{
-    set_scalar( uniform, Size, glm::value_ptr( value ), 1 );
-}
+// Only specific sizes are allowed for mat values:
+// https://registry.khronos.org/OpenGL-Refpages/es3.1/html/glProgramUniform.xhtml
+template < glm::length_t size >
+concept IsMatrixSize = ( 2 <= size && size <= 4 );
 
-template < typename UniformType, typename ValueType >
-    requires IsUniformScalarType< ValueType >
+template < glm::length_t size, typename UniformType, typename ValueType >
+    requires IsUniformMatrixType< ValueType > && IsMatrixSize< size >
+
 auto set_matrix(
     Uniform< UniformType > const& uniform,
-    glm::length_t const           size,
     GLboolean const               transpose,
     ValueType const*              values,
     GLsizei const                 count
@@ -176,23 +205,59 @@ auto set_matrix(
     }
 }
 
-template < glm::length_t Size, typename ValueType >
-auto set(
-    Uniform< glm::mat< Size, Size, ValueType > > const& uniform,
-    glm::mat< Size, Size, ValueType > const&            value
-) -> void
+} // namespace detail
+
+/// \brief Sets the value of a boolean uniform.
+template < typename ValueType >
+    requires detail::IsUniformScalarType< ValueType >
+
+auto set( Uniform< ValueType > const& uniform, bool bvalue ) -> void
 {
-    set_matrix( uniform, Size, GL_FALSE, glm::value_ptr( value ), 1 );
+    auto const value = static_cast< ValueType >( bvalue );
+    detail::set_scalar_or_vec< 1 >( uniform, &value, 1 );
 }
 
+/// \brief Sets the value of a scalar uniform.
+template < typename ValueType >
+    requires detail::IsUniformScalarType< ValueType >
+
+auto set( Uniform< ValueType > const& uniform, ValueType const& value ) -> void
+{
+    detail::set_scalar_or_vec< 1 >( uniform, &value, 1 );
+}
+
+/// \brief Sets the value of a vector uniform.
+template < glm::length_t size, typename ValueType >
+    requires detail::IsUniformScalarType< ValueType >
+
+auto set(
+    Uniform< glm::vec< size, ValueType > > const& uniform,
+    glm::vec< size, ValueType > const&            value
+) -> void
+{
+    detail::set_scalar_or_vec< size >( uniform, glm::value_ptr( value ), 1 );
+}
+
+/// \brief Sets the value of a matrix uniform.
+template < glm::length_t size, typename ValueType >
+    requires detail::IsUniformMatrixType< ValueType >
+
+auto set(
+    Uniform< glm::mat< size, size, ValueType > > const& uniform,
+    glm::mat< size, size, ValueType > const&            value
+) -> void
+{
+    detail::set_matrix< size >( uniform, GL_FALSE, glm::value_ptr( value ), 1 );
+}
+
+/// \brief Sets the value of a buffer uniform.
 auto set(
     Uniform< Buffer > const&                         uniform,
     Bound< Buffer, GL_SHADER_STORAGE_BUFFER > const& buffer,
-    GLuint                                           binding,
-    GLintptr                                         byte_offset,
-    GLsizeiptr                                       size_in_bytes
+    GLuint                                           binding
 ) -> void;
 
+/// \brief Sets the value of a texture uniform.
 template < GLenum bind_type >
 auto set(
     Uniform< Texture > const&          uniform,
@@ -207,5 +272,14 @@ auto set(
     glActiveTexture( static_cast< GLenum >( GL_TEXTURE0 + active_tex ) );
     glProgramUniform1i( uniform.program_id( ), uniform.location( ), active_tex );
 }
+
+/// \brief Sets the value of a Shader Storage Buffer Object (SSBO) uniform.
+auto set(
+    Uniform< Buffer > const&                         uniform,
+    Bound< Buffer, GL_SHADER_STORAGE_BUFFER > const& buffer,
+    GLuint const                                     binding,
+    GLintptr const                                   byte_offset,
+    GLsizeiptr const                                 size_in_bytes
+) -> void;
 
 } // namespace ltb::ogl

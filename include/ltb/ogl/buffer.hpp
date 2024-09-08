@@ -31,6 +31,10 @@ public:
     ///        be called before using the buffer.
     auto initialize( ) -> void;
 
+    /// \brief Returns whether the buffer has been successfully initialized.
+    [[nodiscard( "Const getter" )]]
+    auto is_initialized( ) const -> bool;
+
     /// \brief The raw settings stored for this buffer
     [[nodiscard( "Const getter" )]]
     auto data( ) const -> BufferData const&;

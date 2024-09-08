@@ -1,5 +1,6 @@
 #pragma once
 
+// graphics
 #include "ltb/ogl/opengl.hpp"
 
 // project

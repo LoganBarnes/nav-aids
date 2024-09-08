@@ -17,8 +17,9 @@ public:
     auto initialize( ) -> utils::Result<>;
     auto initialize( GLDEBUGPROC debug_callback ) -> utils::Result<>;
 
-    /// \brief Returns true if the class has been initialized.
-    explicit operator bool( ) const;
+    /// \brief Returns whether the loader has been successfully initialized.
+    [[nodiscard( "Const getter" )]]
+    auto is_initialized( ) const -> bool;
 
 private:
     int32 opengl_ = 0;

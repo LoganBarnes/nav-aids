@@ -1,7 +1,7 @@
 #pragma once
 
 // graphics
-#include "opengl.hpp"
+#include "ltb/ogl/opengl.hpp"
 
 // project
 #include "ltb/ogl/fwd.hpp"
@@ -9,9 +9,6 @@
 
 namespace ltb::ogl
 {
-
-template < typename OglObj, GLenum bind_type = GL_INVALID_ENUM >
-class Bound;
 
 template < typename OglObj, GLenum bind_type >
 class Bound

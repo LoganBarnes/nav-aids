@@ -1,10 +1,8 @@
 #include "ltb/ogl/program.hpp"
 
 // project
-#include "ltb/ogl/buffer.hpp"
 #include "ltb/ogl/object_id.hpp"
-#include "ltb/utils/size_utils.hpp"
-#include "ltb/utils/type_string.hpp"
+#include "ltb/ogl/vertex_array.hpp"
 
 // external
 #include <spdlog/fmt/fmt.h>
@@ -52,6 +50,11 @@ auto Program::initialize( ) -> utils::Result<>
     deleter_ = ogl::make_deleter( data_.gl_id, glDeleteProgram, "glDeleteProgram" );
 
     return utils::success( );
+}
+
+auto Program::is_initialized( ) const -> bool
+{
+    return 0U != data_.gl_id;
 }
 
 auto Program::data( ) const -> ProgramData const&
@@ -104,6 +107,33 @@ auto draw(
     }
 }
 
+template auto draw(
+    Bound< Program > const&,
+    Bound< VertexArray > const&,
+    Bound< Buffer, GL_ELEMENT_ARRAY_BUFFER > const&,
+    GLenum,
+    GLubyte const*,
+    GLsizei
+) -> void;
+
+template auto draw(
+    Bound< Program > const&,
+    Bound< VertexArray > const&,
+    Bound< Buffer, GL_ELEMENT_ARRAY_BUFFER > const&,
+    GLenum,
+    GLushort const*,
+    GLsizei
+) -> void;
+
+template auto draw(
+    Bound< Program > const&,
+    Bound< VertexArray > const&,
+    Bound< Buffer, GL_ELEMENT_ARRAY_BUFFER > const&,
+    GLenum,
+    GLuint const*,
+    GLsizei
+) -> void;
+
 auto draw_instanced(
     Bound< Program > const&     bound_program,
     Bound< VertexArray > const& bound_vertex_array,
@@ -146,33 +176,6 @@ auto draw_instanced(
         );
     }
 }
-
-template auto draw(
-    Bound< Program > const&,
-    Bound< VertexArray > const&,
-    Bound< Buffer, GL_ELEMENT_ARRAY_BUFFER > const&,
-    GLenum,
-    GLubyte const*,
-    GLsizei
-) -> void;
-
-template auto draw(
-    Bound< Program > const&,
-    Bound< VertexArray > const&,
-    Bound< Buffer, GL_ELEMENT_ARRAY_BUFFER > const&,
-    GLenum,
-    GLushort const*,
-    GLsizei
-) -> void;
-
-template auto draw(
-    Bound< Program > const&,
-    Bound< VertexArray > const&,
-    Bound< Buffer, GL_ELEMENT_ARRAY_BUFFER > const&,
-    GLenum,
-    GLuint const*,
-    GLsizei
-) -> void;
 
 template auto draw_instanced(
     Bound< Program > const&,

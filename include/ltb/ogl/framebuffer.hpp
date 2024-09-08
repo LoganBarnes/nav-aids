@@ -41,6 +41,10 @@ public:
     ///        be called before using the framebuffer.
     auto initialize( ) -> void;
 
+    /// \brief Returns whether the framebuffer has been successfully initialized.
+    [[nodiscard( "Const getter" )]]
+    auto is_initialized( ) const -> bool;
+
     /// \brief The raw settings stored for this framebuffer
     [[nodiscard( "Const getter" )]]
     auto data( ) const -> FramebufferData const&;

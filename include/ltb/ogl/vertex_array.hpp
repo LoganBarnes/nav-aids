@@ -29,6 +29,10 @@ public:
     ///        be called before using the vertex array.
     auto initialize( ) -> void;
 
+    /// \brief Returns whether the vertex array has been successfully initialized.
+    [[nodiscard( "Const getter" )]]
+    auto is_initialized( ) const -> bool;
+
     /// \brief The raw settings stored for this vertex array
     [[nodiscard( "Const getter" )]]
     auto data( ) const -> VertexArrayData const&;

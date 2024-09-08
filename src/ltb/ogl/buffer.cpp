@@ -14,6 +14,11 @@ auto Buffer::initialize( ) -> void
     deleter_ = make_array_deleter( { data_.gl_id }, glDeleteBuffers, "glDeleteBuffers" );
 }
 
+auto Buffer::is_initialized( ) const -> bool
+{
+    return 0U != data_.gl_id;
+}
+
 auto Buffer::data( ) const -> BufferData const&
 {
     return data_;

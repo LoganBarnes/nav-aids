@@ -37,11 +37,6 @@ auto default_debug_callback(
 
 } // namespace
 
-OpenglLoader::operator bool( ) const
-{
-    return 0 != opengl_;
-}
-
 auto OpenglLoader::initialize( ) -> utils::Result<>
 {
     if ( opengl_ = ::gl3wInit( ); 0 != opengl_ )
@@ -82,6 +77,11 @@ auto OpenglLoader::initialize( GLDEBUGPROC const debug_callback ) -> utils::Resu
     }
 
     return utils::success( );
+}
+
+auto OpenglLoader::is_initialized( ) const -> bool
+{
+    return 0 != opengl_;
 }
 
 } // namespace ltb::ogl

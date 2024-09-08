@@ -29,20 +29,4 @@ auto set(
     ogl::bind_buffer_range( buffer, binding, byte_offset, size_in_bytes );
 }
 
-auto draw(
-    Bound< Program > const&     bound_program,
-    Bound< VertexArray > const& bound_vertex_array,
-    GLenum const                mode,
-    GLsizei const               start,
-    GLsizei const               num_elements
-) -> void
-{
-    utils::ignore( bound_program, bound_vertex_array );
-
-    if ( num_elements > 0 )
-    {
-        glDrawArrays( mode, start, num_elements );
-    }
-}
-
 } // namespace ltb::ogl

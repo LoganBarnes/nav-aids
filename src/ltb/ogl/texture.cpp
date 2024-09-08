@@ -14,6 +14,11 @@ auto Texture::initialize( ) -> void
     deleter_ = make_array_deleter( { data_.gl_id }, glDeleteTextures, "glDeleteTextures" );
 }
 
+auto Texture::is_initialized( ) const -> bool
+{
+    return 0U != data_.gl_id;
+}
+
 auto Texture::data( ) const -> TextureData const&
 {
     return data_;

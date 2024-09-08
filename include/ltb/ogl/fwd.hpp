@@ -1,5 +1,8 @@
 #pragma once
 
+// graphics
+#include "ltb/ogl/opengl.hpp"
+
 namespace ltb::ogl
 {
 
@@ -14,9 +17,6 @@ struct ProgramData;
 
 struct ShaderData;
 
-// class ShaderProgram;
-// struct ShaderProgramData;
-
 class Texture;
 struct TextureData;
 
@@ -25,5 +25,8 @@ class Uniform;
 
 class VertexArray;
 struct VertexArrayData;
+
+template < typename OglObj, GLenum bind_type = GL_INVALID_ENUM >
+class Bound;
 
 } // namespace ltb::ogl

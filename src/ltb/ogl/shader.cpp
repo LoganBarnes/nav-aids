@@ -12,9 +12,23 @@ namespace ltb::ogl
 
 template < GLenum shader_type >
     requires IsShaderType< shader_type >
+Shader< shader_type >::Shader( std::filesystem::path filename )
+    : filename_( std::move( filename ) )
+{
+}
+
+template < GLenum shader_type >
+    requires IsShaderType< shader_type >
 auto Shader< shader_type >::initialize( ) -> utils::Result<>
 {
     return create_shader( ).and_then( &Shader::load_and_compile ).map( utils::ToVoid{ } );
+}
+
+template < GLenum shader_type >
+    requires IsShaderType< shader_type >
+auto Shader< shader_type >::is_initialized( ) const -> bool
+{
+    return 0U != data_.gl_id;
 }
 
 template < GLenum shader_type >
@@ -53,8 +67,8 @@ auto Shader< shader_type >::load_and_compile( ) -> utils::Result< Shader* >
     }
 
     // Load shader from disk
-    auto const  shader_str    = Shadinclude::load( filename_.string( ) );
-    char const* shader_source = shader_str.c_str( );
+    auto const        shader_str    = Shadinclude::load( filename_.string( ) );
+    char const* const shader_source = shader_str.c_str( );
 
     if ( shader_str.empty( ) )
     {

@@ -10,18 +10,24 @@
 namespace ltb::ogl
 {
 
+/// \brief Represents an OpenGL shader attribute.
 template < typename ValueType >
 class Attribute
 {
 public:
     using Type = ValueType;
 
+    /// \brief Constructs an attribute with the given program and name.
     Attribute( Program& program, std::string name );
 
+    /// \brief Initializes the attribute by querying its location in the program.
     auto initialize( ) -> utils::Result<>;
 
-    [[nodiscard( "Const getter" )]]
-    auto location( ) const -> GLuint;
+    /// \brief Returns whether the attribute has been successfully initialized.
+    [[nodiscard( "Const getter" )]] auto is_initialized( ) const -> bool;
+
+    /// \brief Returns the location of the attribute in the program.
+    [[nodiscard( "Const getter" )]] auto location( ) const -> GLuint;
 
 private:
     Program&    program_;
@@ -39,6 +45,11 @@ Attribute< ValueType >::Attribute( Program& program, std::string name )
 template < typename ValueType >
 auto Attribute< ValueType >::initialize( ) -> utils::Result<>
 {
+    LTB_CHECK_VALID(
+        program_.is_initialized( ),
+        "Attribute program has not been successfully initialized."
+    );
+
     auto const location = glGetAttribLocation( program_.data( ).gl_id, name_.c_str( ) );
     if ( location < 0 )
     {

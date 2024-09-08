@@ -32,6 +32,10 @@ public:
     ///        be called before using the texture.
     auto initialize( ) -> void;
 
+    /// \brief Returns whether the texture has been successfully initialized.
+    [[nodiscard( "Const getter" )]]
+    auto is_initialized( ) const -> bool;
+
     /// \brief The raw settings stored for this texture.
     [[nodiscard( "Const getter" )]]
     auto data( ) const -> TextureData const&;

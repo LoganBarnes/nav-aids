@@ -4,13 +4,11 @@
 #include "ltb/ogl/shader.hpp"
 #include "ltb/ogl/type_traits.hpp"
 #include "ltb/ogl/utils.hpp"
-#include "ltb/ogl/vertex_array.hpp"
 #include "ltb/utils/types.hpp"
 
 // standard
 #include <filesystem>
 #include <memory>
-#include <optional>
 
 namespace ltb::ogl
 {
@@ -29,6 +27,10 @@ public:
     /// \brief Initialize the program object. This must
     ///        be called before using the program.
     auto initialize( ) -> utils::Result<>;
+
+    /// \brief Returns whether the program has been successfully initialized.
+    [[nodiscard( "Const getter" )]]
+    auto is_initialized( ) const -> bool;
 
     /// \brief The raw settings stored for this program.
     [[nodiscard( "Const getter" )]]

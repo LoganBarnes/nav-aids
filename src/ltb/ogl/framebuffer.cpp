@@ -17,6 +17,11 @@ auto Framebuffer::initialize( ) -> void
     deleter_ = make_array_deleter( { data_.gl_id }, glDeleteFramebuffers, "glDeleteFramebuffers" );
 }
 
+auto Framebuffer::is_initialized( ) const -> bool
+{
+    return 0U != data_.gl_id;
+}
+
 auto Framebuffer::data( ) const -> FramebufferData const&
 {
     return data_;

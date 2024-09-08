@@ -1,8 +1,5 @@
 #pragma once
 
-// graphics
-#include "ltb/ogl/opengl.hpp"
-
 // project
 #include "ltb/ogl/fwd.hpp"
 #include "ltb/ogl/type_traits.hpp"
@@ -11,7 +8,6 @@
 // standard
 #include <filesystem>
 #include <memory>
-#include <unordered_map>
 
 namespace ltb::ogl
 {
@@ -47,6 +43,10 @@ public:
     ///        be called before using the shader.
     auto initialize( ) -> utils::Result<>;
 
+    /// \brief Returns whether the shader has been successfully initialized.
+    [[nodiscard( "Const getter" )]]
+    auto is_initialized( ) const -> bool;
+
     /// \brief The raw settings stored for this shader.
     [[nodiscard( "Const getter" )]]
     auto data( ) const -> ShaderData const&;
@@ -59,13 +59,6 @@ private:
     auto create_shader( ) -> utils::Result< Shader* >;
     auto load_and_compile( ) -> utils::Result< Shader* >;
 };
-
-template < GLenum shader_type >
-    requires IsShaderType< shader_type >
-Shader< shader_type >::Shader( std::filesystem::path filename )
-    : filename_( std::move( filename ) )
-{
-}
 
 template < GLenum shader_type >
     requires IsShaderType< shader_type >
