@@ -2,6 +2,12 @@
 
 #include <cinttypes>
 
+// Using _UZ instead of UZ since it isn't supported on MSVC yet.
+constexpr auto operator""_UZ( unsigned long long n )
+{
+    return size_t{ n };
+}
+
 namespace ltb
 {
 
@@ -18,8 +24,8 @@ using uint64 = std::uint64_t;
 using float32 = float;
 using float64 = double;
 
-constexpr auto expected_float32_byte_count = 4;
-constexpr auto expected_float64_byte_count = 8;
+constexpr auto expected_float32_byte_count = 4_UZ;
+constexpr auto expected_float64_byte_count = 8_UZ;
 
 static_assert( expected_float32_byte_count == sizeof( float32 ) );
 static_assert( expected_float64_byte_count == sizeof( float64 ) );

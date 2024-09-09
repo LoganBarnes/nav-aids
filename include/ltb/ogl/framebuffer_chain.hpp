@@ -57,7 +57,7 @@ auto FramebufferChain< N >::initialize( glm::ivec2 size, TextureParams params ) 
 {
     params_ = params;
 
-    for ( auto i = 0UZ; i < N; ++i )
+    for ( auto i = 0_UZ; i < N; ++i )
     {
         textures_[ i ].initialize( );
         framebuffers_[ i ].initialize( );
@@ -74,7 +74,7 @@ auto FramebufferChain< N >::initialize( glm::ivec2 size, TextureParams params ) 
 template < size_t N >
 auto FramebufferChain< N >::resize( glm::ivec2 size ) -> utils::Result<>
 {
-    for ( auto i = 0UZ; i < N; ++i )
+    for ( auto i = 0_UZ; i < N; ++i )
     {
         constexpr auto mipmap_level = GLint{ 0 };
         tex_image_2d< void >(
@@ -122,10 +122,10 @@ template < size_t N >
 auto FramebufferChain< N >::swap( ) -> void
 {
     // [a, b, c] -> [c, a, b]
-    for ( size_t i = N; i > 1UZ; --i )
+    for ( size_t i = N; i > 1_UZ; --i )
     {
-        std::swap( textures_[ i - 1UZ ], textures_[ i - 2UZ ] );
-        std::swap( framebuffers_[ i - 1UZ ], framebuffers_[ i - 2UZ ] );
+        std::swap( textures_[ i - 1_UZ ], textures_[ i - 2_UZ ] );
+        std::swap( framebuffers_[ i - 1_UZ ], framebuffers_[ i - 2_UZ ] );
     }
 }
 

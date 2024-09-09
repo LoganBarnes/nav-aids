@@ -41,7 +41,7 @@ constexpr auto audio_period_range_ms = math::Range< float64 >{
 [[maybe_unused]] auto constexpr audio_period_max = audio_period_range_ms.max;
 [[maybe_unused]] auto constexpr audio_period_min = audio_period_range_ms.min;
 
-constexpr auto num_points = 50'000UZ;
+constexpr auto num_points = 50'000_UZ;
 
 auto constexpr x_axis_time_ms = 100.0F;
 auto const step               = x_axis_time_ms / static_cast< float64 >( num_points );

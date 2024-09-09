@@ -30,7 +30,7 @@ private:
     std::chrono::steady_clock::time_point start_time_ = { };
 
     // Framebuffers and textures to store the wave field.
-    static constexpr auto framebuffer_count_ = 3UZ;
+    static constexpr auto framebuffer_count_ = 3_UZ;
 
     glm::ivec2                                  framebuffer_size_ = { };
     ogl::FramebufferChain< framebuffer_count_ > wave_field_chain_ = { };
