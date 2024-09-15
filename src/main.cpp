@@ -2,6 +2,7 @@
 // project
 #include "ltb/app/antenna_app.hpp"
 #include "ltb/app/app.hpp"
+#include "ltb/app/cfd_lesson_1_app.hpp"
 #include "ltb/gui/glfw_opengl_imgui_setup.hpp"
 #include "ltb/window/glfw_window.hpp"
 
@@ -22,6 +23,7 @@ auto app_main( ) -> utils::Result< void >
         window,
         imgui,
         {
+            { "CFD Lesson 1", std::make_shared< app::CfdLesson1App >( ) },
             { "Antenna", std::make_shared< app::AntennaApp >( ) },
         }
     };

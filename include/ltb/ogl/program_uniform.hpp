@@ -40,9 +40,9 @@ public:
     [[nodiscard( "Const getter" )]] auto location( ) const -> LocationType;
 
 private:
-    Program&     program_;
-    std::string  name_;
-    LocationType location_ = static_cast< LocationType >( GL_INVALID_INDEX );
+    std::reference_wrapper< Program > program_;
+    std::string                       name_;
+    LocationType                      location_ = static_cast< LocationType >( GL_INVALID_INDEX );
 };
 
 template < typename ValueType >
@@ -56,13 +56,13 @@ template < typename ValueType >
 auto Uniform< ValueType >::initialize( ) -> utils::Result<>
 {
     LTB_CHECK_VALID(
-        program_.is_initialized( ),
+        program_.get( ).is_initialized( ),
         "Uniform program has not been successfully initialized."
     );
 
     static_assert( static_cast< LocationType >( GL_INVALID_INDEX ) == -1 );
 
-    location_ = glGetUniformLocation( program_.data( ).gl_id, name_.c_str( ) );
+    location_ = glGetUniformLocation( program_.get( ).data( ).gl_id, name_.c_str( ) );
     if ( location_ < 0 )
     {
         return LTB_MAKE_UNEXPECTED_ERROR( "Uniform '{}' not found in program.", name_ );
@@ -84,7 +84,7 @@ auto Uniform< ValueType >::is_initialized( ) const -> bool
 template < typename ValueType >
 auto Uniform< ValueType >::program_id( ) const -> GLuint
 {
-    return program_.data( ).gl_id;
+    return program_.get( ).data( ).gl_id;
 }
 
 template < typename ValueType >

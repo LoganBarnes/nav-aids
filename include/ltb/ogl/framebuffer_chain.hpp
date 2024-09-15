@@ -32,10 +32,12 @@ public:
 
     template < size_t index >
         requires( index < N )
+    [[nodiscard( "Const getter" )]]
     auto get_texture( ) const -> Texture const&;
 
     template < size_t index >
         requires( index < N )
+    [[nodiscard( "Const getter" )]]
     auto get_framebuffer( ) const -> Framebuffer const&;
 
     auto swap( ) -> void;
@@ -53,7 +55,8 @@ auto FramebufferChain< N >::initialize( glm::ivec2 size ) -> utils::Result<>
 }
 
 template < size_t N >
-auto FramebufferChain< N >::initialize( glm::ivec2 size, TextureParams params ) -> utils::Result<>
+auto FramebufferChain< N >::initialize( glm::ivec2 size, TextureParams const params )
+    -> utils::Result<>
 {
     params_ = params;
 

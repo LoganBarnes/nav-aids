@@ -14,11 +14,10 @@
 #include <spdlog/spdlog.h>
 
 // standard
-#include <filesystem>
 #include <tuple>
 #include <utility>
 
-namespace ltb::ogl
+namespace ltb::utils
 {
 
 template < typename T >
@@ -57,6 +56,8 @@ auto initialize( Objects&... objects ) -> utils::Result<>
     return utils::success( );
 }
 
+#if 0
+
 template < typename... Objects, std::size_t... Is >
 auto initialize( std::tuple< Objects&... > const& objects, std::index_sequence< Is... > )
     -> utils::Result<>
@@ -77,4 +78,6 @@ auto initialize( Object& object ) -> utils::Result<>
     return initialize( pfr::structure_tie( object ) );
 }
 
-} // namespace ltb::ogl
+#endif
+
+} // namespace ltb::utils

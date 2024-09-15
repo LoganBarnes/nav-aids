@@ -31,6 +31,9 @@ auto AppRunner::initialize( ) -> utils::Result< AppRunner* >
         } )
     );
     LTB_CHECK( imgui_setup_.initialize( ) );
+
+    ImGui::GetIO( ).ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
     LTB_CHECK( ogl_loader_.initialize( ) );
 
     if ( !apps_.empty( ) )

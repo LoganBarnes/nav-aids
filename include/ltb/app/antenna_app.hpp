@@ -4,7 +4,7 @@
 #include "ltb/app/app.hpp"
 #include "ltb/gui/imgui_setup.hpp"
 #include "ltb/ogl/framebuffer_chain.hpp"
-#include "ltb/ogl/initializable.hpp"
+#include "ltb/utils/initializable.hpp"
 #include "ltb/window/window.hpp"
 
 // generated

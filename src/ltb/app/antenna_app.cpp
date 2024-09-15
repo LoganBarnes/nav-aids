@@ -23,7 +23,7 @@ auto AntennaApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Resul
     framebuffer_size_ = framebuffer_size;
     LTB_CHECK( wave_field_chain_.initialize( framebuffer_size_ ) );
 
-    LTB_CHECK( ogl::initialize(
+    LTB_CHECK( utils::initialize(
         wave_pipeline_.vertex_shader,
         wave_pipeline_.fragment_shader,
         wave_pipeline_.program,
@@ -32,7 +32,7 @@ auto AntennaApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Resul
         wave_pipeline_.curr_state_uniform,
         wave_pipeline_.vertex_array
     ) );
-    LTB_CHECK( ogl::initialize(
+    LTB_CHECK( utils::initialize(
         antenna_pipeline_.vertex_shader,
         antenna_pipeline_.fragment_shader,
         antenna_pipeline_.program,
@@ -71,7 +71,7 @@ auto AntennaApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Resul
         antenna_pipeline_.program,
         "antenna_power",
     };
-    LTB_CHECK( ogl::initialize( antenna_world_position_attrib, antenna_power_attrib ) );
+    LTB_CHECK( utils::initialize( antenna_world_position_attrib, antenna_power_attrib ) );
 
     ogl::set_attributes< void >(
         ogl::bind( antenna_pipeline_.vertex_array ),
@@ -94,7 +94,7 @@ auto AntennaApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Resul
         attrib_divisor
     );
 
-    LTB_CHECK( ogl::initialize(
+    LTB_CHECK( utils::initialize(
         display_pipeline_.vertex_shader,
         display_pipeline_.fragment_shader,
         display_pipeline_.program,
