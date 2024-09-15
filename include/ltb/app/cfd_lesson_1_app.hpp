@@ -38,7 +38,7 @@ private:
     glm::ivec2                                  framebuffer_size_ = { };
     ogl::FramebufferChain< framebuffer_count_ > wave_field_chain_ = { };
 
-    struct Pipeline
+    struct PropagatePipeline
     {
         ogl::Shader< GL_VERTEX_SHADER > vertex_shader = {
             config::shader_dir_path( ) / "fullscreen.vert",
@@ -48,14 +48,48 @@ private:
         };
         ogl::Program program = { vertex_shader, fragment_shader };
 
-        ogl::Uniform< ogl::Texture > wave_texture_uniform     = { program, "wave_texture" };
+        ogl::Uniform< ogl::Texture > prev_state_uniform       = { program, "prev_state" };
         ogl::Uniform< glm::vec2 >    framebuffer_size_uniform = { program, "framebuffer_size" };
+
+        ogl::VertexArray vertex_array = { };
+    };
+
+    PropagatePipeline propagate_pipeline_ = { };
+
+    struct WaveDisplayPipeline
+    {
+        ogl::Shader< GL_VERTEX_SHADER > vertex_shader = {
+            config::shader_dir_path( ) / "cfd" / "wave_display.vert",
+        };
+        ogl::Shader< GL_FRAGMENT_SHADER > fragment_shader = {
+            config::shader_dir_path( ) / "cfd" / "wave_display.frag",
+        };
+        ogl::Program program = { vertex_shader, fragment_shader };
+
+        ogl::Uniform< ogl::Texture > wave_values_uniform = { program, "wave_values" };
+        ogl::Uniform< int32 >        resolution_uniform  = { program, "resolution" };
 
         ogl::Buffer      vertex_buffer = { };
         ogl::VertexArray vertex_array  = { };
     };
 
-    Pipeline propagate_pipeline_ = { };
+    WaveDisplayPipeline wave_display_pipeline_ = { };
+
+    struct DefaultPipeline
+    {
+        ogl::Shader< GL_VERTEX_SHADER > vertex_shader = {
+            config::shader_dir_path( ) / "fullscreen.vert",
+        };
+        ogl::Shader< GL_FRAGMENT_SHADER > fragment_shader = {
+            config::shader_dir_path( ) / "cfd" / "lesson1.frag",
+        };
+        ogl::Program program = { vertex_shader, fragment_shader };
+
+        ogl::Uniform< ogl::Texture > prev_state_uniform       = { program, "prev_state" };
+        ogl::Uniform< glm::vec2 >    framebuffer_size_uniform = { program, "framebuffer_size" };
+
+        ogl::VertexArray vertex_array = { };
+    };
 
     auto propagate_waves( ) -> void;
     auto display_waves( ) -> void;

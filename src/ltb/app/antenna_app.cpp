@@ -57,9 +57,8 @@ auto AntennaApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Resul
         GL_STATIC_DRAW
     );
 
-    constexpr Antenna const* const null_antenna_ptr = nullptr;
-    // Tightly packed.
-    constexpr auto total_vertex_stride = sizeof( Antenna );
+    constexpr Antenna const* const null_antenna_ptr    = nullptr;
+    constexpr auto                 total_vertex_stride = sizeof( Antenna );
     // Not instanced
     constexpr auto attrib_divisor = 0U;
 
@@ -73,7 +72,7 @@ auto AntennaApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Resul
     };
     LTB_CHECK( utils::initialize( antenna_world_position_attrib, antenna_power_attrib ) );
 
-    ogl::set_attributes< void >(
+    ogl::set_attributes(
         ogl::bind( antenna_pipeline_.vertex_array ),
         ogl::bind< GL_ARRAY_BUFFER >( antenna_pipeline_.vertex_buffer ),
         {

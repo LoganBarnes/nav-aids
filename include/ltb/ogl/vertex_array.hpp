@@ -45,13 +45,12 @@ private:
     std::shared_ptr< void > deleter_ = nullptr;
 };
 
-template < typename DataType >
 struct VaoElement
 {
-    GLuint          attribute_location;
-    GLint           num_coordinates;
-    GLenum          data_type;
-    DataType const* initial_offset_into_vbo;
+    GLuint      attribute_location;
+    GLint       num_coordinates;
+    GLenum      data_type;
+    void const* initial_offset_into_vbo;
 };
 
 /// \brief Sets the vertex attribute information for the given vertex buffer object.
@@ -59,64 +58,12 @@ struct VaoElement
 /// \param elements the individual attribute elements.
 /// \param total_stride the byte offset between consecutive attributes (0 implies tightly packed).
 /// \param attrib_divisor the number of instances between updates (0 if not using instancing).
-template < typename DataType >
 auto set_attributes(
-    Bound< VertexArray > const&                  bound_vertex_array,
-    Bound< Buffer, GL_ARRAY_BUFFER > const&      bound_buffer,
-    std::vector< VaoElement< DataType > > const& elements,
-    GLsizei const                                total_stride,
-    GLuint const                                 attrib_divisor
-) -> void
-{
-    // These arguments are provided to ensure they are
-    // bound, but nothing has to be done with them.
-    utils::ignore( bound_vertex_array, bound_buffer );
-
-    for ( auto const& element : elements )
-    {
-        glEnableVertexAttribArray( element.attribute_location );
-
-        switch ( element.data_type )
-        {
-            case GL_BYTE:
-            case GL_UNSIGNED_BYTE:
-            case GL_SHORT:
-            case GL_UNSIGNED_SHORT:
-            case GL_INT:
-            case GL_UNSIGNED_INT:
-                glVertexAttribIPointer(
-                    element.attribute_location,
-                    element.num_coordinates,
-                    element.data_type,
-                    total_stride,
-                    element.initial_offset_into_vbo
-                );
-                break;
-
-            case GL_DOUBLE:
-                glVertexAttribLPointer(
-                    element.attribute_location,
-                    element.num_coordinates,
-                    element.data_type,
-                    total_stride,
-                    element.initial_offset_into_vbo
-                );
-                break;
-
-            default:
-                glVertexAttribPointer(
-                    element.attribute_location,
-                    element.num_coordinates,
-                    element.data_type,
-                    GL_FALSE,
-                    total_stride,
-                    element.initial_offset_into_vbo
-                );
-                break;
-        }
-
-        glVertexAttribDivisor( element.attribute_location, attrib_divisor );
-    }
-}
+    Bound< VertexArray > const&             bound_vertex_array,
+    Bound< Buffer, GL_ARRAY_BUFFER > const& bound_buffer,
+    std::vector< VaoElement > const&        elements,
+    GLsizei                                 total_stride,
+    GLuint                                  attrib_divisor
+) -> void;
 
 } // namespace ltb::ogl
