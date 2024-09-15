@@ -1,12 +1,18 @@
-# Pilot Navigation Aids
+# Pilot Stuff
 
-## Instrument Landing System (ILS)
+## Navigation Aids
+
+### Instrument Landing System (ILS)
+
+TODO
+
+### VHF Omnidirectional Range (VOR)
 
 TODO
 
-## VHF Omnidirectional Range (VOR)
+## Aerodynamics
 
-TODO
+https://drzgan.github.io/Python_CFD/intro.html
 
 ## Libs
 
