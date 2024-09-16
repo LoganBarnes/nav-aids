@@ -10,9 +10,9 @@ namespace ltb::app
 namespace
 {
 
-auto constexpr draw_start_vertex       = 0;
-auto constexpr fullscreen_draw_mode    = GL_TRIANGLE_STRIP;
-auto constexpr fullscreen_vertex_count = 4;
+//auto constexpr draw_start_vertex       = 0;
+//auto constexpr fullscreen_draw_mode    = GL_TRIANGLE_STRIP;
+//auto constexpr fullscreen_vertex_count = 4;
 
 } // namespace
 
