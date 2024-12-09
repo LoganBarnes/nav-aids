@@ -209,7 +209,7 @@ auto set_matrix(
 template < typename ValueType >
     requires detail::IsUniformScalarType< ValueType >
 
-auto set( Uniform< ValueType > const& uniform, bool bvalue ) -> void
+auto set( Uniform< ValueType > const& uniform, bool const bvalue ) -> void
 {
     auto const value = static_cast< ValueType >( bvalue );
     detail::set_scalar_or_vec< 1 >( uniform, &value, 1 );

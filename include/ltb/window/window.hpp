@@ -37,11 +37,13 @@ public:
 
     /// \brief Returns true if a window close event was requested.
     [[nodiscard( "Const getter" )]]
-    virtual auto should_close( ) const -> bool = 0;
+    virtual auto should_close( ) const -> bool
+        = 0;
 
     /// \brief Returns the new size of the framebuffer if the window was resized.
     [[nodiscard( "Const getter" )]]
-    virtual auto resized( ) const -> std::optional< glm::ivec2 > = 0;
+    virtual auto resized( ) const -> std::optional< glm::ivec2 >
+        = 0;
 };
 
 inline Window::~Window( ) = default;

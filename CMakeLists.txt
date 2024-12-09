@@ -19,6 +19,12 @@ option(
   OFF
 )
 
+option(
+  LTB_NAV_BUILD_TESTS
+  "Build unit test executables"
+  OFF
+)
+
 # ##############################################################################
 # CMake Package Manager
 # ##############################################################################
@@ -49,13 +55,26 @@ endif ()
 # ##############################################################################
 file(
   GLOB_RECURSE
+  LtbNav_TEST_FILES
+  LIST_DIRECTORIES
+  false
+  CONFIGURE_DEPENDS
+  ${CMAKE_CURRENT_LIST_DIR}/src/ltb/*_tests.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/src/ltb/test/*.cpp
+)
+file(
+  GLOB_RECURSE
   LtbNav_SOURCE_FILES
   LIST_DIRECTORIES
   false
   CONFIGURE_DEPENDS
   ${CMAKE_CURRENT_LIST_DIR}/external/src/*.c
   ${CMAKE_CURRENT_LIST_DIR}/src/ltb/*.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/src/ltb/*.hpp
+)
+list(
+  REMOVE_ITEM
+  LtbNav_SOURCE_FILES
+  ${LtbNav_TEST_FILES}
 )
 
 add_library(
@@ -167,6 +186,25 @@ endif ()
 # ##############################################################################
 # Tests
 # ##############################################################################
+if (${LTB_NAV_BUILD_TESTS})
+  add_executable(
+    TestLtbNav
+    ${LtbNav_TEST_FILES}
+  )
+  target_link_libraries(
+    TestLtbNav
+    PRIVATE
+    LtbNav::LtbNav
+    GTest::gmock
+    GTest::gtest_main
+  )
+  add_test(
+    NAME
+    TestLtbNav
+    COMMAND
+    $<TARGET_FILE:TestLtbNav>
+  )
+endif ()
 
 # ##############################################################################
 # Executables

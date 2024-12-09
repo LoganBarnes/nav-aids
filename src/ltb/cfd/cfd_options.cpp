@@ -30,8 +30,11 @@ constexpr auto time_step_extents    = math::Range< float32 >{ .min = 0.0F, .max 
 
 auto configure_gui( CfdOptions< 1 >& options ) -> void
 {
-    if ( auto const domain_range_min_label = fmt::
-             format( "Domain Range [{}, {}]", domain_range_extents.min, domain_range_extents.max );
+    if ( auto const domain_range_min_label = fmt::format(
+             "Domain Range Min [{}, {}]",
+             domain_range_extents.min,
+             domain_range_extents.max
+         );
          ImGui::DragFloat(
              domain_range_min_label.c_str( ),
              &options.domain_range.min,

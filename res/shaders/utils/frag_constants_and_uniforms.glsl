@@ -12,10 +12,10 @@ const uint shading_mode_lambertian    = 1;/// \todo (need lights)
 const uint shading_mode_cook_torrance = 2;/// \todo
 
 // Uniforms
-//layout(binding = 1) uniform sampler2D tex_sampler;
+uniform sampler2D tex_sampler;
 
-layout(push_constant) uniform Display {
-    layout(offset = 112) vec4 color;// offset must be the size of previous push_constants
+uniform Display {
+    vec4 color;
     uint color_mode;
     uint shading_mode;
 } display;

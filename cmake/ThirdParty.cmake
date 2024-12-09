@@ -92,6 +92,23 @@ cpmaddpackage(
 )
 cpmaddpackage("gh:gabime/spdlog@1.14.1")
 
+if (${LTB_NAV_BUILD_TESTS})
+  cpmaddpackage(
+    NAME
+    googletest
+    GITHUB_REPOSITORY
+    google/googletest
+    GIT_TAG
+    v1.15.2
+    OPTIONS
+    "INSTALL_GTEST OFF"
+    "gtest_force_shared_crt ON"
+  )
+
+  # Enable testing
+  include(CTest)
+endif ()
+
 if (magic_enum_ADDED)
   # Mark external include directories as system includes to avoid warnings.
   target_include_directories(
