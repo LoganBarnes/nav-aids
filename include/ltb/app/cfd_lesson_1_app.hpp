@@ -4,6 +4,7 @@
 #include "ltb/app/app.hpp"
 #include "ltb/cfd/cfd_options.hpp"
 #include "ltb/gui/imgui_setup.hpp"
+#include "ltb/gui/mesh_display_pipeline.hpp"
 #include "ltb/ogl/framebuffer_chain.hpp"
 #include "ltb/utils/initializable.hpp"
 #include "ltb/window/window.hpp"
@@ -37,6 +38,8 @@ private:
 
     glm::ivec2                                  framebuffer_size_ = { };
     ogl::FramebufferChain< framebuffer_count_ > wave_field_chain_ = { };
+
+    gui::IncrementalIdGenerator< uint32 > incremental_id_generator_ = { };
 
     struct PropagatePipeline
     {
@@ -75,21 +78,7 @@ private:
 
     WaveDisplayPipeline wave_display_pipeline_ = { };
 
-    struct DefaultPipeline
-    {
-        ogl::Shader< GL_VERTEX_SHADER > vertex_shader = {
-            config::shader_dir_path( ) / "fullscreen.vert",
-        };
-        ogl::Shader< GL_FRAGMENT_SHADER > fragment_shader = {
-            config::shader_dir_path( ) / "cfd" / "lesson1.frag",
-        };
-        ogl::Program program = { vertex_shader, fragment_shader };
-
-        ogl::Uniform< ogl::Texture > prev_state_uniform       = { program, "prev_state" };
-        ogl::Uniform< glm::vec2 >    framebuffer_size_uniform = { program, "framebuffer_size" };
-
-        ogl::VertexArray vertex_array = { };
-    };
+    gui::MeshDisplayPipeline mesh_display_pipeline = { incremental_id_generator_ };
 
     auto propagate_waves( ) -> void;
     auto display_waves( ) -> void;

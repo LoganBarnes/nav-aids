@@ -1,11 +1,13 @@
 #pragma once
 
 #include <cinttypes>
+#include <cstddef>
 
 // Using _UZ instead of UZ since it isn't supported on MSVC yet.
-constexpr auto operator""_UZ( unsigned long long n )
+[[nodiscard( "Const literal" )]]
+consteval auto operator""_UZ( unsigned long long n )
 {
-    return size_t{ n };
+    return std::size_t{ n };
 }
 
 namespace ltb

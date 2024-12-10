@@ -1,7 +1,7 @@
 #pragma once
 
-// external
-#include <glm/glm.hpp>
+// project
+#include "ltb/math/fwd.hpp"
 
 namespace ltb::math
 {
@@ -12,9 +12,6 @@ struct Range
     T min = { };
     T max = { };
 };
-
-using Range2Di = Range< glm::ivec2 >;
-using Range2D  = Range< glm::vec2 >;
 
 template < typename T >
 constexpr auto dimensions( Range< T > const& range )

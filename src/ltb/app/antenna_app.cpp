@@ -23,25 +23,29 @@ auto AntennaApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Resul
     framebuffer_size_ = framebuffer_size;
     LTB_CHECK( wave_field_chain_.initialize( framebuffer_size_ ) );
 
-    LTB_CHECK( utils::initialize(
-        wave_pipeline_.vertex_shader,
-        wave_pipeline_.fragment_shader,
-        wave_pipeline_.program,
-        wave_pipeline_.state_size_uniform,
-        wave_pipeline_.prev_state_uniform,
-        wave_pipeline_.curr_state_uniform,
-        wave_pipeline_.vertex_array
-    ) );
-    LTB_CHECK( utils::initialize(
-        antenna_pipeline_.vertex_shader,
-        antenna_pipeline_.fragment_shader,
-        antenna_pipeline_.program,
-        antenna_pipeline_.clip_from_world_uniform,
-        antenna_pipeline_.time_s_uniform,
-        antenna_pipeline_.frequency_hz_uniform,
-        antenna_pipeline_.vertex_buffer,
-        antenna_pipeline_.vertex_array
-    ) );
+    LTB_CHECK(
+        utils::initialize(
+            wave_pipeline_.vertex_shader,
+            wave_pipeline_.fragment_shader,
+            wave_pipeline_.program,
+            wave_pipeline_.state_size_uniform,
+            wave_pipeline_.prev_state_uniform,
+            wave_pipeline_.curr_state_uniform,
+            wave_pipeline_.vertex_array
+        )
+    );
+    LTB_CHECK(
+        utils::initialize(
+            antenna_pipeline_.vertex_shader,
+            antenna_pipeline_.fragment_shader,
+            antenna_pipeline_.program,
+            antenna_pipeline_.clip_from_world_uniform,
+            antenna_pipeline_.time_s_uniform,
+            antenna_pipeline_.frequency_hz_uniform,
+            antenna_pipeline_.vertex_buffer,
+            antenna_pipeline_.vertex_array
+        )
+    );
 
     antennas_ = std::vector{
         Antenna{ .world_position = { -0.01F, -0.5F }, .antenna_power = 100.0F },
@@ -93,13 +97,15 @@ auto AntennaApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Resul
         attrib_divisor
     );
 
-    LTB_CHECK( utils::initialize(
-        display_pipeline_.vertex_shader,
-        display_pipeline_.fragment_shader,
-        display_pipeline_.program,
-        display_pipeline_.wave_texture_uniform,
-        display_pipeline_.vertex_array
-    ) );
+    LTB_CHECK(
+        utils::initialize(
+            display_pipeline_.vertex_shader,
+            display_pipeline_.fragment_shader,
+            display_pipeline_.program,
+            display_pipeline_.wave_texture_uniform,
+            display_pipeline_.vertex_array
+        )
+    );
 
     glClearColor( 0.0F, 0.0F, 0.0F, 1.0F );
     glDisable( GL_DEPTH_TEST );

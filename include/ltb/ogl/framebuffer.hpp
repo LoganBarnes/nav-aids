@@ -157,8 +157,8 @@ auto framebuffer_texture_2d(
 
 /// \brief Check the status of the currently bound framebuffer.
 template < GLenum bind_type >
-auto check_framebuffer_status( Bound< Framebuffer, bind_type > const& bound_framebuffer
-) -> utils::Result<>
+auto check_framebuffer_status( Bound< Framebuffer, bind_type > const& bound_framebuffer )
+    -> utils::Result<>
 {
     // This argument is provided to ensure the framebuffer
     // is bound, but nothing has to be done with it.

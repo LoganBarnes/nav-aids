@@ -21,10 +21,10 @@ find_package(OpenGL REQUIRED)
 cpmaddpackage(
   NAME
   expected
-  GIT_TAG
-  ltb # master
   GITHUB_REPOSITORY
   LoganBarnes/expected
+  GIT_TAG
+  ltb # master
   OPTIONS
   "EXPECTED_BUILD_TESTS OFF"
 )
@@ -44,11 +44,11 @@ cpmaddpackage(
 cpmaddpackage(
   NAME
   glm
+  GITHUB_REPOSITORY
+  g-truc/glm
   # None of the tagged versions have the fixes we need
   GIT_TAG
   cc98465e3508535ba8c7f6208df934c156a018dc
-  GITHUB_REPOSITORY
-  g-truc/glm
   # It's header only and the CMakeLists.txt file adds
   # global flags that break CUDA on windows
   DOWNLOAD_ONLY
@@ -91,6 +91,23 @@ cpmaddpackage(
   TRUE
 )
 cpmaddpackage("gh:gabime/spdlog@1.14.1")
+
+if (${LTB_NAV_BUILD_TESTS})
+  cpmaddpackage(
+    NAME
+    googletest
+    GITHUB_REPOSITORY
+    google/googletest
+    GIT_TAG
+    v1.15.2
+    OPTIONS
+    "INSTALL_GTEST OFF"
+    "gtest_force_shared_crt ON"
+  )
+
+  # Enable testing
+  include(CTest)
+endif ()
 
 if (magic_enum_ADDED)
   # Mark external include directories as system includes to avoid warnings.

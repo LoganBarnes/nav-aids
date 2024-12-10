@@ -32,28 +32,32 @@ auto CfdLesson1App::initialize( glm::ivec2 const framebuffer_size ) -> utils::Re
 
     LTB_CHECK( wave_field_chain_.initialize( glm::ivec2( cfd::resolution_extents.max, 1 ) ) );
 
-    LTB_CHECK( utils::initialize(
-        propagate_pipeline_.vertex_shader,
-        propagate_pipeline_.fragment_shader,
-        propagate_pipeline_.program,
+    LTB_CHECK(
+        utils::initialize(
+            propagate_pipeline_.vertex_shader,
+            propagate_pipeline_.fragment_shader,
+            propagate_pipeline_.program,
 
-        propagate_pipeline_.prev_state_uniform,
-        propagate_pipeline_.framebuffer_size_uniform,
+            propagate_pipeline_.prev_state_uniform,
+            propagate_pipeline_.framebuffer_size_uniform,
 
-        propagate_pipeline_.vertex_array
-    ) );
+            propagate_pipeline_.vertex_array
+        )
+    );
 
-    LTB_CHECK( utils::initialize(
-        wave_display_pipeline_.vertex_shader,
-        wave_display_pipeline_.fragment_shader,
-        wave_display_pipeline_.program,
+    LTB_CHECK(
+        utils::initialize(
+            wave_display_pipeline_.vertex_shader,
+            wave_display_pipeline_.fragment_shader,
+            wave_display_pipeline_.program,
 
-        wave_display_pipeline_.wave_values_uniform,
-        wave_display_pipeline_.resolution_uniform,
+            wave_display_pipeline_.wave_values_uniform,
+            wave_display_pipeline_.resolution_uniform,
 
-        wave_display_pipeline_.vertex_buffer,
-        wave_display_pipeline_.vertex_array
-    ) );
+            wave_display_pipeline_.vertex_buffer,
+            wave_display_pipeline_.vertex_array
+        )
+    );
 
     auto const indices = ranges::view::iota( 0, cfd::resolution_extents.max * 2 )
                        | ranges::view::transform( IndexToVec2{ } ) | ranges::to< std::vector >( );
@@ -100,7 +104,8 @@ auto CfdLesson1App::render( ) -> void
 
 auto CfdLesson1App::configure_gui( ) -> void
 {
-    utils::ignore( ImGui::DockSpaceOverViewport( ) );
+    auto const dock_node_flags = ImGuiDockNodeFlags_PassthruCentralNode;
+    utils::ignore( ImGui::DockSpaceOverViewport( 0, nullptr, dock_node_flags ) );
 
     if ( ImGui::Begin( "CFD Lesson 1" ) )
     {
