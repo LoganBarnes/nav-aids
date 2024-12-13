@@ -21,7 +21,7 @@ auto constexpr fullscreen_vertex_count = 4;
 
 struct IndexToVec2
 {
-    auto operator( )( int32 const i ) { return glm::ivec2( i / 2, i % 2 ); }
+    auto operator( )( int32 const i ) const { return glm::ivec2( i / 2, i % 2 ); }
 };
 
 } // namespace
@@ -59,8 +59,8 @@ auto CfdLesson1App::initialize( glm::ivec2 const framebuffer_size ) -> utils::Re
         )
     );
 
-    auto const indices = ranges::view::iota( 0, cfd::resolution_extents.max * 2 )
-                       | ranges::view::transform( IndexToVec2{ } ) | ranges::to< std::vector >( );
+    auto const indices = ranges::views::iota( 0, cfd::resolution_extents.max * 2 )
+                       | ranges::views::transform( IndexToVec2{ } ) | ranges::to< std::vector >( );
 
     auto const bound_buffer = bind< GL_ARRAY_BUFFER >( wave_display_pipeline_.vertex_buffer );
     buffer_data( bound_buffer, indices, GL_STATIC_DRAW );
