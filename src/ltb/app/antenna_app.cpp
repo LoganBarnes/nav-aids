@@ -25,13 +25,13 @@ auto AntennaApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Resul
 
     LTB_CHECK(
         utils::initialize(
+            fullscreen_vertex_array_,
             wave_pipeline_.vertex_shader,
             wave_pipeline_.fragment_shader,
             wave_pipeline_.program,
             wave_pipeline_.state_size_uniform,
             wave_pipeline_.prev_state_uniform,
-            wave_pipeline_.curr_state_uniform,
-            wave_pipeline_.vertex_array
+            wave_pipeline_.curr_state_uniform
         )
     );
     LTB_CHECK(
@@ -102,8 +102,7 @@ auto AntennaApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Resul
             display_pipeline_.vertex_shader,
             display_pipeline_.fragment_shader,
             display_pipeline_.program,
-            display_pipeline_.wave_texture_uniform,
-            display_pipeline_.vertex_array
+            display_pipeline_.wave_texture_uniform
         )
     );
 

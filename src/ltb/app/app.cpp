@@ -106,6 +106,8 @@ auto AppRunner::configure_app_menu( std::string const& name, App* const app ) ->
 {
     if ( ImGui::MenuItem( name.c_str( ) ) )
     {
+        spdlog::info( "Switching to app: {}", name );
+
         if ( nullptr != current_app_ )
         {
             current_app_->destroy( );

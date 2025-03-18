@@ -1,45 +1,44 @@
 #pragma once
 
 // project
-#include "ltb/gui/imgui_setup.hpp"
+#include "ltb/app/app.hpp"
 #include "ltb/ogl/framebuffer.hpp"
-#include "ltb/ogl/opengl_loader.hpp"
 #include "ltb/utils/initializable.hpp"
-#include "ltb/window/window.hpp"
+
+// generated
+#include "ltb/ltb_config.hpp"
 
 namespace ltb::app
 {
 
 /// \brief The main application window for the ILS app.
-class IlsApp
+class IlsApp : public App
 {
 public:
-    explicit IlsApp( window::Window& window, gui::ImguiSetup& imgui_setup );
+    IlsApp( )           = default;
+    ~IlsApp( ) override = default;
 
-    auto initialize( ) -> utils::Result< IlsApp* >;
-    auto run( ) -> utils::Result< void >;
+    auto initialize( glm::ivec2 framebuffer_size ) -> utils::Result< void > override;
+    auto render( ) -> void override;
+    auto configure_gui( ) -> void override;
+    auto destroy( ) -> void override;
+
+    auto resize( glm::ivec2 framebuffer_size ) -> void override;
 
 private:
-    // Window & graphics interfaces
-    window::Window&  window_;
-    gui::ImguiSetup& imgui_setup_;
-
     glm::ivec2 framebuffer_size_ = { };
 
-    ogl::OpenglLoader ogl_loader_ = { };
+    ogl::Shader< GL_VERTEX_SHADER > fullscreen_vertex_shader_ = {
+        config::shader_dir_path( ) / "fullscreen.vert",
+    };
+    ogl::Shader< GL_FRAGMENT_SHADER > ils_fragment_shader_ = {
+        config::shader_dir_path( ) / "ils.frag",
+    };
+    ogl::Program program_ = { fullscreen_vertex_shader_, ils_fragment_shader_ };
 
-    // OpenGL rendering objects
-    // ogl::Pipeline< ogl::Attributes<>, ogl::Uniforms<> > pipeline_ = {
-    //     ogl::attribute_names( ),
-    // };
+    ogl::Uniform< glm::vec2 > field_size_pixels_uniform_ = { program_, "field_size_pixels" };
 
-    // OpenGL display objects
-    ogl::Texture     color_texture_ = { };
-    ogl::Framebuffer framebuffer_   = { };
-
-    auto on_resize( ) const -> void;
-    auto render_to_framebuffer( ) const -> void;
-    auto render_gui( ) const -> void;
+    ogl::VertexArray vertex_array_  = { };
 };
 
 } // namespace ltb::app
