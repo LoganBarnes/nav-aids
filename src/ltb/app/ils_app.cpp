@@ -26,7 +26,11 @@ auto IlsApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Result< v
             fullscreen_vertex_shader_,
             ils_fragment_shader_,
             program_,
-            time_s_uniform_,
+            pixel_size_m_uniform_,
+            antenna_pairs_uniform_,
+            antenna_spacing_m_uniform_,
+            output_scale_uniform_,
+            // time_s_uniform_,
             field_size_pixels_uniform_,
             vertex_array_
         )
@@ -51,6 +55,10 @@ auto IlsApp::render( ) -> void
         = std::chrono::duration_cast< std::chrono::duration< float32 > >( elapsed_duration )
               .count( );
 
+    set( pixel_size_m_uniform_, pixel_size_m );
+    set( antenna_pairs_uniform_, antenna_pairs_ );
+    set( antenna_spacing_m_uniform_, antenna_spacing_m );
+    set( output_scale_uniform_, output_scale_ );
     set( time_s_uniform_, elapsed_time_s * time_scale_s_ );
     set( field_size_pixels_uniform_, glm::vec2{ framebuffer_size_ } );
 
@@ -64,7 +72,36 @@ auto IlsApp::configure_gui( ) -> void
 
     if ( ImGui::Begin( "ILS" ) )
     {
-        ImGui::Text( "ILS App" );
+        ImGui::SliderFloat( "Pixel size (m)", &pixel_size_m, 0.1F, 10.0F );
+        ImGui::SliderInt( "Antenna pairs", &antenna_pairs_, 1, 20 );
+        ImGui::SliderFloat( "Antenna spacing (m)", &antenna_spacing_m, 0.1F, 10.0F );
+
+        auto str = "Both";
+        if ( output_scale_.x > 0.0F )
+        {
+            str = "CSB";
+        }
+        else if ( output_scale_.y > 0.0F )
+        {
+            str = "SBO";
+        }
+
+        if ( ImGui::BeginCombo( "Pattern", str ) )
+        {
+            if ( ImGui::Selectable( "CSB" ) )
+            {
+                output_scale_ = { 0.1F, 0.0F, 0.0F };
+            }
+            if ( ImGui::Selectable( "SBO" ) )
+            {
+                output_scale_ = { 0.0F, 0.1F, 0.0F };
+            }
+            if ( ImGui::Selectable( "Both" ) )
+            {
+                output_scale_ = { 0.0F, 0.0F, 0.1F };
+            }
+            ImGui::EndCombo( );
+        }
     }
     ImGui::End( );
 }

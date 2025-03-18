@@ -39,13 +39,22 @@ private:
     };
     ogl::Program program_ = { fullscreen_vertex_shader_, ils_fragment_shader_ };
 
-    ogl::Uniform< float32 >   time_s_uniform_              = { program_, "time_s" };
+    ogl::Uniform< float32 >   pixel_size_m_uniform_      = { program_, "pixel_size_m" };
+    ogl::Uniform< int32 >     antenna_pairs_uniform_     = { program_, "antenna_pairs" };
+    ogl::Uniform< float32 >   antenna_spacing_m_uniform_ = { program_, "antenna_spacing_m" };
+    ogl::Uniform< glm::vec3 > output_scale_uniform_      = { program_, "output_scale" };
+    ogl::Uniform< float32 >   time_s_uniform_            = { program_, "time_s" };
     ogl::Uniform< glm::vec2 > field_size_pixels_uniform_ = { program_, "field_size_pixels" };
 
     ogl::VertexArray vertex_array_ = { };
 
     std::chrono::steady_clock::time_point start_time_   = { };
     float32                               time_scale_s_ = 0.0F;
+
+    float32   pixel_size_m      = 1.0F;
+    int32     antenna_pairs_    = 1;
+    float32   antenna_spacing_m = 5.0F;
+    glm::vec3 output_scale_     = { 0.1F, 0.0F, 0.0F };
 };
 
 } // namespace ltb::app
