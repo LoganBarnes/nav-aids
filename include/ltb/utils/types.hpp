@@ -1,9 +1,10 @@
 #pragma once
 
+// standard
 #include <cinttypes>
 #include <cstddef>
 
-// Using _UZ instead of UZ since it isn't supported on MSVC yet.
+// Using _UZ instead of UZ since UZ isn't supported on MSVC yet.
 [[nodiscard( "Const literal" )]]
 consteval auto operator""_UZ( unsigned long long n )
 {
