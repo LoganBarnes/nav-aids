@@ -54,7 +54,7 @@ using Transform3d   = Transform< three_dimensions >;
 template < glm::length_t Dimensions >
 using Mat = glm::mat< Dimensions, Dimensions, float32 >;
 
-/// \brief Consolidates a collection of 2D transforms into a single 2D transformation matrix.
+/// \brief Consolidates a collection of transforms into a single transformation matrix.
 ///        Transforms will be applied in the order they are provided:
 ///        T_final = T_n * T_n-1 * ... * T_1 * T_0
 template < glm::length_t Dimensions >
