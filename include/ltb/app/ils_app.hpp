@@ -8,6 +8,9 @@
 // generated
 #include "ltb/ltb_config.hpp"
 
+// standard
+#include <chrono>
+
 namespace ltb::app
 {
 
@@ -36,9 +39,13 @@ private:
     };
     ogl::Program program_ = { fullscreen_vertex_shader_, ils_fragment_shader_ };
 
+    ogl::Uniform< float32 >   time_s_uniform_              = { program_, "time_s" };
     ogl::Uniform< glm::vec2 > field_size_pixels_uniform_ = { program_, "field_size_pixels" };
 
-    ogl::VertexArray vertex_array_  = { };
+    ogl::VertexArray vertex_array_ = { };
+
+    std::chrono::steady_clock::time_point start_time_   = { };
+    float32                               time_scale_s_ = 0.0F;
 };
 
 } // namespace ltb::app
