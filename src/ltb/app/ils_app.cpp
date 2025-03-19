@@ -72,11 +72,14 @@ auto IlsApp::configure_gui( ) -> void
 
     if ( ImGui::Begin( "ILS" ) )
     {
-        ImGui::SliderFloat( "Pixel size (m)", &pixel_size_m, 0.1F, 10.0F );
-        ImGui::SliderInt( "Antenna pairs", &antenna_pairs_, 1, 20 );
-        ImGui::SliderFloat( "Antenna spacing (m)", &antenna_spacing_m, 0.1F, 10.0F );
+        auto const unused_return_values = std::array{
+            ImGui::SliderFloat( "Pixel size (m)", &pixel_size_m, 0.1F, 10.0F ),
+            ImGui::SliderInt( "Antenna pairs", &antenna_pairs_, 1, 20 ),
+            ImGui::SliderFloat( "Antenna spacing (m)", &antenna_spacing_m, 0.1F, 10.0F ),
+        };
+        utils::ignore( unused_return_values );
 
-        auto str = "Both";
+        auto* str = "";
         if ( output_scale_.x > 0.0F )
         {
             str = "CSB";
@@ -85,20 +88,25 @@ auto IlsApp::configure_gui( ) -> void
         {
             str = "SBO";
         }
+        else
+        {
+            str = "Both";
+        }
 
         if ( ImGui::BeginCombo( "Pattern", str ) )
         {
+            constexpr auto scale_value = 0.2F;
             if ( ImGui::Selectable( "CSB" ) )
             {
-                output_scale_ = { 0.1F, 0.0F, 0.0F };
+                output_scale_ = { scale_value, 0.0F, 0.0F };
             }
             if ( ImGui::Selectable( "SBO" ) )
             {
-                output_scale_ = { 0.0F, 0.1F, 0.0F };
+                output_scale_ = { 0.0F, scale_value, 0.0F };
             }
             if ( ImGui::Selectable( "Both" ) )
             {
-                output_scale_ = { 0.0F, 0.0F, 0.1F };
+                output_scale_ = { 0.0F, 0.0F, scale_value };
             }
             ImGui::EndCombo( );
         }

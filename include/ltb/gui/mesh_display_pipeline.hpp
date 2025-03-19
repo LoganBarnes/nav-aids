@@ -19,14 +19,14 @@ namespace ltb::gui
 class MeshDisplayPipeline
 {
 public:
-    explicit(false) MeshDisplayPipeline( IncrementalIdGenerator< uint32 >& id_generator );
+    explicit( false ) MeshDisplayPipeline( IncrementalIdGenerator< uint32 >& id_generator );
 
     /// \brief Initialize all the pipeline graphics objects.
     /// \note This should be called before any other functions to avoid errors.
     auto initialize( ) -> utils::Result< void >;
 
     /// \brief Returns true if the pipeline has been initialized.
-    [[nodiscard("Const getter")]]
+    [[nodiscard( "Const getter" )]]
     auto is_initialized( ) const -> bool;
 
     /// \brief Create new GPU objects used to display the mesh data.
@@ -39,7 +39,7 @@ public:
     /// \brief Returns the saved display settings for the mesh with the provided id.
     ///        If errors are encountered they are logged to the console and the default
     ///        settings are returned.
-    [[nodiscard("Const getter")]]
+    [[nodiscard( "Const getter" )]]
     auto get_settings( MeshId id ) const -> MeshDisplaySettings;
 
     /// \brief Remove the mesh with the provided id from the pipeline. If errors are
