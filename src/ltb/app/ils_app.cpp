@@ -95,18 +95,18 @@ auto IlsApp::configure_gui( ) -> void
 
         if ( ImGui::BeginCombo( "Pattern", str ) )
         {
-            constexpr auto scale_value = 0.2F;
+            constexpr auto scale_value = 0.5F;
             if ( ImGui::Selectable( "CSB" ) )
             {
-                output_scale_ = { scale_value, 0.0F, 0.0F };
+                output_scale_ = {  0.0F, scale_value, 0.0F };
             }
             if ( ImGui::Selectable( "SBO" ) )
             {
-                output_scale_ = { 0.0F, scale_value, 0.0F };
+                output_scale_ = {  0.0F, 0.0F, scale_value };
             }
             if ( ImGui::Selectable( "Both" ) )
             {
-                output_scale_ = { 0.0F, 0.0F, scale_value };
+                output_scale_ = { 0.0F, scale_value, scale_value };
             }
             ImGui::EndCombo( );
         }

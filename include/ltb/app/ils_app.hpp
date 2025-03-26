@@ -54,7 +54,7 @@ private:
     float32   pixel_size_m      = 1.0F;
     int32     antenna_pairs_    = 1;
     float32   antenna_spacing_m = 5.0F;
-    glm::vec3 output_scale_     = { 0.1F, 0.0F, 0.0F };
+    glm::vec3 output_scale_     = { 0.1F, 0.1F, 0.1F };
 };
 
 } // namespace ltb::app
