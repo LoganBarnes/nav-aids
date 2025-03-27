@@ -58,7 +58,7 @@ auto IlsApp::render( ) -> void
     set( pixel_size_m_uniform_, pixel_size_m );
     set( antenna_pairs_uniform_, antenna_pairs_ );
     set( antenna_spacing_m_uniform_, antenna_spacing_m );
-    set( output_scale_uniform_, output_scale_ );
+    set( output_scale_uniform_, output_channels_ * output_scale_ );
     set( time_s_uniform_, elapsed_time_s * time_scale_s_ );
     set( field_size_pixels_uniform_, glm::vec2{ framebuffer_size_ } );
 
@@ -74,39 +74,44 @@ auto IlsApp::configure_gui( ) -> void
     {
         auto const unused_return_values = std::array{
             ImGui::SliderFloat( "Pixel size (m)", &pixel_size_m, 0.1F, 10.0F ),
-            ImGui::SliderInt( "Antenna pairs", &antenna_pairs_, 1, 20 ),
+            ImGui::SliderInt( "Antenna pairs", &antenna_pairs_, 1, 10 ),
             ImGui::SliderFloat( "Antenna spacing (m)", &antenna_spacing_m, 0.1F, 10.0F ),
         };
         utils::ignore( unused_return_values );
 
+        output_scale_ = 0.1F / static_cast< float32 >( antenna_pairs_ );
+
         auto* str = "";
-        if ( output_scale_.x > 0.0F )
+        switch ( display_ )
         {
-            str = "CSB";
-        }
-        else if ( output_scale_.y > 0.0F )
-        {
-            str = "SBO";
-        }
-        else
-        {
-            str = "Both";
+            using enum Display;
+            case CSB:
+                str = "CSB";
+                break;
+            case SBO:
+                str = "SBO";
+                break;
+            case Both:
+                str = "Both";
+                break;
         }
 
         if ( ImGui::BeginCombo( "Pattern", str ) )
         {
-            constexpr auto scale_value = 0.5F;
             if ( ImGui::Selectable( "CSB" ) )
             {
-                output_scale_ = {  0.0F, scale_value, 0.0F };
+                output_channels_ = { 0.0F, 1.0F, 0.0F };
+                display_         = Display::CSB;
             }
             if ( ImGui::Selectable( "SBO" ) )
             {
-                output_scale_ = {  0.0F, 0.0F, scale_value };
+                output_channels_ = { 0.0F, 0.0F, 1.0F };
+                display_         = Display::SBO;
             }
             if ( ImGui::Selectable( "Both" ) )
             {
-                output_scale_ = { 0.0F, scale_value, scale_value };
+                output_channels_ = { 0.0F, 1.0F, 1.0F };
+                display_         = Display::Both;
             }
             ImGui::EndCombo( );
         }

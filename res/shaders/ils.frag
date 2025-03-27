@@ -44,6 +44,9 @@ void main()
     vec3 left  = csb + inv_sbo;
     vec3 right = csb - inv_sbo;
 
+    vec2 carrier_c = vec2(0.0F);
+    vec2 carrier_s = vec2(0.0F);
+
     float min_antenna_pos = (float(antenna_pairs) - 0.5F) * antenna_spacing_m;
 
     for (int i = 0; i < antenna_pairs * 2; ++i) {
@@ -71,14 +74,20 @@ void main()
                 vec2 j_value_carrier_c = value(position, antenna_j_pos, loc_freq, 0.0F);
                 vec2 j_value_carrier_s = value(position, antenna_j_pos, loc_freq, j_phase);
 
-                float csb_strength = (i_value_carrier_c + j_value_carrier_c).x;
-                float sbo_strength = (i_value_carrier_s + j_value_carrier_s).x;
+//                float csb_strength = (i_value_carrier_c + j_value_carrier_c).x;
+//                float sbo_strength = (i_value_carrier_s + j_value_carrier_s).x;
 
-                signal += csb * csb_strength;
-                signal += sbo * sbo_strength;
+//                signal += csb * csb_strength;
+//                signal += sbo * sbo_strength;
+
+                carrier_c += i_value_carrier_c + j_value_carrier_c;
+                carrier_s += i_value_carrier_s + j_value_carrier_s;
             }
         }
     }
+
+//    signal = vec3(0.0F, length(carrier_c), length(carrier_s));
+    signal = vec3(0.0F, carrier_c.x, carrier_s.x);
 
     vec3 output_color = (signal * output_scale) + output_scale;
 
