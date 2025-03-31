@@ -23,6 +23,7 @@ enum class MeshFormat
     LineStrip,
     Triangles,
     TriangleStrip,
+    TriangleFan,
 };
 
 template < glm::length_t N, typename T >
