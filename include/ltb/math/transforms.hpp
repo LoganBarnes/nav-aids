@@ -18,6 +18,7 @@ namespace ltb::math
 constexpr auto one_dimension    = glm::length_t{ 1 };
 constexpr auto two_dimensions   = glm::length_t{ 2 };
 constexpr auto three_dimensions = glm::length_t{ 3 };
+constexpr auto four_dimensions  = glm::length_t{ 4 };
 
 template < glm::length_t Dimensions >
 concept TwoOrThreeD = ( two_dimensions == Dimensions ) || ( three_dimensions == Dimensions );
@@ -106,5 +107,21 @@ struct Scale
 {
     glm::vec< Dimensions, float32 > scale = glm::vec< Dimensions, float32 >( 1.0F );
 };
+
+/// \brief Applies the rotation, scale, and translation matrix transform to the point.
+template < typename T >
+    requires std::is_floating_point_v< T >
+auto transform_point( glm::tmat4x4< T > const& transform, glm::tvec3< T > const& point )
+{
+    return glm::tvec3< T >( transform * glm::tvec4< T >( point, T( 1 ) ) );
+}
+
+/// \brief Applies the rotation and scale parts of the matrix transform to the vector.
+template < typename T >
+    requires std::is_floating_point_v< T >
+auto transform_vector( glm::tmat4x4< T > const& transform, glm::tvec3< T > const& vector )
+{
+    return glm::tvec3< T >( transform * glm::tvec4< T >( vector, T( 0 ) ) );
+}
 
 } // namespace ltb::math

@@ -1,6 +1,7 @@
 #pragma once
 
 // project
+#include "ltb/gui/incremental_id_generator.hpp"
 #include "ltb/utils/types.hpp"
 
 // standard
@@ -11,37 +12,62 @@ namespace ltb::gui
 {
 
 /// \brief A unique identifier for an allocated piece of geometry.
-class MeshId
+template < typename Type >
+class TypeId
 {
 public:
-    constexpr MeshId( ) = default;
-
-    explicit constexpr MeshId( uint32 const id )
-        : id_( id )
-    {
-    }
-
     [[nodiscard( "Const Getter" )]] auto id( ) const -> uint32;
+    [[nodiscard( "Const Getter" )]] auto is_nil( ) const -> bool;
 
-    explicit operator bool( ) const;
+    auto operator<=>( TypeId< Type > const& ) const = default;
 
-    auto operator<=>( MeshId const& ) const = default;
+    static auto nil( ) -> TypeId< Type >;
 
 private:
-    uint32 id_ = 0U;
+    friend class IncrementalIdGenerator< uint32 >;
+
+    explicit constexpr TypeId( uint32 id );
+
+    uint32 id_;
+
+    constexpr static auto nil_value_ = 0U;
 };
+
+template < typename Type >
+constexpr TypeId< Type >::TypeId( uint32 const id )
+    : id_{ id }
+{
+}
+
+template < typename Type >
+auto TypeId< Type >::id( ) const -> uint32_t
+{
+    return id_;
+}
+
+template < typename Type >
+auto TypeId< Type >::is_nil( ) const -> bool
+{
+    return nil_value_ != id_;
+}
+
+template < typename Type >
+auto TypeId< Type >::nil( ) -> TypeId< Type >
+{
+    return TypeId< Type >{ nil_value_ };
+}
 
 } // namespace ltb::gui
 
 namespace std
 {
 
-template <>
-struct hash< ltb::gui::MeshId >
+template < typename Type >
+struct hash< ltb::gui::TypeId< Type > >
 {
-    auto operator( )( ltb::gui::MeshId const& id ) const -> size_t
+    auto operator( )( ltb::gui::TypeId< Type > const& id ) const noexcept
     {
-        return std::hash< ltb::uint32 >{ }( id.id( ) );
+        return hash< ltb::uint32 >{ }( id.id( ) );
     }
 };
 

@@ -1,6 +1,6 @@
-#version 450
+#version 410
 
-#include "utils/frag_constants_and_uniforms.glsl"
+#include utils/frag_constants_and_uniforms.glsl
 
 // Inputs
 in vec3 world_position;
@@ -12,7 +12,7 @@ in vec3 vertex_color;
 out vec4 out_color;
 
 vec3 get_color() {
-    switch (display.color_mode) {
+    switch (color_mode) {
         case color_mode_position:
         return world_position;
 
@@ -26,7 +26,7 @@ vec3 get_color() {
         return vertex_color;
 
         case color_mode_global_color:
-        return display.color.rgb;
+        return uniform_color.rgb;
 
         case color_mode_texture:
         return vec3(uv_coords, 1.0F);

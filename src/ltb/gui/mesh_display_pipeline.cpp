@@ -112,7 +112,7 @@ auto MeshDisplayPipeline::initialize( ) -> utils::Result< void >
             clip_from_world_uniform_,
             world_from_local_uniform_,
             world_from_local_normals_uniform_,
-            color_uniform_,
+            uniform_color_uniform_,
             color_mode_uniform_,
             shading_mode_uniform_
         )
@@ -291,7 +291,7 @@ auto MeshDisplayPipeline::draw( math::cam::CameraRenderParams const& cam ) -> vo
         {
             set( world_from_local_uniform_, data.world_transform );
             set( world_from_local_normals_uniform_, data.normals_transform );
-            set( color_uniform_, data.settings.custom_color );
+            set( uniform_color_uniform_, data.settings.custom_color );
             set( color_mode_uniform_, std::to_underlying( data.settings.color_mode ) );
             set( shading_mode_uniform_, std::to_underlying( data.settings.shading_mode ) );
 

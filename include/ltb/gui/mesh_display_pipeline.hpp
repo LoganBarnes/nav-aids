@@ -16,6 +16,8 @@
 namespace ltb::gui
 {
 
+using MeshId = TypeId< struct MeshIdTag >;
+
 class MeshDisplayPipeline
 {
 public:
@@ -99,9 +101,9 @@ private:
         program_,
         "world_from_local_normals",
     };
-    ogl::Uniform< glm::vec4 > color_uniform_ = {
+    ogl::Uniform< glm::vec4 > uniform_color_uniform_ = {
         program_,
-        "color",
+        "uniform_color",
     };
     ogl::Uniform< uint32 > color_mode_uniform_ = {
         program_,

@@ -3,6 +3,7 @@
 #include "ltb/app/antenna_app.hpp"
 #include "ltb/app/app.hpp"
 #include "ltb/app/cfd_lesson_1_app.hpp"
+#include "ltb/app/gps_app.hpp"
 #include "ltb/app/ils_app.hpp"
 #include "ltb/gui/glfw_opengl_imgui_setup.hpp"
 #include "ltb/window/glfw_window.hpp"
@@ -24,6 +25,7 @@ auto app_main( ) -> utils::Result< void >
         window,
         imgui,
         {
+            { "GPS", std::make_shared< app::GpsApp >( ) },
             { "ILS", std::make_shared< app::IlsApp >( ) },
             { "Antenna", std::make_shared< app::AntennaApp >( ) },
             { "CFD Lesson 1", std::make_shared< app::CfdLesson1App >( ) },

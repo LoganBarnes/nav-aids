@@ -14,8 +14,6 @@ const uint shading_mode_cook_torrance = 2;/// \todo
 // Uniforms
 uniform sampler2D tex_sampler;
 
-uniform Display {
-    vec4 color;
-    uint color_mode;
-    uint shading_mode;
-} display;
+uniform vec4 uniform_color = vec4(1.0F);
+uniform uint color_mode    = color_mode_white;
+uniform uint shading_mode  = shading_mode_flat;
