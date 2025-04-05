@@ -1,5 +1,8 @@
 #include "ltb/app/app.hpp"
 
+// project
+#include "ltb/ogl/utils.hpp"
+
 // external
 #include <spdlog/spdlog.h>
 
@@ -9,6 +12,24 @@
 
 namespace ltb::app
 {
+namespace
+{
+
+[[maybe_unused]] auto opengl_error_callback(
+    GLenum        source,
+    GLenum        type,
+    GLuint        id,
+    GLenum        severity,
+    GLsizei       length,
+    GLchar const* message,
+    void const*   userParam
+)
+{
+    utils::ignore( source, type, id, length, userParam );
+    spdlog::error( "OpenGL Error: {} ({}: {})", message, id, severity );
+}
+
+} // namespace
 
 AppRunner::AppRunner(
     window::Window&                                                 window,
@@ -34,7 +55,10 @@ auto AppRunner::initialize( ) -> utils::Result< AppRunner* >
 
     ImGui::GetIO( ).ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
-    LTB_CHECK( ogl_loader_.initialize( ) );
+    // LTB_CHECK( ogl_loader_.initialize( ) );
+    LTB_CHECK( ogl_loader_.initialize( opengl_error_callback ) );
+
+    ogl::set_defaults( );
 
     if ( !apps_.empty( ) )
     {
@@ -61,12 +85,7 @@ auto AppRunner::run( ) -> utils::Result< void >
             }
         }
 
-        if ( nullptr != current_app_ )
-        {
-            current_app_->render( );
-        }
-
-        render_gui( );
+        render( );
 
         window_.swap_buffers( );
     }
@@ -74,7 +93,7 @@ auto AppRunner::run( ) -> utils::Result< void >
     return utils::success( );
 }
 
-auto AppRunner::render_gui( ) -> void
+auto AppRunner::render( ) -> void
 {
     imgui_setup_.new_frame( );
 
@@ -97,6 +116,7 @@ auto AppRunner::render_gui( ) -> void
     if ( nullptr != current_app_ )
     {
         current_app_->configure_gui( );
+        current_app_->render( );
     }
 
     imgui_setup_.render( );

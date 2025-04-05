@@ -53,7 +53,7 @@ private:
     std::vector< std::pair< std::string, std::shared_ptr< App > > > apps_;
     App*                                                            current_app_ = nullptr;
 
-    auto render_gui( ) -> void;
+    auto render( ) -> void;
     auto configure_app_menu( std::string const& name, App* app ) -> void;
 };
 
