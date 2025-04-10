@@ -82,7 +82,7 @@ auto OrbitCamera::handle_inputs( CameraInputSettings const& settings ) -> void
     }
 
     // Handle mouse-drag pan/rotate
-    if ( io.MouseDelta.x != 0.f || io.MouseDelta.y != 0.f )
+    if ( io.MouseDelta.x != 0.0F || io.MouseDelta.y != 0.0F )
     {
         // Pan
         if ( utils::has_flag( movement_modes_, MovementMode::Pan ) )
@@ -96,34 +96,23 @@ auto OrbitCamera::handle_inputs( CameraInputSettings const& settings ) -> void
         {
             yaw_degrees_ -= io.MouseDelta.x * settings_.rotate_sensitivity;
             pitch_degrees_ -= io.MouseDelta.y * settings_.rotate_sensitivity;
-            pitch_degrees_ = glm::clamp( pitch_degrees_, -89.f, +89.f );
+            pitch_degrees_ = glm::clamp( pitch_degrees_, -89.0F, +89.0F );
         }
     }
 
     // Zoom
-    if ( io.MouseWheel != 0.f )
+    if ( io.MouseWheel != 0.0F )
     {
         orbit_distance_ += io.MouseWheel * settings_.zoom_sensitivity * orbit_distance_;
-        orbit_distance_ = glm::max( 0.01f, orbit_distance_ ); // Prevent negative or zero distance
-    }
-
-    // Optional: roll left/right when pressing Q/E
-    if ( io.KeysDown[ ImGuiKey_Q ] )
-    {
-        roll_degrees_ -= settings_.rotate_sensitivity;
-    }
-    if ( io.KeysDown[ ImGuiKey_E ] )
-    {
-        roll_degrees_ += settings_.rotate_sensitivity;
+        orbit_distance_ = glm::max( 0.01F, orbit_distance_ ); // Prevent negative or zero distance
     }
 
     // Reset position (and optionally orientation)
     if ( io.KeysDown[ ImGuiKey_R ] )
     {
         orbit_point_   = { };
-        pitch_degrees_ = 0.f;
-        yaw_degrees_   = 0.f;
-        roll_degrees_  = 0.f; // Reset roll as well
+        pitch_degrees_ = 0.0F;
+        yaw_degrees_   = 0.0F;
     }
 
     update( );
@@ -134,24 +123,25 @@ auto OrbitCamera::update( ) -> void
     render_params_ = { };
 
     // Y-up by default; Z-up if specified.
-    auto eye   = glm::vec3( 0.f, 0.f, +1.f );
-    auto look  = glm::vec3( 0.f, 0.f, -1.f );
-    auto up    = glm::vec3( 0.f, +1.f, 0.f );
-    auto right = glm::vec3( +1.f, 0.f, 0.f );
+    auto eye   = glm::vec3( 0.0F, 0.0F, +1.0F );
+    auto look  = glm::vec3( 0.0F, 0.0F, -1.0F );
+    auto up    = glm::vec3( 0.0F, +1.0F, 0.0F );
+    auto right = glm::vec3( +1.0F, 0.0F, 0.0F );
 
     if ( settings_.z_up )
     {
-        eye   = glm::vec3( 0.f, -1.f, 0.f );
-        look  = glm::vec3( 0.f, +1.f, 0.f );
-        up    = glm::vec3( 0.f, 0.f, +1.f );
-        right = glm::vec3( +1.f, 0.f, 0.f );
+        eye   = glm::vec3( 0.0F, -1.0F, 0.0F );
+        look  = glm::vec3( 0.0F, +1.0F, 0.0F );
+        up    = glm::vec3( 0.0F, 0.0F, +1.0F );
+        right = glm::vec3( +1.0F, 0.0F, 0.0F );
     }
 
     // 1) Rotate by yaw around the up axis.
-    auto yaw_mat = glm::rotate( glm::mat4( 1.f ), glm::radians( yaw_degrees_ ), up );
+    auto yaw_mat = glm::rotate( glm::mat4( 1.0F ), glm::radians( yaw_degrees_ ), up );
     // 2) Rotate by pitch around the camera's right axis (after yaw).
     auto pitched_right = math::transform_vector( yaw_mat, right );
-    auto pitch_mat = glm::rotate( glm::mat4( 1.f ), glm::radians( pitch_degrees_ ), pitched_right );
+    auto pitch_mat
+        = glm::rotate( glm::mat4( 1.0F ), glm::radians( pitch_degrees_ ), pitched_right );
 
     // Combine yaw + pitch
     auto yaw_pitch_mat = pitch_mat * yaw_mat;
@@ -159,8 +149,7 @@ auto OrbitCamera::update( ) -> void
     // 3) Roll around the new forward (look) axis after yaw/pitch
     auto new_look = math::transform_vector( yaw_pitch_mat, look );
     new_look      = glm::normalize( new_look );
-    auto roll_mat = glm::rotate( glm::mat4( 1.f ), glm::radians( roll_degrees_ ), new_look );
-    auto rotation = glm::toMat4( world_rotation_ ) * roll_mat * yaw_pitch_mat;
+    auto rotation = glm::toMat4( world_rotation_ ) * yaw_pitch_mat;
 
     // Calculate final vectors
     auto final_eye
@@ -175,7 +164,8 @@ auto OrbitCamera::update( ) -> void
     render_params_.right = final_right;
 
     // Build perspective
-    auto aspect_ratio = ( viewport_size_.y <= 0.f ) ? 1.f : ( viewport_size_.x / viewport_size_.y );
+    auto aspect_ratio
+        = ( viewport_size_.y <= 0.0F ) ? 1.0F : ( viewport_size_.x / viewport_size_.y );
     render_params_.clip_from_view = glm::perspective(
         glm::radians( settings_.perspective.fov_degrees ),
         aspect_ratio,

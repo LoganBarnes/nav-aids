@@ -18,37 +18,25 @@ auto GpsApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Result< v
     LTB_CHECK( utils::initialize( mesh_pipeline_ ) );
 
     glClearColor( 0.2F, 0.2F, 0.2F, 1.0F );
+    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 
-    // Tmp
-    glEnable( GL_CULL_FACE );
-
-    // auto const earth_mesh = build_mesh(
-    //     math::shapes::Icosphere{
-    //         .position        = { 0.0F, 0.0F, 0.0F },
-    //         .radius          = earth_radius_km,
-    //         .recursion_level = 2U,
-    //     }
-    // );
-    // LTB_CHECK( earth_id_, mesh_pipeline_.initialize_mesh( earth_mesh ) );
-
-    auto triangle      = math::Mesh3{ math::MeshFormat::Triangles };
-    triangle.positions = {
-        { +0.0F, +0.5F, 0.0F },
-        { -0.5F, -0.5F, 0.0F },
-        { +0.5F, -0.5F, 0.0F },
-    };
-    // triangle.vertex_colors = {
-    //     { 1.0F, 0.0F, 0.0F },
-    //     { 0.0F, 1.0F, 0.0F },
-    //     { 0.0F, 0.0F, 1.0F },
-    // };
-    LTB_CHECK( mesh_pipeline_.initialize_mesh( triangle ) );
-
-    // auto cam_settings                 = camera_.settings( );
-    // cam_settings.initial_eye_position = { 0.0F, 0.0F, 5.0F };
-    // cam_settings.initial_focus_point  = { 0.0F, 0.0F, 0.0F };
-    // cam_settings.initial_up_direction = { 0.0F, 1.0F, 0.0F };
-    // camera_.set_settings( cam_settings );
+    auto const earth_mesh = build_mesh(
+        math::shapes::Icosphere{
+            .position        = { 0.0F, 0.0F, 0.0F },
+            .radius          = earth_radius_Mm,
+            .recursion_level = 4U,
+        }
+    );
+    LTB_CHECK( earth_id_, mesh_pipeline_.initialize_mesh( earth_mesh ) );
+    mesh_pipeline_.update_settings(
+        earth_id_,
+        gui::MeshDisplaySettings{
+            .visible      = true,
+            .color_mode   = gui::ColorMode::GlobalColor,
+            .custom_color = { 0.1F, 0.5F, 0.1F, 1.0F },
+            .shading_mode = gui::ShadingMode::Flat,
+        }
+    );
 
     resize( framebuffer_size );
 

@@ -5,6 +5,7 @@
 #include "ltb/math/cam/camera_render_params.hpp"
 #include "ltb/math/cam/camera_settings.hpp"
 #include "ltb/utils/enum_flags.hpp"
+#include "ltb/utils/types.hpp"
 
 // external
 #include <glm/detail/type_quat.hpp>
@@ -34,7 +35,7 @@ public:
 
     auto set_world_offset( glm::vec3 world_offset ) -> void;
 
-    auto set_world_rotation( float w, float x, float y, float z ) -> void;
+    auto set_world_rotation( float32 w, float32 x, float32 y, float32 z ) -> void;
 
 private:
     math::cam::CameraSettings     settings_      = { };
@@ -43,14 +44,13 @@ private:
     utils::Flags< MovementMode > movement_modes_ = { };
 
     glm::fquat world_rotation_ = glm::fquat( );
-    glm::vec3  world_offset_   = { 0.f, 0.f, 0.f };
-    glm::vec3  orbit_point_    = { 0.f, 0.f, 0.f };
-    float      pitch_degrees_  = 0.f;
-    float      yaw_degrees_    = 0.f;
-    float      roll_degrees_   = 0.f; // NEW: track roll angle
+    glm::vec3  world_offset_   = { 0.0F, 0.0F, 0.0F };
+    glm::vec3  orbit_point_    = { 0.0F, 0.0F, 0.0F };
+    float32    pitch_degrees_  = 0.0F;
+    float32    yaw_degrees_    = 0.0F;
 
-    float     orbit_distance_ = 15.f;
-    glm::vec2 viewport_size_  = { 1.f, 1.f };
+    float32   orbit_distance_ = 50.0F;
+    glm::vec2 viewport_size_  = { 1.0F, 1.0F };
 
     auto update( ) -> void;
 };

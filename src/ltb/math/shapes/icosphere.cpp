@@ -22,24 +22,23 @@ auto get_middle_point(
 {
     // first check if we have it already
     auto const key = std::make_pair( std::min( index1, index2 ), std::max( index1, index2 ) );
-
     if ( auto iter = cache.find( key ); iter != cache.end( ) )
     {
         return iter->second;
     }
-
-    auto const index = static_cast< uint32 >( mesh.positions.size( ) );
 
     // not in cache, calculate it
     auto const point1 = mesh.positions[ index1 ];
     auto const point2 = mesh.positions[ index2 ];
     auto const middle = glm::mix( point1, point2, 0.5F );
 
+    auto const index = static_cast< uint32 >( mesh.positions.size( ) );
+
     // add vertex makes sure point is on unit sphere
     mesh.positions.emplace_back( glm::normalize( middle ) );
 
     // store it, return index
-    cache.emplace( key, index );
+    cache.try_emplace( key, index );
 
     return index;
 }
@@ -54,14 +53,18 @@ auto refine_unit_icosphere( Mesh3& mesh, uint32 const recursion_level )
         auto refined_indices = std::vector< uint32 >{ };
         for ( auto i = 0U; i < mesh.indices.size( ); i += 3U )
         {
-            // replace triangle by 4 triangles
-            auto const a = get_middle_point( mesh, i + 0U, i + 1U, cache );
-            auto const b = get_middle_point( mesh, i + 1U, i + 2U, cache );
-            auto const c = get_middle_point( mesh, i + 2U, i + 0U, cache );
+            auto const i0 = mesh.indices[ i + 0U ];
+            auto const i1 = mesh.indices[ i + 1U ];
+            auto const i2 = mesh.indices[ i + 2U ];
 
-            refined_indices.insert( refined_indices.end( ), { i + 0U, a, c } );
-            refined_indices.insert( refined_indices.end( ), { i + 1U, b, a } );
-            refined_indices.insert( refined_indices.end( ), { i + 2U, c, b } );
+            // replace triangle by 4 triangles
+            auto const a = get_middle_point( mesh, i0, i1, cache );
+            auto const b = get_middle_point( mesh, i1, i2, cache );
+            auto const c = get_middle_point( mesh, i2, i0, cache );
+
+            refined_indices.insert( refined_indices.end( ), { i0, a, c } );
+            refined_indices.insert( refined_indices.end( ), { i1, b, a } );
+            refined_indices.insert( refined_indices.end( ), { i2, c, b } );
             refined_indices.insert( refined_indices.end( ), { a, b, c } );
         }
         mesh.indices = std::move( refined_indices );

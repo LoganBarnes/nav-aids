@@ -14,43 +14,46 @@ namespace ltb::gui
 namespace
 {
 
-// template < glm::length_t L >
-// auto maybe_add_buffer(
-//     std::vector< ogl::Buffer >&                     vertex_buffers,
-//     ogl::Bound< ogl::VertexArray >&                 bound_vao,
-//     std::vector< glm::vec< L, float32 > > const&    data,
-//     ogl::Attribute< glm::vec< L, float32 > > const& attribute,
-//     std::string_view const                          name,
-//     size_t const                                    expected_size
-// ) -> utils::Result< void >
-// {
-//
-//     if ( !data.empty( ) )
-//     {
-//         if ( data.size( ) != expected_size )
-//         {
-//             return LTB_MAKE_UNEXPECTED_ERROR( "Mesh {} size does not match positions size", name );
-//         }
-//         auto bound_vbo = bind< GL_ARRAY_BUFFER >( vertex_buffers.emplace_back( ) );
-//         buffer_data( bound_vbo, data, GL_STATIC_DRAW );
-//
-//         constexpr auto total_stride   = 0;
-//         constexpr auto attrib_divisor = 0;
-//         set_attributes(
-//             bound_vao,
-//             bound_vbo,
-//             { {
-//                 .attribute_location      = attribute.location( ),
-//                 .num_coordinates         = L,
-//                 .data_type               = GL_FLOAT,
-//                 .initial_offset_into_vbo = nullptr,
-//             } },
-//             total_stride,
-//             attrib_divisor
-//         );
-//     }
-//     return utils::success( );
-// }
+template < glm::length_t L >
+auto maybe_add_buffer(
+    std::vector< ogl::Buffer >&                     vertex_buffers,
+    ogl::Bound< ogl::VertexArray >&                 bound_vao,
+    std::vector< glm::vec< L, float32 > > const&    data,
+    ogl::Attribute< glm::vec< L, float32 > > const& attribute,
+    std::string_view const                          name,
+    size_t const                                    expected_size
+) -> utils::Result< void >
+{
+
+    if ( !data.empty( ) )
+    {
+        if ( data.size( ) != expected_size )
+        {
+            return LTB_MAKE_UNEXPECTED_ERROR( "Mesh {} size does not match positions size", name );
+        }
+        auto& vertex_buffer = vertex_buffers.emplace_back( );
+        LTB_CHECK( utils::initialize( vertex_buffer ) );
+
+        auto bound_vbo = bind< GL_ARRAY_BUFFER >( vertex_buffer );
+        buffer_data( bound_vbo, data, GL_STATIC_DRAW );
+
+        constexpr auto total_stride   = 0;
+        constexpr auto attrib_divisor = 0;
+        set_attributes(
+            bound_vao,
+            bound_vbo,
+            { {
+                .attribute_location      = attribute.location( ),
+                .num_coordinates         = L,
+                .data_type               = GL_FLOAT,
+                .initial_offset_into_vbo = nullptr,
+            } },
+            total_stride,
+            attrib_divisor
+        );
+    }
+    return utils::success( );
+}
 
 auto mode_from_geometry_format( math::MeshFormat const format ) -> utils::Result< GLenum >
 {
@@ -105,16 +108,16 @@ auto MeshDisplayPipeline::initialize( ) -> utils::Result< void >
             vertex_shader_,
             fragment_shader_,
             program_,
-            local_position_attribute_
-            // local_normal_attribute_,
-            // local_uv_coords_attribute_,
-            // local_color_attribute_,
-            // clip_from_world_uniform_,
-            // world_from_local_uniform_,
-            // world_from_local_normals_uniform_,
-            // uniform_color_uniform_,
-            // color_mode_uniform_,
-            // shading_mode_uniform_
+            local_position_attribute_,
+            local_normal_attribute_,
+            local_uv_coords_attribute_,
+            local_color_attribute_,
+            clip_from_world_uniform_,
+            world_from_local_uniform_,
+            world_from_local_normals_uniform_,
+            uniform_color_uniform_,
+            color_mode_uniform_,
+            shading_mode_uniform_
         )
     );
 
@@ -139,64 +142,51 @@ auto MeshDisplayPipeline::initialize_mesh( math::Mesh3 const& mesh ) -> utils::R
 
     // Create the OpenGL objects for the mesh.
     auto mesh_data = InternalMeshData{ .draw_mode = draw_mode };
-    // auto       bound_vao     = bind( mesh_data.vertex_array );
-    // auto const expected_size = mesh.positions.size( );
 
-    auto bound_vbo = bind< GL_ARRAY_BUFFER >( mesh_data.vertex_buffer );
-    buffer_data( bound_vbo, mesh.positions, GL_STATIC_DRAW );
+    LTB_CHECK( utils::initialize( mesh_data.vertex_array ) );
 
-    constexpr auto total_stride   = 0;
-    constexpr auto attrib_divisor = 0;
-    set_attributes(
-        bind( mesh_data.vertex_array ),
-        bound_vbo,
-        { {
-            .attribute_location      = local_position_attribute_.location( ),
-            .num_coordinates         = decltype( mesh.positions )::value_type::length( ),
-            .data_type               = GL_FLOAT,
-            .initial_offset_into_vbo = nullptr,
-        } },
-        total_stride,
-        attrib_divisor
-    );
+    auto       bound_vao     = bind( mesh_data.vertex_array );
+    auto const expected_size = mesh.positions.size( );
 
-    // LTB_CHECK( maybe_add_buffer(
-    //     mesh_data.vertex_buffers,
-    //     bound_vao,
-    //     mesh.positions,
-    //     local_position_attribute_,
-    //     "positions",
-    //     expected_size
-    // ) );
-    // LTB_CHECK( maybe_add_buffer(
-    //     mesh_data.vertex_buffers,
-    //     bound_vao,
-    //     mesh.normals,
-    //     local_normal_attribute_,
-    //     "normals",
-    //     expected_size
-    // ) );
-    // LTB_CHECK( maybe_add_buffer(
-    //     mesh_data.vertex_buffers,
-    //     bound_vao,
-    //     mesh.uvs,
-    //     local_uv_coords_attribute_,
-    //     "uvs",
-    //     expected_size
-    // ) );
-    // LTB_CHECK( maybe_add_buffer(
-    //     mesh_data.vertex_buffers,
-    //     bound_vao,
-    //     mesh.vertex_colors,
-    //     local_color_attribute_,
-    //     "vertex_colors",
-    //     expected_size
-    // ) );
+    LTB_CHECK( maybe_add_buffer(
+        mesh_data.vertex_buffers,
+        bound_vao,
+        mesh.positions,
+        local_position_attribute_,
+        "positions",
+        expected_size
+    ) );
+    LTB_CHECK( maybe_add_buffer(
+        mesh_data.vertex_buffers,
+        bound_vao,
+        mesh.normals,
+        local_normal_attribute_,
+        "normals",
+        expected_size
+    ) );
+    LTB_CHECK( maybe_add_buffer(
+        mesh_data.vertex_buffers,
+        bound_vao,
+        mesh.uvs,
+        local_uv_coords_attribute_,
+        "uvs",
+        expected_size
+    ) );
+    LTB_CHECK( maybe_add_buffer(
+        mesh_data.vertex_buffers,
+        bound_vao,
+        mesh.vertex_colors,
+        local_color_attribute_,
+        "vertex_colors",
+        expected_size
+    ) );
 
     if ( !mesh.indices.empty( ) )
     {
+        mesh_data.index_buffer = ogl::Buffer{ };
+        LTB_CHECK( utils::initialize( mesh_data.index_buffer.value( ) ) );
         buffer_data(
-            bind< GL_ELEMENT_ARRAY_BUFFER >( mesh_data.index_buffer.emplace( ) ),
+            bind< GL_ELEMENT_ARRAY_BUFFER >( mesh_data.index_buffer.value( ) ),
             mesh.indices,
             GL_STATIC_DRAW
         );
@@ -215,8 +205,7 @@ auto MeshDisplayPipeline::initialize_mesh( math::Mesh3 const& mesh ) -> utils::R
     return id;
 }
 
-auto MeshDisplayPipeline::update_settings( MeshId const id, MeshDisplaySettings const settings )
-    -> void
+auto MeshDisplayPipeline::update_settings( MeshId const id, MeshDisplaySettings settings ) -> void
 {
     if ( !is_initialized( ) )
     {
@@ -241,7 +230,7 @@ auto MeshDisplayPipeline::update_settings( MeshId const id, MeshDisplaySettings 
     data.world_transform   = consolidate_transforms( settings.transforms );
     data.normals_transform = math::normals_transform( data.world_transform );
 
-    data.settings = settings;
+    data.settings = std::move( settings );
 }
 
 auto MeshDisplayPipeline::get_settings( MeshId const id ) const -> MeshDisplaySettings
@@ -269,7 +258,7 @@ auto MeshDisplayPipeline::get_settings( MeshId const id ) const -> MeshDisplaySe
 
 auto MeshDisplayPipeline::remove( MeshId const id ) -> void
 {
-    internal_data_.erase( id );
+    utils::ignore( internal_data_.erase( id ) );
 }
 
 auto MeshDisplayPipeline::clear( ) -> void
@@ -279,8 +268,6 @@ auto MeshDisplayPipeline::clear( ) -> void
 
 auto MeshDisplayPipeline::draw( math::cam::CameraRenderParams const& cam ) -> void
 {
-    utils::ignore( cam );
-
     if ( !is_initialized( ) )
     {
         spdlog::error( "MeshDisplayPipeline not initialized" );
@@ -294,8 +281,8 @@ auto MeshDisplayPipeline::draw( math::cam::CameraRenderParams const& cam ) -> vo
         return;
     }
 
-    auto bound_program = bind( program_ );
-    // set( clip_from_world_uniform_, cam.clip_from_world );
+    auto const& bound_program = bind( program_ );
+    set( clip_from_world_uniform_, cam.clip_from_world );
 
     for ( auto const& [ id, data ] : internal_data_ )
     {
@@ -303,18 +290,19 @@ auto MeshDisplayPipeline::draw( math::cam::CameraRenderParams const& cam ) -> vo
 
         if ( ShouldDisplay{ }( data ) )
         {
-            // set( world_from_local_uniform_, data.world_transform );
-            // set( world_from_local_normals_uniform_, data.normals_transform );
-            // set( uniform_color_uniform_, data.settings.custom_color );
-            // set( color_mode_uniform_, std::to_underlying( data.settings.color_mode ) );
-            // set( shading_mode_uniform_, std::to_underlying( data.settings.shading_mode ) );
+            set( world_from_local_uniform_, data.world_transform );
+            set( world_from_local_normals_uniform_, data.normals_transform );
+            set( uniform_color_uniform_, data.settings.custom_color );
+            set( color_mode_uniform_, std::to_underlying( data.settings.color_mode ) );
+            set( shading_mode_uniform_, std::to_underlying( data.settings.shading_mode ) );
 
+            auto const& bound_vao = bind( data.vertex_array );
             if ( data.index_buffer.has_value( ) )
             {
                 constexpr uint32 const* index_offset = nullptr;
                 ogl::draw(
                     bound_program,
-                    bind( data.vertex_array ),
+                    bound_vao,
                     bind< GL_ELEMENT_ARRAY_BUFFER >( data.index_buffer.value( ) ),
                     data.draw_mode,
                     index_offset,
@@ -323,15 +311,8 @@ auto MeshDisplayPipeline::draw( math::cam::CameraRenderParams const& cam ) -> vo
             }
             else
             {
-                auto           bound_vbo = bind< GL_ARRAY_BUFFER >( data.vertex_buffer );
-                constexpr auto start     = GLsizei{ 0 };
-                ogl::draw(
-                    bound_program,
-                    bind( data.vertex_array ),
-                    data.draw_mode,
-                    start,
-                    data.draw_count
-                );
+                constexpr auto start = GLsizei{ 0 };
+                ogl::draw( bound_program, bound_vao, data.draw_mode, start, data.draw_count );
             }
         }
     }

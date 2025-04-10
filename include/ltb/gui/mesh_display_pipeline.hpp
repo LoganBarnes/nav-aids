@@ -75,54 +75,53 @@ private:
         program_,
         "local_position",
     };
-    // ogl::Attribute< glm::vec3 > local_normal_attribute_ = {
-    //     program_,
-    //     "local_normal",
-    // };
-    // ogl::Attribute< glm::vec2 > local_uv_coords_attribute_ = {
-    //     program_,
-    //     "local_uv_coords",
-    // };
-    // ogl::Attribute< glm::vec3 > local_color_attribute_ = {
-    //     program_,
-    //     "local_color",
-    // };
-    //
-    // // Program uniforms passed to the GPU during render calls
-    // ogl::Uniform< glm::mat4 > clip_from_world_uniform_ = {
-    //     program_,
-    //     "clip_from_world",
-    // };
-    // ogl::Uniform< glm::mat4 > world_from_local_uniform_ = {
-    //     program_,
-    //     "world_from_local",
-    // };
-    // ogl::Uniform< glm::mat3 > world_from_local_normals_uniform_ = {
-    //     program_,
-    //     "world_from_local_normals",
-    // };
-    // ogl::Uniform< glm::vec4 > uniform_color_uniform_ = {
-    //     program_,
-    //     "uniform_color",
-    // };
-    // ogl::Uniform< uint32 > color_mode_uniform_ = {
-    //     program_,
-    //     "color_mode",
-    // };
-    // ogl::Uniform< uint32 > shading_mode_uniform_ = {
-    //     program_,
-    //     "shading_mode",
-    // };
+    ogl::Attribute< glm::vec3 > local_normal_attribute_ = {
+        program_,
+        "local_normal",
+    };
+    ogl::Attribute< glm::vec2 > local_uv_coords_attribute_ = {
+        program_,
+        "local_uv_coords",
+    };
+    ogl::Attribute< glm::vec3 > local_color_attribute_ = {
+        program_,
+        "local_color",
+    };
+
+    // Program uniforms passed to the GPU during render calls
+    ogl::Uniform< glm::mat4 > clip_from_world_uniform_ = {
+        program_,
+        "clip_from_world",
+    };
+    ogl::Uniform< glm::mat4 > world_from_local_uniform_ = {
+        program_,
+        "world_from_local",
+    };
+    ogl::Uniform< glm::mat3 > world_from_local_normals_uniform_ = {
+        program_,
+        "world_from_local_normals",
+    };
+    ogl::Uniform< glm::vec4 > uniform_color_uniform_ = {
+        program_,
+        "uniform_color",
+    };
+    ogl::Uniform< uint32 > color_mode_uniform_ = {
+        program_,
+        "color_mode",
+    };
+    ogl::Uniform< uint32 > shading_mode_uniform_ = {
+        program_,
+        "shading_mode",
+    };
 
     // The initialization state of the pipeline.
     bool initialized_ = false;
 
     struct InternalMeshData
     {
-        // std::vector< ogl::Buffer >   vertex_buffers = { };
-        ogl::Buffer                  vertex_buffer = { };
-        ogl::VertexArray             vertex_array  = { };
-        std::optional< ogl::Buffer > index_buffer  = std::nullopt;
+        std::vector< ogl::Buffer >   vertex_buffers = { };
+        ogl::VertexArray             vertex_array   = { };
+        std::optional< ogl::Buffer > index_buffer   = std::nullopt;
 
         GLenum  draw_mode  = GL_POINTS;
         GLsizei draw_count = 0;

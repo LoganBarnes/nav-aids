@@ -17,8 +17,8 @@
 namespace ltb::app
 {
 
-constexpr auto gps_satellite_altitude_km = 20.2F;
-constexpr auto earth_radius_km           = 6'378.0F;
+constexpr auto gps_satellite_altitude_Mm = 20.2F;
+constexpr auto earth_radius_Mm           = 6.378F;
 
 /// \brief The main application window for the ILS app.
 class GpsApp : public App
@@ -48,7 +48,7 @@ private:
 
     struct Satellite
     {
-        glm::vec3 lat_long_alt_km = { 0.0F, 0.0F, gps_satellite_altitude_km };
+        glm::vec3 lat_long_alt_km = { 0.0F, 0.0F, gps_satellite_altitude_Mm };
 
         gui::MeshId satellite_point_id = gui::MeshId::nil( );
         gui::MeshId range_sphere_id    = gui::MeshId::nil( );
