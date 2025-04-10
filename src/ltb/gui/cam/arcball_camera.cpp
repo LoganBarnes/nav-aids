@@ -4,6 +4,8 @@
 #include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
 
+// https://github.com/LoganBarnes/ltb-fun/blob/4a6d9b33a60d68d72cd9620f613b945e057f90bf/ltb-gvs/src/ltb/gvs/display/cameras/camera_mover.cpp#L31
+
 namespace ltb::gui::cam
 {
 namespace
