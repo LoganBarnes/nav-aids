@@ -16,16 +16,16 @@ namespace
 {
 
 [[maybe_unused]] auto opengl_error_callback(
-    GLenum        source,
-    GLenum        type,
-    GLuint        id,
-    GLenum        severity,
-    GLsizei       length,
-    GLchar const* message,
-    void const*   userParam
+    GLenum const        source,
+    GLenum const        type,
+    GLuint const        id,
+    GLenum const        severity,
+    GLsizei const       length,
+    GLchar const* const message,
+    void const* const   user_param
 )
 {
-    utils::ignore( source, type, id, length, userParam );
+    utils::ignore( source, type, id, length, user_param );
     spdlog::error( "OpenGL Error: {} ({}: {})", message, id, severity );
 }
 
@@ -55,8 +55,8 @@ auto AppRunner::initialize( ) -> utils::Result< AppRunner* >
 
     ImGui::GetIO( ).ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
-    // LTB_CHECK( ogl_loader_.initialize( ) );
-    LTB_CHECK( ogl_loader_.initialize( opengl_error_callback ) );
+    LTB_CHECK( ogl_loader_.initialize( ) );
+    // LTB_CHECK( ogl_loader_.initialize( opengl_error_callback ) );
 
     ogl::set_defaults( );
 
