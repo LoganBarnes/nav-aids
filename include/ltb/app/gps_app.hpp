@@ -2,7 +2,7 @@
 
 // project
 #include "ltb/app/app.hpp"
-// #include "ltb/gui/cam/orbit_camera.hpp"
+#include "ltb/gui/cam/orbit_camera.hpp"
 #include "ltb/gui/cam/arcball_camera.hpp"
 #include "ltb/gui/incremental_id_generator.hpp"
 #include "ltb/gui/mesh_display_pipeline.hpp"
@@ -43,8 +43,8 @@ private:
 
     math::cam::CameraSettings     camera_settings_       = { };
     gui::cam::CameraInputSettings camera_input_settings_ = { };
-    gui::cam::ArcballCamera       camera_                = { };
-    // gui::cam::OrbitCamera         camera_                = { };
+    // gui::cam::ArcballCamera       camera_                = { };
+    gui::cam::OrbitCamera         camera_                = { };
 
     gui::MeshId earth_id_ = gui::MeshId::nil( );
 

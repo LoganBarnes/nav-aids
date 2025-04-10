@@ -38,13 +38,13 @@ auto GpsApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Result< v
         }
     );
 
-    auto settings                 = camera_.settings( );
-    settings.initial_eye_position = { 0.0F, 0.0F, 200.0F };
-    settings.initial_focus_point  = { 0.0F, 0.0F, 0.0F };
-    settings.initial_up_direction = { 0.0F, 1.0F, 0.0F };
-    camera_.set_settings( settings );
-    camera_.reset( );
-    camera_.update();
+    // auto settings                 = camera_.settings( );
+    // settings.initial_eye_position = { 0.0F, 0.0F, 200.0F };
+    // settings.initial_focus_point  = { 0.0F, 0.0F, 0.0F };
+    // settings.initial_up_direction = { 0.0F, 1.0F, 0.0F };
+    // camera_.set_settings( settings );
+    // camera_.reset( );
+    // camera_.update();
 
     resize( framebuffer_size );
 
