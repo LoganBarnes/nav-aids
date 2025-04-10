@@ -1,5 +1,8 @@
 #pragma once
 
+// project
+#include "ltb/utils/types.hpp"
+
 // external
 #include <glm/glm.hpp>
 
@@ -22,20 +25,20 @@ struct CameraSettings
 
     struct Perspective
     {
-        float fov_degrees = 60.f;
+        float32 fov_degrees = 60.0F;
     };
 
     struct Orthographic
     {
-        float half_size        = 10.f;
-        bool  link_size_to_fov = true;
+        float32 half_size        = 10.0F;
+        bool    link_size_to_fov = true;
     };
 
     AspectType     aspect_type     = AspectType::KeepHeight;
     ProjectionType projection_type = ProjectionType::Perspective;
 
-    float near_plane_distance = 1.f;
-    float far_plane_distance  = 1000.f;
+    float32 near_plane_distance = 1.0F;
+    float32 far_plane_distance  = 1000.0F;
 
     /// \brief Update the near plane distance each frame based on
     //         the camera position and the bounds of the scene.
@@ -48,14 +51,15 @@ struct CameraSettings
     Perspective  perspective  = { };
     Orthographic orthographic = { };
 
-    glm::vec3 initial_eye_position = { 5.f, 0.f, 0.f };
-    glm::vec3 initial_focus_point  = { 0.f, 0.f, 0.f };
-    glm::vec3 initial_up_direction = { 0.f, 0.f, 1.f };
+    glm::vec3 initial_eye_position = { 5.0F, 0.0F, 0.0F };
+    glm::vec3 initial_focus_point  = { 0.0F, 0.0F, 0.0F };
+    glm::vec3 initial_up_direction = { 0.0F, 0.0F, 1.0F };
 
-    float movement_lag       = +0.5f; // 0.0 is no lag, 1.0 is full lag.
-    float zoom_sensitivity   = -0.1f;
-    float pan_sensitivity    = +0.01f;
-    float rotate_sensitivity = +1.f;
+    // 0.0 is no lag, 1.0 is full lag.
+    float32 movement_lag       = +0.5F;
+    float32 zoom_sensitivity   = -0.1F;
+    float32 pan_sensitivity    = +0.01F;
+    float32 rotate_sensitivity = +1.0F;
 
     bool z_up = false;
 };
