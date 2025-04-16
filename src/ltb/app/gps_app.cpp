@@ -1,6 +1,7 @@
 #include "ltb/app/gps_app.hpp"
 
 // project
+#include "ltb/gps/constants.hpp"
 #include "ltb/math/shapes/icosphere.hpp"
 
 // external
@@ -23,7 +24,7 @@ auto GpsApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Result< v
     auto const earth_mesh = build_mesh(
         math::shapes::Icosphere{
             .position        = { 0.0F, 0.0F, 0.0F },
-            .radius          = earth_radius_Mm,
+            .radius          = gps::Constants< float32 >::earth_radius_Mm( ),
             .recursion_level = 4U,
         }
     );
@@ -37,14 +38,6 @@ auto GpsApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Result< v
             .shading_mode = gui::ShadingMode::Flat,
         }
     );
-
-    // auto settings                 = camera_.settings( );
-    // settings.initial_eye_position = { 0.0F, 0.0F, 200.0F };
-    // settings.initial_focus_point  = { 0.0F, 0.0F, 0.0F };
-    // settings.initial_up_direction = { 0.0F, 1.0F, 0.0F };
-    // camera_.set_settings( settings );
-    // camera_.reset( );
-    // camera_.update();
 
     resize( framebuffer_size );
 
