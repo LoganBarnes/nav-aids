@@ -70,13 +70,16 @@ auto Receiver::configure_gui( ) -> void
 {
     ImGui::PushID( this );
 
-    if ( ImGui::TreeNode( "Receiver" ) )
+    if ( ImGui::TreeNodeEx( "Receiver", ImGuiTreeNodeFlags_DefaultOpen ) )
     {
-        if (auto const values = std::array{
-                 ImGui::DragFloat( "Latitude", &lat_long_alt_ft_.x),
-                 ImGui::DragFloat( "Longitude", &lat_long_alt_ft_.y ),
-                 ImGui::DragFloat( "Altitude", &lat_long_alt_ft_.z, 100.0F ),
-             }; std::ranges::any_of( values, utils::IsTrue{} ))
+        if ( std::ranges::any_of(
+                 std::array{
+                     ImGui::DragFloat( "Latitude", &lat_long_alt_ft_.x ),
+                     ImGui::DragFloat( "Longitude", &lat_long_alt_ft_.y ),
+                     ImGui::DragFloat( "Altitude", &lat_long_alt_ft_.z, 100.0F ),
+                 },
+                 utils::IsTrue{ }
+             ) )
         {
             update_transform( );
         }

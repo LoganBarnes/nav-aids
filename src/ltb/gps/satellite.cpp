@@ -70,13 +70,16 @@ auto Satellite::configure_gui( ) -> void
 {
     ImGui::PushID( this );
 
-    if ( ImGui::TreeNode( "Satellite" ) )
+    if ( ImGui::TreeNodeEx( "Satellite", ImGuiTreeNodeFlags_DefaultOpen ) )
     {
-        if (auto const values = std::array{
-                 ImGui::Checkbox( "Ignore", &ignore_ ),
-            ImGui::DragFloat( "Latitude", &lat_long_.x),
-            ImGui::DragFloat( "Longitude", &lat_long_.y ),
-        }; std::ranges::any_of( values, utils::IsTrue{} ))
+        if ( std::ranges::any_of(
+                 std::array{
+                     ImGui::Checkbox( "Ignore", &ignore_ ),
+                     ImGui::DragFloat( "Latitude", &lat_long_.x ),
+                     ImGui::DragFloat( "Longitude", &lat_long_.y ),
+                 },
+                 utils::IsTrue{ }
+             ) )
         {
             update_transform( );
         }
