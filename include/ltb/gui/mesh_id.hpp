@@ -48,7 +48,7 @@ auto TypeId< Type >::id( ) const -> uint32_t
 template < typename Type >
 auto TypeId< Type >::is_nil( ) const -> bool
 {
-    return nil_value_ != id_;
+    return nil_value_ == id_;
 }
 
 template < typename Type >

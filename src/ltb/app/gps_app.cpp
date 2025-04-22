@@ -59,7 +59,30 @@ auto GpsApp::configure_gui( ) -> void
     auto const dock_node_flags = ImGuiDockNodeFlags_PassthruCentralNode;
     utils::ignore( ImGui::DockSpaceOverViewport( 0, nullptr, dock_node_flags ) );
 
-    if ( ImGui::Begin( "GPS" ) ) {}
+    if ( ImGui::Begin( "Satellites" ) )
+    {
+
+        for ( auto& satellite : satellites_ )
+        {
+            satellite.configure_gui( );
+        }
+
+        if ( ImGui::Button( "Add Satellite" ) )
+        {
+            auto satellite = gps::Satellite{ mesh_pipeline_ };
+            if ( auto result = satellite.initialize( ) )
+            {
+                satellites_.push_back( std::move( satellite ) );
+            }
+            else
+            {
+                error_alert_.to_display( result.error( ) );
+            }
+        }
+    }
+    ImGui::End( );
+
+    if ( ImGui::Begin( "Receiver" ) ) {}
     ImGui::End( );
 }
 

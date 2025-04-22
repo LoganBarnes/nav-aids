@@ -1,7 +1,6 @@
 #pragma once
 
 // project
-#include "ltb/gps/constants.hpp"
 #include "ltb/gui/mesh_display_pipeline.hpp"
 
 namespace ltb::gps
@@ -10,16 +9,20 @@ namespace ltb::gps
 class Satellite
 {
 public:
-    Satellite( )  = default;
-    ~Satellite( ) = default;
+    explicit Satellite( gui::MeshDisplayPipeline& mesh_pipeline );
+
+    auto initialize( ) -> utils::Result< void >;
+    auto is_initialized( ) const -> bool;
 
     auto configure_gui( ) -> void;
 
 private:
-    glm::vec3 lat_long_alt_Mm_ = { 0.0F, 0.0F, Constants< float32 >::satellite_altitude_Mm( ) };
+    gui::MeshDisplayPipeline& mesh_pipeline_;
+    glm::vec2                 lat_long_ = { 0.0F, 0.0F };
 
     gui::MeshId satellite_point_id_ = gui::MeshId::nil( );
-    gui::MeshId range_sphere_id_    = gui::MeshId::nil( );
+
+    auto update_transform() -> void;
 };
 
 } // namespace ltb::gps

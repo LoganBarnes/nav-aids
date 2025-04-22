@@ -6,6 +6,7 @@
 #include "ltb/gps/satellite.hpp"
 #include "ltb/gui/cam/arcball_camera.hpp"
 #include "ltb/gui/cam/orbit_camera.hpp"
+#include "ltb/gui/error_alert.hpp"
 #include "ltb/gui/incremental_id_generator.hpp"
 #include "ltb/gui/mesh_display_pipeline.hpp"
 #include "ltb/utils/initializable.hpp"
@@ -34,7 +35,8 @@ private:
     gui::IncrementalIdGenerator< uint32 > id_generator_  = { };
     gui::MeshDisplayPipeline              mesh_pipeline_ = { id_generator_ };
 
-    glm::ivec2 framebuffer_size_ = { };
+    glm::ivec2      framebuffer_size_ = { };
+    gui::ErrorAlert error_alert_      = { "Error!", gui::LogToConsole::Yes };
 
     math::cam::CameraSettings     camera_settings_       = { };
     gui::cam::CameraInputSettings camera_input_settings_ = { };
