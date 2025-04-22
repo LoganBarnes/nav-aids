@@ -13,6 +13,7 @@
 
 // standard
 #include <chrono>
+#include <list>
 
 namespace ltb::app
 {
@@ -42,10 +43,12 @@ private:
     gui::cam::CameraInputSettings camera_input_settings_ = { };
     gui::cam::OrbitCamera         camera_                = { };
 
+    gui::MeshId axis_id_ = gui::MeshId::nil( );
+
     gui::MeshId earth_id_ = gui::MeshId::nil( );
 
-    std::vector< gps::Satellite > satellites_ = { };
-    std::vector< gps::Receiver >  receivers_  = { };
+    std::list< gps::Satellite > satellites_ = { };
+    std::list< gps::Receiver >  receivers_  = { };
 };
 
 } // namespace ltb::app

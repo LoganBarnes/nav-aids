@@ -21,6 +21,35 @@ auto GpsApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Result< v
     glClearColor( 0.2F, 0.2F, 0.2F, 1.0F );
     glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 
+    auto const axis_mesh = math::Mesh3{
+        .format = math::MeshFormat::Lines,
+        .positions = {
+            { 0.0F, 0.0F, 0.0F },
+            { 1.0F, 0.0F, 0.0F },
+            { 0.0F, 0.0F, 0.0F },
+            { 0.0F, 1.0F, 0.0F },
+            { 0.0F, 0.0F, 0.0F },
+            { 0.0F, 0.0F, 1.0F },
+        },
+        .vertex_colors = {
+            { 1.0F, 0.0F, 0.0F },
+            { 1.0F, 0.0F, 0.0F },
+            { 0.0F, 1.0F, 0.0F },
+            { 0.0F, 1.0F, 0.0F },
+            { 0.0F, 0.0F, 1.0F },
+            { 0.0F, 0.0F, 1.0F },
+        }
+    };
+    LTB_CHECK( axis_id_, mesh_pipeline_.initialize_mesh( axis_mesh ) );
+    mesh_pipeline_.update_settings(
+        axis_id_,
+        gui::MeshDisplaySettings{
+            .visible      = false,
+            .color_mode   = gui::ColorMode::VertexColor,
+            .shading_mode = gui::ShadingMode::Flat,
+        }
+    );
+
     auto const earth_mesh = build_mesh(
         math::shapes::Icosphere{
             .position        = { 0.0F, 0.0F, 0.0F },
@@ -37,6 +66,15 @@ auto GpsApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Result< v
             .custom_color = { 0.1F, 0.5F, 0.1F, 1.0F },
             .shading_mode = gui::ShadingMode::Flat,
         }
+    );
+
+    LTB_CHECK(
+        utils::initialize(
+            satellites_.emplace_back( mesh_pipeline_, glm::vec2{ 55.0F, 0.0F } ),
+            satellites_.emplace_back( mesh_pipeline_, glm::vec2{ 90.0F, 0.0F } ),
+            satellites_.emplace_back( mesh_pipeline_, glm::vec2{ 55.0F, 180.0F } ),
+            receivers_.emplace_back( mesh_pipeline_, glm::vec3{ 90.0F, 0.0F, 10'000.0F } )
+        )
     );
 
     resize( framebuffer_size );
@@ -61,7 +99,6 @@ auto GpsApp::configure_gui( ) -> void
 
     if ( ImGui::Begin( "Satellites" ) )
     {
-
         for ( auto& satellite : satellites_ )
         {
             satellite.configure_gui( );
@@ -82,7 +119,27 @@ auto GpsApp::configure_gui( ) -> void
     }
     ImGui::End( );
 
-    if ( ImGui::Begin( "Receiver" ) ) {}
+    if ( ImGui::Begin( "Receiver" ) )
+    {
+
+        for ( auto& receiver : receivers_ )
+        {
+            receiver.configure_gui( );
+        }
+
+        if ( ImGui::Button( "Add Receiver" ) )
+        {
+            auto receiver = gps::Receiver{ mesh_pipeline_ };
+            if ( auto result = receiver.initialize( ) )
+            {
+                receivers_.push_back( std::move( receiver ) );
+            }
+            else
+            {
+                error_alert_.to_display( result.error( ) );
+            }
+        }
+    }
     ImGui::End( );
 }
 

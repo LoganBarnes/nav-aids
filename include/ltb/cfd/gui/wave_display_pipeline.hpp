@@ -21,8 +21,9 @@ template <>
 class WaveDisplayPipeline< math::one_dimension >
 {
 public:
-    explicit( false
-    ) WaveDisplayPipeline( ltb::gui::IncrementalIdGenerator< uint32 >& id_generator );
+    explicit( false ) WaveDisplayPipeline(
+        ltb::gui::IncrementalIdGenerator< uint32 >& id_generator
+    );
 
     /// \brief Initialize all the pipeline graphics objects.
     /// \note This should be called before any other functions to avoid errors.
