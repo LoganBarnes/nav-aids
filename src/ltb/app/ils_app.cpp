@@ -60,13 +60,12 @@ auto draw_phase( glm::dvec2 const world_pos, glm::dvec2 const antenna_pos, float
     ImGui::Text( "Antenna 1: %.2F m", distance_meters );
     auto const microseconds = distance_meters / c;
     ImGui::Text( "Time delay: %.9F µs", microseconds );
-    auto const phase_angle = radio_frequency_mhz * glm::two_pi< float32 >( ) * microseconds;
-    ImGui::Text( "Phase angle: %.2F rad", phase_angle );
+    auto const phase_angle = radio_frequency_mhz * microseconds;
+    ImGui::Text( "Phase angle: %.2F", phase_angle );
 
-    auto const wave = glm::dvec2{
-        std::cos( phase_angle * glm::two_pi< float64 >( ) ) * scale,
-        std::sin( phase_angle * glm::two_pi< float64 >( ) ) * scale,
-    };
+    auto const radians = phase_angle * glm::two_pi< float64 >( );
+
+    auto const wave = glm::dvec2{ std::cos( radians ), std::sin( radians ) } * scale;
 
     draw_phase_circle( wave );
 
