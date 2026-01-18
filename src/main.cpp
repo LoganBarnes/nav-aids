@@ -25,8 +25,8 @@ auto app_main( ) -> utils::Result< void >
         window,
         imgui,
         {
-            { "GPS", std::make_shared< app::GpsApp >( ) },
             { "ILS", std::make_shared< app::IlsApp >( ) },
+            { "GPS", std::make_shared< app::GpsApp >( ) },
             { "Antenna", std::make_shared< app::AntennaApp >( ) },
             { "CFD Lesson 1", std::make_shared< app::CfdLesson1App >( ) },
         }

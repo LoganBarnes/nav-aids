@@ -51,11 +51,11 @@ private:
     std::chrono::steady_clock::time_point start_time_   = { };
     float32                               time_scale_s_ = 0.0F;
 
-    float32   pixel_size_m      = 1.0F;
-    int32     antenna_pairs_    = 1;
-    float32   antenna_spacing_m = 5.0F;
-    glm::vec3 output_channels_  = { 1.0F, 1.0F, 1.0F };
-    float32   output_scale_     = 0.1F;
+    float32   pixel_size_m_      = 1.0F;
+    int32     antenna_pairs_     = 1;
+    float32   antenna_spacing_m_ = 5.0F;
+    glm::vec3 output_channels_   = { 1.0F, 1.0F, 1.0F };
+    float32   output_scale_      = 0.1F;
 
     enum class Display
     {
