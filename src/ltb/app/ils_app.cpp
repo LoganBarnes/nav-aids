@@ -224,6 +224,117 @@ auto IlsApp::configure_gui( ) -> void
         draw_phase_circle( wave_1 + wave_2 );
     }
     ImGui::End( );
+
+    constexpr auto radio_frequency        = 30.0;
+    constexpr auto ninety_hz_frequency    = 0.9;
+    constexpr auto one_fifty_hz_frequency = 1.5;
+
+    constexpr auto sample_points_i = 8192;
+    constexpr auto sample_points   = static_cast< uint64 >( sample_points_i );
+    constexpr auto window_range_us = math::Range{ .min = 0.0, .max = 2.0 };
+    constexpr auto window_size_us  = dimensions( window_range_us );
+
+    auto carrier_wave = std::vector( sample_points, 0.0F );
+    assert( carrier_wave.size( ) == sample_points );
+    auto ninety_hz_wave = std::vector( sample_points, 0.0F );
+    assert( ninety_hz_wave.size( ) == sample_points );
+    auto one_fifty_hz_wave = std::vector( sample_points, 0.0F );
+    assert( one_fifty_hz_wave.size( ) == sample_points );
+    auto csb_audio_wave = std::vector( sample_points, 0.0F );
+    assert( csb_audio_wave.size( ) == sample_points );
+    auto csb_modulated_wave = std::vector( sample_points, 0.0F );
+    assert( csb_modulated_wave.size( ) == sample_points );
+    auto csb_signal_wave = std::vector( sample_points, 0.0F );
+    assert( csb_signal_wave.size( ) == sample_points );
+
+    for ( auto i = 0UZ; i < sample_points; ++i )
+    {
+        auto const t = static_cast< float64 >( i ) / static_cast< float64 >( sample_points );
+
+        auto const us = window_range_us.min + ( t * window_size_us );
+
+        carrier_wave[ i ] = static_cast< float32 >(
+            std::sin( glm::two_pi< float64 >( ) * radio_frequency * us )
+        );
+        ninety_hz_wave[ i ] = static_cast< float32 >(
+            std::sin( glm::two_pi< float64 >( ) * ninety_hz_frequency * us )
+        );
+        one_fifty_hz_wave[ i ] = static_cast< float32 >(
+            std::sin( glm::two_pi< float64 >( ) * one_fifty_hz_frequency * us )
+        );
+        csb_audio_wave[ i ]     = ninety_hz_wave[ i ] + one_fifty_hz_wave[ i ];
+        csb_modulated_wave[ i ] = carrier_wave[ i ] * csb_audio_wave[ i ] * 0.2F;
+        csb_signal_wave[ i ]    = csb_modulated_wave[ i ] + carrier_wave[ i ];
+    }
+
+    if ( ImGui::Begin( "Waves" ) )
+    {
+        ImGui::PlotLines(
+            "Radio Carrier",
+            carrier_wave.data( ),
+            sample_points_i,
+            0,
+            nullptr,
+            -2.0F,
+            2.0F,
+            ImVec2( 0.0F, 100.0F )
+        );
+        ImGui::PlotLines(
+            "90Hz Audio",
+            ninety_hz_wave.data( ),
+            sample_points_i,
+            0,
+            nullptr,
+            -2.0F,
+            2.0F,
+            ImVec2( 0.0F, 100.0F )
+        );
+        ImGui::PlotLines(
+            "150Hz Audio",
+            one_fifty_hz_wave.data( ),
+            sample_points_i,
+            0,
+            nullptr,
+            -2.0F,
+            2.0F,
+            ImVec2( 0.0F, 100.0F )
+        );
+        ImGui::PlotLines(
+            "CSB Audio (90Hz + 150Hz)",
+            csb_audio_wave.data( ),
+            sample_points_i,
+            0,
+            nullptr,
+            -2.0F,
+            2.0F,
+            ImVec2( 0.0F, 100.0F )
+        );
+        ImGui::PlotLines(
+            "CSB Modulated",
+            csb_modulated_wave.data( ),
+            sample_points_i,
+            0,
+            nullptr,
+            -2.0F,
+            2.0F,
+            ImVec2( 0.0F, 100.0F )
+        );
+        ImGui::PlotLines(
+            "CSB Signal",
+            csb_signal_wave.data( ),
+            sample_points_i,
+            0,
+            nullptr,
+            -2.0F,
+            2.0F,
+            ImVec2( 0.0F, 100.0F )
+        );
+    }
+    ImGui::End( );
+
+    // auto const radians = phase_angle * glm::two_pi< float64 >( );
+
+    // auto const wave = glm::dvec2{ std::cos( radians ), std::sin( radians ) } * scale;
 }
 
 auto IlsApp::destroy( ) -> void
