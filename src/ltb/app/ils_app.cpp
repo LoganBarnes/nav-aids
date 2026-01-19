@@ -9,7 +9,9 @@
 // external
 #include <magic_enum.hpp>
 #include <spdlog/spdlog.h>
-#include <sys/stat.h>
+
+// ILS Interference Graphics
+// https://www.desmos.com/calculator/l0sj535wrs
 
 namespace ltb::app
 {
@@ -54,7 +56,12 @@ auto draw_phase_circle( glm::dvec2 const wave )
     );
 }
 
-auto draw_phase( glm::dvec2 const world_pos, glm::dvec2 const antenna_pos, float64 const scale )
+auto draw_phase(
+    glm::dvec2 const world_pos,
+    glm::dvec2 const antenna_pos,
+    float64 const    scale,
+    float64 const    shift
+)
 {
     auto const distance_meters = glm::distance( world_pos, antenna_pos );
     ImGui::Text( "Antenna 1: %.2F m", distance_meters );
@@ -63,7 +70,7 @@ auto draw_phase( glm::dvec2 const world_pos, glm::dvec2 const antenna_pos, float
     auto const phase_angle = radio_frequency_mhz * microseconds;
     ImGui::Text( "Phase angle: %.2F", phase_angle );
 
-    auto const radians = phase_angle * glm::two_pi< float64 >( );
+    auto const radians = ( phase_angle * glm::two_pi< float64 >( ) ) + shift;
 
     auto const wave = glm::dvec2{ std::cos( radians ), std::sin( radians ) } * scale;
 
@@ -191,13 +198,13 @@ auto IlsApp::configure_gui( ) -> void
 
     if ( ImGui::Begin( "CSB 1" ) )
     {
-        wave_1 = draw_phase( world_pos, antenna_1, 1.0 );
+        wave_1 = draw_phase( world_pos, antenna_1, 1.0, 0.0 );
     }
     ImGui::End( );
 
     if ( ImGui::Begin( "CSB 2" ) )
     {
-        wave_2 = draw_phase( world_pos, antenna_2, 1.0 );
+        wave_2 = draw_phase( world_pos, antenna_2, 1.0, 0.0 );
     }
     ImGui::End( );
 
@@ -209,13 +216,13 @@ auto IlsApp::configure_gui( ) -> void
 
     if ( ImGui::Begin( "SBO 1" ) )
     {
-        wave_1 = draw_phase( world_pos, antenna_1, +1.0 );
+        wave_1 = draw_phase( world_pos, antenna_1, -1.0, glm::half_pi< float64 >( ) );
     }
     ImGui::End( );
 
     if ( ImGui::Begin( "SBO 2" ) )
     {
-        wave_2 = draw_phase( world_pos, antenna_2, -1.0 );
+        wave_2 = draw_phase( world_pos, antenna_2, +1.0, glm::half_pi< float64 >( ) );
     }
     ImGui::End( );
 
@@ -246,6 +253,12 @@ auto IlsApp::configure_gui( ) -> void
     assert( csb_modulated_wave.size( ) == sample_points );
     auto csb_signal_wave = std::vector( sample_points, 0.0F );
     assert( csb_signal_wave.size( ) == sample_points );
+    auto sbo_audio_wave = std::vector( sample_points, 0.0F );
+    assert( sbo_audio_wave.size( ) == sample_points );
+    auto sbo_modulated_wave = std::vector( sample_points, 0.0F );
+    assert( sbo_modulated_wave.size( ) == sample_points );
+    auto sbo_shifted_wave = std::vector( sample_points, 0.0F );
+    assert( sbo_shifted_wave.size( ) == sample_points );
 
     for ( auto i = 0UZ; i < sample_points; ++i )
     {
@@ -262,12 +275,21 @@ auto IlsApp::configure_gui( ) -> void
         one_fifty_hz_wave[ i ] = static_cast< float32 >(
             std::sin( glm::two_pi< float64 >( ) * one_fifty_hz_frequency * us )
         );
+
         csb_audio_wave[ i ]     = ninety_hz_wave[ i ] + one_fifty_hz_wave[ i ];
         csb_modulated_wave[ i ] = carrier_wave[ i ] * csb_audio_wave[ i ] * 0.2F;
         csb_signal_wave[ i ]    = csb_modulated_wave[ i ] + carrier_wave[ i ];
+
+        auto const shifted_carrier_wave = static_cast< float32 >( std::sin(
+            glm::half_pi< float64 >( ) + ( glm::two_pi< float64 >( ) * radio_frequency * us )
+        ) );
+
+        sbo_audio_wave[ i ]     = ninety_hz_wave[ i ] - one_fifty_hz_wave[ i ];
+        sbo_modulated_wave[ i ] = carrier_wave[ i ] * sbo_audio_wave[ i ] * 0.2F;
+        sbo_shifted_wave[ i ]   = shifted_carrier_wave * sbo_audio_wave[ i ] * 0.2F;
     }
 
-    if ( ImGui::Begin( "Waves" ) )
+    if ( ImGui::Begin( "Transmitted Waves" ) )
     {
         ImGui::PlotLines(
             "Radio Carrier",
@@ -322,6 +344,36 @@ auto IlsApp::configure_gui( ) -> void
         ImGui::PlotLines(
             "CSB Signal",
             csb_signal_wave.data( ),
+            sample_points_i,
+            0,
+            nullptr,
+            -2.0F,
+            2.0F,
+            ImVec2( 0.0F, 100.0F )
+        );
+        ImGui::PlotLines(
+            "SBO Audio (90Hz - 150Hz)",
+            sbo_audio_wave.data( ),
+            sample_points_i,
+            0,
+            nullptr,
+            -2.0F,
+            2.0F,
+            ImVec2( 0.0F, 100.0F )
+        );
+        ImGui::PlotLines(
+            "SBO Modulated",
+            sbo_modulated_wave.data( ),
+            sample_points_i,
+            0,
+            nullptr,
+            -2.0F,
+            2.0F,
+            ImVec2( 0.0F, 100.0F )
+        );
+        ImGui::PlotLines(
+            "SBO Shifted",
+            sbo_shifted_wave.data( ),
             sample_points_i,
             0,
             nullptr,
