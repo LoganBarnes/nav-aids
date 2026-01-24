@@ -11,6 +11,8 @@ const float loc_freq = 110.1F;// MHz
 
 const float pi = 3.14159265359F;
 
+in vec2 clip_position;
+
 uniform float pixel_size_m = 1.0F;// m
 uniform int   antenna_pairs = 1;
 uniform float antenna_spacing_m = 5.0F;//m
@@ -19,6 +21,8 @@ uniform vec3 output_scale = vec3(0.1F, 0.0F, 0.0F);
 
 //uniform float time_s;
 uniform vec2 field_size_pixels;
+
+uniform mat4 world_from_clip = mat4(1.0F);
 
 out vec4 frag_color;
 
@@ -39,9 +43,10 @@ vec2 value(in vec2 position, in vec2 antenna, in float frequency) {
 
 void main()
 {
-    float half_frame_height = field_size_pixels.y * 0.5F;
-    vec2  pixel_pos = vec2(gl_FragCoord.x, half_frame_height - gl_FragCoord.y);
-    vec2  position  = pixel_pos * pixel_size_m;
+    //    float half_frame_height = field_size_pixels.y * 0.5F;
+    //    vec2  pixel_pos = vec2(gl_FragCoord.x, half_frame_height - gl_FragCoord.y);
+    //    vec2  position  = pixel_pos * pixel_size_m;
+    vec2 position = (world_from_clip * vec4(clip_position, 0.0F, 1.0F)).xy;
 
     vec3 signal = vec3(1.0F, 0.0F, 0.0F);
 

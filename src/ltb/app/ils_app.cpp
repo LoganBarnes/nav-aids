@@ -90,12 +90,11 @@ auto IlsApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Result< v
             fullscreen_vertex_shader_,
             ils_fragment_shader_,
             program_,
-            pixel_size_m_uniform_,
             antenna_pairs_uniform_,
             antenna_spacing_m_uniform_,
             output_scale_uniform_,
             // time_s_uniform_,
-            field_size_pixels_uniform_,
+            world_from_clip_uniform_,
             vertex_array_
         )
     );
@@ -104,6 +103,9 @@ auto IlsApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Result< v
     glDisable( GL_DEPTH_TEST );
 
     start_time_ = std::chrono::steady_clock::now( );
+
+    camera_.set_width( 50.0F );
+    camera_.set_center( { 0.0F, 0.0F } );
 
     return utils::success( );
 }
@@ -119,25 +121,30 @@ auto IlsApp::render( ) -> void
         = std::chrono::duration_cast< std::chrono::duration< float32 > >( elapsed_duration )
               .count( );
 
-    set( pixel_size_m_uniform_, pixel_size_m_ );
+    auto const cam_uniforms = camera_.simple_render_params( );
+
+    // set( pixel_size_m_uniform_, pixel_size_m_ );
     set( antenna_pairs_uniform_, antenna_pairs_ );
     set( antenna_spacing_m_uniform_, antenna_spacing_m_ );
     set( output_scale_uniform_, output_channels_ * output_scale_ );
     set( time_s_uniform_, elapsed_time_s * time_scale_s_ );
-    set( field_size_pixels_uniform_, glm::vec2{ framebuffer_size_ } );
+    // set( field_size_pixels_uniform_, glm::vec2{ framebuffer_size_ } );
+    set( world_from_clip_uniform_, cam_uniforms.world_from_clip );
 
     ogl::draw( ogl::bind( program_ ), ogl::bind( vertex_array_ ), GL_TRIANGLE_STRIP, 0, 4 );
 }
 
 auto IlsApp::configure_gui( ) -> void
 {
+    utils::ignore( camera_.handle_inputs( ) );
+
     constexpr auto dock_node_flags = ImGuiDockNodeFlags_PassthruCentralNode;
     utils::ignore( ImGui::DockSpaceOverViewport( 0, nullptr, dock_node_flags ) );
 
     if ( ImGui::Begin( "ILS" ) )
     {
         auto const unused_return_values = std::array{
-            ImGui::SliderFloat( "Pixel size (m)", &pixel_size_m_, 0.1F, 10.0F ),
+            // ImGui::SliderFloat( "Pixel size (m)", &pixel_size_m_, 0.1F, 10.0F ),
             ImGui::SliderInt( "Antenna pairs", &antenna_pairs_, 1, 10 ),
             ImGui::SliderFloat( "Antenna spacing (m)", &antenna_spacing_m_, 0.1F, 10.0F ),
         };
@@ -182,13 +189,15 @@ auto IlsApp::configure_gui( ) -> void
     }
     ImGui::End( );
 
-    auto const pixel_size_m      = static_cast< float64 >( pixel_size_m_ );
     auto const antenna_spacing_m = static_cast< float64 >( antenna_spacing_m_ );
+    auto const cam               = camera_.simple_render_params( );
 
-    auto const half_frame_height = static_cast< float32 >( framebuffer_size_.y ) * 0.5F;
-    auto const mouse_pos         = glm::vec2{ ImGui::GetMousePos( ) };
+    auto const mouse_pos = glm::vec2{ ImGui::GetMousePos( ) };
+    auto const clip_pos  = ( ( mouse_pos / glm::vec2{ framebuffer_size_ } ) * 2.0F ) - 1.0F;
     auto const world_pos
-        = glm::dvec2{ mouse_pos.x, half_frame_height - mouse_pos.y } * pixel_size_m;
+        = glm::dvec2( cam.world_from_clip * glm::vec4( clip_pos.x, -clip_pos.y, 0.0F, 1.0F ) );
+
+    ImGui::SetTooltip( "World pos: (%.2F, %.2F) m", world_pos.x, world_pos.y );
 
     auto const antenna_1 = glm::dvec2{ 0.0, +antenna_spacing_m * 0.5 };
     auto const antenna_2 = glm::dvec2{ 0.0, -antenna_spacing_m * 0.5 };
@@ -399,5 +408,9 @@ auto IlsApp::destroy( ) -> void
 }
 
 auto IlsApp::resize( glm::ivec2 const framebuffer_size ) -> void
-{ framebuffer_size_ = framebuffer_size; }
+{
+    framebuffer_size_ = framebuffer_size;
+
+    camera_.resize( glm::vec2( framebuffer_size_ ) );
+}
 } // namespace ltb::app
