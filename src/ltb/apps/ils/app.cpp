@@ -31,10 +31,12 @@ auto IlsApp::initialize( ) -> utils::Result< exec::UpdateLoopStatus >
 
         LTB_CHECK( this->initialize_gpu( )
                        .and_then( &IlsApp::initialize_presentation )
-                       .and_then( &IlsApp::initialize_fluid )
                        .and_then( &IlsApp::initialize_camera )
+                       .and_then( &IlsApp::initialize_waves )
                        .and_then( &IlsApp::initialize_display_pipeline )
                        .and_then( &IlsApp::initialize_meshes ) );
+
+        update_world_pos( { 10.0F, 0.0F } );
 
         initialized_ = true;
     }
@@ -90,22 +92,18 @@ auto IlsApp::configure_gui( ) -> void
     }
     ImGui::End( );
 
-    auto const cam = camera_.simple_render_params( );
+    if ( ImGui::IsMouseDown( ImGuiMouseButton_Left ) )
+    {
+        auto const cam = camera_.simple_render_params( );
 
-    auto const mouse_pos = glm::vec2{ ImGui::GetMousePos( ) };
-    auto const clip_pos
-        = ( ( mouse_pos / glm::vec2{ ImGui::GetIO( ).DisplaySize } ) * 2.0F ) - 1.0F;
-    auto const world_pos
-        = glm::vec2( cam.world_from_clip * glm::vec4( clip_pos.x, clip_pos.y, 0.0F, 1.0F ) );
+        auto const mouse_pos = glm::vec2{ ImGui::GetMousePos( ) };
+        auto const clip_pos
+            = ( ( mouse_pos / glm::vec2{ ImGui::GetIO( ).DisplaySize } ) * 2.0F ) - 1.0F;
+        auto const world_pos
+            = glm::vec2( cam.world_from_clip * glm::vec4( clip_pos.x, clip_pos.y, 0.0F, 1.0F ) );
 
-    ImGui::SetTooltip( "World pos: (%.2F, %.2F) m", world_pos.x, -world_pos.y );
-
-    auto const angle = glm::atan( world_pos.y, world_pos.x );
-
-    auto const transform = glm::translate( glm::identity< glm::mat3 >( ), glm::vec2{ world_pos } )
-                         * glm::rotate( glm::identity< glm::mat3 >( ), angle );
-
-    conversion_line_->model.transform = glm::mat3x4{ transform };
+        ImGui::SetTooltip( "World pos: (%.2F, %.2F) m", world_pos.x, world_pos.y );
+    }
 }
 
 auto IlsApp::on_resize( glm::ivec2 const size ) -> utils::Result< void >
@@ -161,52 +159,6 @@ auto IlsApp::initialize_presentation( ) -> utils::Result< IlsApp* >
     return this;
 }
 
-auto IlsApp::initialize_fluid( ) -> utils::Result< IlsApp* >
-{
-    // auto const num_points  = ils_.num_points;
-    // auto const cfd_divisor = static_cast< float32 >( num_points );
-    //
-    // ils_.initial_positions.reserve( num_points );
-    //
-    // for ( auto i = 0U; i < num_points; ++i )
-    // {
-    //     auto const interpolant = ( static_cast< float32 >( i ) + 0.5 ) / cfd_divisor;
-    //
-    //     if ( auto const x_pos = std::lerp( ils_.domain.min, ils_.domain.max, interpolant );
-    //          ( 0.5F < x_pos ) && ( x_pos < 1.0F ) )
-    //     {
-    //         ils_.initial_positions.emplace_back( 2.0F );
-    //     }
-    //     else
-    //     {
-    //         ils_.initial_positions.emplace_back( 1.0F );
-    //     }
-    // }
-    // LTB_CHECK_VALID( ils_.initial_positions.size( ) == num_points );
-    //
-    // auto fluid_compute_settings = cfd::FluidPipeline1Settings{
-    //     .frame_count       = exec::max_frames_in_flight,
-    //     .initial_positions = ils_.initial_positions,
-    //     .compute_queue     = graphics_and_compute_queue_,
-    // };
-    // LTB_CHECK_VALID( fluid_compute_.initialize( fluid_compute_settings ) );
-    //
-    // auto const cell_size = geom::dimensions( ils_.domain ) / static_cast< float32 >( num_points
-    // );
-    //
-    // auto compute_uniforms        = fluid_compute_.uniforms( );
-    // compute_uniforms.fluid_count = ils_.num_points;
-    // compute_uniforms.cell_size   = cell_size;
-    // fluid_compute_.set_uniforms( compute_uniforms );
-    //
-    // auto display_uniforms             = fluid_display_.uniforms( );
-    // display_uniforms.fluid_cell_count = ils_.num_points;
-    // display_uniforms.cell_size        = cell_size;
-    // fluid_display_.set_uniforms( display_uniforms );
-
-    return this;
-}
-
 auto IlsApp::initialize_camera( ) -> utils::Result< IlsApp* >
 {
     auto camera_buffer_layout = vlk::MemoryLayout{ };
@@ -226,6 +178,19 @@ auto IlsApp::initialize_camera( ) -> utils::Result< IlsApp* >
 
     camera_.set_width( 36.0F );
     camera_.set_center( { 13.0F, 0.0F } );
+
+    return this;
+}
+
+auto IlsApp::initialize_waves( ) -> utils::Result< IlsApp* >
+{
+    LTB_CHECK( ils_wave_pipeline_.initialize( {
+        .frame_count = exec::max_frames_in_flight,
+        .camera_ubo  = camera_ubo_,
+    } ) );
+
+    LTB_CHECK( pos_wave_, ils_wave_pipeline_.initialize_wave( ) );
+    LTB_CHECK( neg_wave_, ils_wave_pipeline_.initialize_wave( ) );
 
     return this;
 }
@@ -328,20 +293,12 @@ auto IlsApp::render( ) -> utils::Result< void >
         LTB_CHECK( this->update_camera_uniforms( frame ) );
         LTB_CHECK( this->record_render_commands( frame ) );
 
-        auto wait_until_signaled = std::vector< vlk::objs::SemaphoreAndStage >{ };
-
-        // if ( auto const& compute_semaphore = fluid_compute_.get_semaphore( ) )
-        // {
-        //     wait_until_signaled.push_back( {
-        //         .semaphore = compute_semaphore.value( ),
-        //         .stage     = vk::PipelineStageFlagBits::eVertexInput,
-        //     } );
-        //     fluid_compute_.clear_semaphore( );
-        // }
-        wait_until_signaled.push_back( {
-            .semaphore = frame.image_semaphore,
-            .stage     = vk::PipelineStageFlagBits::eColorAttachmentOutput,
-        } );
+        auto wait_until_signaled = std::vector{
+            vlk::objs::SemaphoreAndStage{
+                .semaphore = frame.image_semaphore,
+                .stage     = vk::PipelineStageFlagBits::eColorAttachmentOutput,
+            },
+        };
 
         LTB_CHECK(
             auto const& render_finished_semaphore,
@@ -395,9 +352,8 @@ auto IlsApp::record_render_commands( vlk::objs::FrameInfo const& frame ) -> util
         .color_clear_value = { 0.35F, 0.35F, 0.35F, 1.0F },
     } ) );
 
-    // auto const [ prev_index, next_index ] = fluid_compute_.last_computed_frame_indices( );
-    // LTB_CHECK( fluid_display_.draw( frame, prev_index, next_index ) );
     LTB_CHECK( line_display_.draw( frame ) );
+    LTB_CHECK( ils_wave_pipeline_.draw( frame ) );
 
     imgui_.render( frame.command_buffer );
 
@@ -406,6 +362,33 @@ auto IlsApp::record_render_commands( vlk::objs::FrameInfo const& frame ) -> util
     VK_CHECK( frame.command_buffer.end( ) );
 
     return utils::success( );
+}
+
+auto IlsApp::update_world_pos( glm::vec2 const world_pos ) -> void
+{
+    auto const angle = glm::atan( world_pos.y, world_pos.x );
+
+    auto const transform = glm::translate( glm::identity< glm::mat3 >( ), world_pos )
+                         * glm::rotate( glm::identity< glm::mat3 >( ), angle );
+
+    conversion_line_->model.transform = glm::mat3x4{ transform };
+
+    auto const half_spacing = ils_.antenna_spacing_m * 0.5F;
+
+    ils_wave_pipeline_.set_data(
+        pos_wave_,
+        ils::IlsWaveData{
+            .start_position = { 0.0F, +half_spacing },
+            .end_position   = world_pos,
+        }
+    );
+    ils_wave_pipeline_.set_data(
+        neg_wave_,
+        ils::IlsWaveData{
+            .start_position = { 0.0F, -half_spacing },
+            .end_position   = world_pos,
+        }
+    );
 }
 
 } // namespace ltb

@@ -20,4 +20,9 @@ inline auto shader_dir_path( ) -> std::filesystem::path
     return res_dir_path( ) / "shaders";
 }
 
+inline auto ils_shader_dir_path( ) -> std::filesystem::path
+{
+    return shader_dir_path( ) / "ils";
+}
+
 } // namespace ltb::nav::config

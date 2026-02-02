@@ -5,15 +5,15 @@ file(
   GLOB_RECURSE LtbNav_SHADERS
   LIST_DIRECTORIES false
   CONFIGURE_DEPENDS
-  ${CMAKE_CURRENT_LIST_DIR}/*.vert
-  ${CMAKE_CURRENT_LIST_DIR}/*.geom
-  ${CMAKE_CURRENT_LIST_DIR}/*.tesc
-  ${CMAKE_CURRENT_LIST_DIR}/*.tese
-  ${CMAKE_CURRENT_LIST_DIR}/*.frag
-  ${CMAKE_CURRENT_LIST_DIR}/*.comp
+  ${CMAKE_CURRENT_LIST_DIR}/ils/*.vert
+  ${CMAKE_CURRENT_LIST_DIR}/ils/*.geom
+  ${CMAKE_CURRENT_LIST_DIR}/ils/*.tesc
+  ${CMAKE_CURRENT_LIST_DIR}/ils/*.tese
+  ${CMAKE_CURRENT_LIST_DIR}/ils/*.frag
+  ${CMAKE_CURRENT_LIST_DIR}/ils/*.comp
 )
 file(
-  GLOB_RECURSE LtbNav_SHADER_INCLUDES
+  GLOB_RECURSE LtbNav_SHADER_DEPS
   LIST_DIRECTORIES false
   CONFIGURE_DEPENDS
   ${CMAKE_CURRENT_LIST_DIR}/*.glsl
@@ -29,8 +29,6 @@ add_library(
   ltb_nav_generate_spirv
 )
 
-set(LtbNav_SHADERS "")
-
 # Generate the SPIR-V file for each shader
 foreach( SHADER_FILE ${LtbNav_SHADERS} )
   set( SPIRV_FILE ${SHADER_FILE}.spv )
@@ -39,7 +37,7 @@ foreach( SHADER_FILE ${LtbNav_SHADERS} )
     OUTPUT ${SPIRV_FILE}
     COMMAND $<TARGET_FILE:Vulkan::glslc>
     ARGS ${SHADER_FILE} -o ${SPIRV_FILE}
-    DEPENDS ${SHADER_FILE} ${LtbNav_SHADER_INCLUDES}
+    DEPENDS ${SHADER_FILE} ${LtbNav_SHADER_DEPS}
     VERBATIM
   )
 

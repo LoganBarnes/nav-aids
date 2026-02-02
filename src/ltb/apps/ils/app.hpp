@@ -7,6 +7,7 @@
 #include "ltb/cam/camera_2d.hpp"
 #include "ltb/exec/update_loop.hpp"
 #include "ltb/gui/imgui_glfw_vulkan_setup.hpp"
+#include "ltb/ils/ils_wave_display_pipeline.hpp"
 #include "ltb/vlk/dd/lines_pipeline_2.hpp"
 #include "ltb/vlk/objs/vulkan_buffer.hpp"
 #include "ltb/vlk/objs/vulkan_command_and_sync.hpp"
@@ -20,10 +21,10 @@ namespace ltb
 
 struct IlsParams
 {
-    int32     antenna_pairs_     = 1;
-    float32   antenna_spacing_m_ = 5.0F;
-    glm::vec3 output_channels_   = { 1.0F, 1.0F, 1.0F };
-    float32   output_scale_      = 0.1F;
+    int32     antenna_pairs     = 1;
+    float32   antenna_spacing_m = 5.0F;
+    glm::vec3 output_channels   = { 1.0F, 1.0F, 1.0F };
+    float32   output_scale      = 0.1F;
 };
 
 class IlsApp
@@ -55,8 +56,6 @@ private:
     vlk::objs::VulkanPresentation presentation_ = { gpu_ };
     gui::ImguiGlfwVulkanSetup     imgui_        = { glfw_window_, gpu_, presentation_ };
 
-    IlsParams ils_ = { };
-
     vlk::objs::VulkanBuffer      camera_ubo_            = { gpu_ };
     cam::Camera2d                camera_                = { };
     std::unordered_set< uint32 > camera_frames_updated_ = { };
@@ -64,14 +63,21 @@ private:
     vlk::dd::LinesPipeline2         line_display_          = { gpu_, presentation_ };
     vlk::objs::VulkanCommandAndSync graphics_cmd_and_sync_ = { gpu_ };
 
+    IlsParams ils_ = { };
+
+    ils::IlsWaveDisplayPipeline ils_wave_pipeline_ = { gpu_, presentation_ };
+    uint32                      pos_wave_          = 0U;
+    uint32                      neg_wave_          = 0U;
+    uint32                      combined_wave_     = 0U;
+
     vlk::dd::SimpleMeshUniforms* conversion_line_ = nullptr;
 
     bool initialized_ = false;
 
     auto initialize_gpu( ) -> utils::Result< IlsApp* >;
     auto initialize_presentation( ) -> utils::Result< IlsApp* >;
-    auto initialize_fluid( ) -> utils::Result< IlsApp* >;
     auto initialize_camera( ) -> utils::Result< IlsApp* >;
+    auto initialize_waves( ) -> utils::Result< IlsApp* >;
     auto initialize_display_pipeline( ) -> utils::Result< IlsApp* >;
     auto initialize_meshes( ) -> utils::Result< IlsApp* >;
 
@@ -80,6 +86,8 @@ private:
     auto render( ) -> utils::Result< void >;
     auto update_camera_uniforms( vlk::objs::FrameInfo const& frame ) -> utils::Result< void >;
     auto record_render_commands( vlk::objs::FrameInfo const& frame ) -> utils::Result< void >;
+
+    auto update_world_pos(glm::vec2 world_pos) -> void;
 };
 
 } // namespace ltb

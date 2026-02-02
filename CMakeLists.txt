@@ -78,6 +78,7 @@ add_library(
   LtbNav
   #  ${LtbNav_SOURCE_FILES}
   ${CMAKE_CURRENT_LIST_DIR}/src/ltb/apps/ils/app.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/src/ltb/ils/ils_wave_display_pipeline.cpp
 )
 add_library(
   LtbNav::LtbNav
@@ -97,12 +98,6 @@ target_include_directories(
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
   $<BUILD_INTERFACE:${LTB_NAV_GENERATED_DIR}>
-)
-target_include_directories(
-  LtbNav
-  SYSTEM
-  PRIVATE
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/external/src>
 )
 target_compile_features(
   LtbNav
