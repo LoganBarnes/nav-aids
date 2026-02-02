@@ -127,8 +127,8 @@ auto Camera2d::update_render_params( ) -> void
         glm::vec3( 0.0F, 1.0F, 0.0F )
     );
     render_params_.clip_from_view = glm::ortho(
-        +half_view_size.x,
         -half_view_size.x,
+        +half_view_size.x,
         -half_view_size.y,
         +half_view_size.y,
         cam_distance - 1.0F,
