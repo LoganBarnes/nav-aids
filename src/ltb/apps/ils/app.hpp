@@ -18,8 +18,6 @@
 namespace ltb
 {
 
-// https://drzgan.github.io/Python_CFD/2.1D%20linear%20convection.html
-
 struct IlsParams
 {
     int32     antenna_pairs_     = 1;
@@ -65,6 +63,8 @@ private:
 
     vlk::dd::LinesPipeline2         line_display_          = { gpu_, presentation_ };
     vlk::objs::VulkanCommandAndSync graphics_cmd_and_sync_ = { gpu_ };
+
+    vlk::dd::SimpleMeshUniforms* conversion_line_ = nullptr;
 
     bool initialized_ = false;
 

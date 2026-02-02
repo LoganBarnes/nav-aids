@@ -12,6 +12,7 @@
 
 // external
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/matrix_transform_2d.hpp>
 #include <spdlog/spdlog.h>
 
 namespace ltb
@@ -88,6 +89,23 @@ auto IlsApp::configure_gui( ) -> void
         ImGui::Text( "FPS: %.1F", ImGui::GetIO( ).Framerate );
     }
     ImGui::End( );
+
+    auto const cam = camera_.simple_render_params( );
+
+    auto const mouse_pos = glm::vec2{ ImGui::GetMousePos( ) };
+    auto const clip_pos
+        = ( ( mouse_pos / glm::vec2{ ImGui::GetIO( ).DisplaySize } ) * 2.0F ) - 1.0F;
+    auto const world_pos
+        = glm::vec2( cam.world_from_clip * glm::vec4( clip_pos.x, clip_pos.y, 0.0F, 1.0F ) );
+
+    ImGui::SetTooltip( "World pos: (%.2F, %.2F) m", world_pos.x, -world_pos.y );
+
+    auto const angle = glm::atan( world_pos.y, world_pos.x );
+
+    auto const transform = glm::translate( glm::identity< glm::mat3 >( ), glm::vec2{ world_pos } )
+                         * glm::rotate( glm::identity< glm::mat3 >( ), angle );
+
+    conversion_line_->model.transform = glm::mat3x4{ transform };
 }
 
 auto IlsApp::on_resize( glm::ivec2 const size ) -> utils::Result< void >
@@ -206,8 +224,8 @@ auto IlsApp::initialize_camera( ) -> utils::Result< IlsApp* >
         .store_mapped_value = true,
     } ) );
 
-    camera_.set_width( 500.0F );
-    camera_.set_center( { 0.0F, 0.0F } );
+    camera_.set_width( 36.0F );
+    camera_.set_center( { 13.0F, 0.0F } );
 
     return this;
 }
@@ -239,20 +257,33 @@ auto IlsApp::initialize_display_pipeline( ) -> utils::Result< IlsApp* >
 
 auto IlsApp::initialize_meshes( ) -> utils::Result< IlsApp* >
 {
-    auto const num_points  = 20U;
-    auto const cfd_divisor = static_cast< float32 >( num_points );
-
     auto grid_lines = vlk::dd::SimpleMesh2{ };
-    for ( auto i = 0U; i <= num_points; ++i )
+
+    constexpr auto ils_grid_length_km_count = 30U;
+    constexpr auto ils_grid_width_km_count  = 10U;
+    constexpr auto ils_grid_length_km       = static_cast< float32 >( ils_grid_length_km_count );
+    constexpr auto ils_grid_width_km        = static_cast< float32 >( ils_grid_width_km_count );
+
+    for ( auto i = 0U; i <= ils_grid_length_km_count; ++i )
     {
-        auto const interpolant = static_cast< float32 >( i ) / cfd_divisor;
-        auto const x_pos       = std::lerp( -100.0F, +100.0F, interpolant );
+        auto const     x_pos      = static_cast< float32 >( i );
+        constexpr auto half_width = ils_grid_width_km * 0.5F;
 
         utils::ignore(
-            grid_lines.positions.emplace_back( x_pos, -2.0F ),
-            grid_lines.positions.emplace_back( x_pos, -0.0F )
+            grid_lines.positions.emplace_back( x_pos, -half_width ),
+            grid_lines.positions.emplace_back( x_pos, +half_width )
         );
     }
+    for ( auto i = 0U; i <= ils_grid_width_km_count; ++i )
+    {
+        auto const y_pos = static_cast< float32 >( i ) - ( ils_grid_width_km * 0.5F );
+
+        utils::ignore(
+            grid_lines.positions.emplace_back( 0.0F, y_pos ),
+            grid_lines.positions.emplace_back( ils_grid_length_km, y_pos )
+        );
+    }
+
     LTB_CHECK(
         auto* const grid_uniforms,
         line_display_.initialize_mesh(
@@ -261,7 +292,17 @@ auto IlsApp::initialize_meshes( ) -> utils::Result< IlsApp* >
             graphics_and_compute_queue_
         )
     );
-    grid_uniforms->color = { 0.5F, 0.5F, 0.5F, 1.0F };
+    grid_uniforms->display.color = { 0.5F, 0.5F, 0.5F, 1.0F };
+
+    LTB_CHECK(
+        conversion_line_,
+        line_display_.initialize_mesh(
+            vlk::dd::SimpleMesh2{ .positions = { { 0.0F, -1.0F }, { 0.0F, +1.0F } } },
+            graphics_cmd_and_sync_.command_pool( ),
+            graphics_and_compute_queue_
+        )
+    );
+    conversion_line_->display.color = { 1.0F, 1.0F, 1.0F, 1.0F };
 
     return this;
 }
