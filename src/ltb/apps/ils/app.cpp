@@ -92,7 +92,9 @@ auto IlsApp::configure_gui( ) -> void
     }
     ImGui::End( );
 
-    if ( ImGui::IsMouseDown( ImGuiMouseButton_Left ) )
+    auto const& io = ImGui::GetIO( );
+
+    if ( ( !io.WantCaptureMouse ) && ImGui::IsMouseDown( ImGuiMouseButton_Left ) )
     {
         auto const cam = camera_.simple_render_params( );
 
