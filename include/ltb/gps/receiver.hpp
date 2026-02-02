@@ -25,7 +25,7 @@ private:
     gui::MeshDisplayPipeline& mesh_pipeline_;
     glm::vec3                 lat_long_alt_ft_;
 
-    gui::MeshId                reciever_point_id_ = gui::MeshId::nil( );
+    gui::MeshId                receiver_point_id_ = gui::MeshId::nil( );
     std::vector< gui::MeshId > range_spheres_     = { };
 
     auto update_transform( ) -> void;

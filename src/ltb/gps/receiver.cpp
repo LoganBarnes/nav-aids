@@ -44,10 +44,10 @@ auto Receiver::initialize( ) -> utils::Result<>
             .recursion_level = 2U,
         }
     );
-    LTB_CHECK( reciever_point_id_, mesh_pipeline_.initialize_mesh( position_mesh ) );
+    LTB_CHECK( receiver_point_id_, mesh_pipeline_.initialize_mesh( position_mesh ) );
 
     mesh_pipeline_.update_settings(
-        reciever_point_id_,
+        receiver_point_id_,
         gui::MeshDisplaySettings{
             .visible      = true,
             .color_mode   = gui::ColorMode::GlobalColor,
@@ -63,7 +63,7 @@ auto Receiver::initialize( ) -> utils::Result<>
 
 auto Receiver::is_initialized( ) const -> bool
 {
-    return !reciever_point_id_.is_nil( );
+    return !receiver_point_id_.is_nil( );
 }
 
 auto Receiver::configure_gui( ) -> void
@@ -107,9 +107,9 @@ auto Receiver::update_transform( ) -> void
         )
     );
 
-    auto settings       = mesh_pipeline_.get_settings( reciever_point_id_ );
+    auto settings       = mesh_pipeline_.get_settings( receiver_point_id_ );
     settings.transforms = { math::Translation3d{ pos } };
-    mesh_pipeline_.update_settings( reciever_point_id_, settings );
+    mesh_pipeline_.update_settings( receiver_point_id_, settings );
 }
 
 } // namespace ltb::gps
