@@ -44,14 +44,14 @@ auto IlsWaveDisplayPipeline::initialize( IlsWavePipelineSettings const& settings
             .spirv_file = nav::config::ils_shader_dir_path( ) / "ils_wave.vert.spv",
             .stage      = vk::ShaderStageFlagBits::eVertex,
         },
-        // {
-        //     .spirv_file = nav::config::ils_shader_dir_path( ) / "ils_wave.tesc.spv",
-        //     .stage      = vk::ShaderStageFlagBits::eTessellationControl,
-        // },
-        // {
-        //     .spirv_file = nav::config::ils_shader_dir_path( ) / "ils_wave.tese.spv",
-        //     .stage      = vk::ShaderStageFlagBits::eTessellationEvaluation,
-        // },
+        {
+            .spirv_file = nav::config::ils_shader_dir_path( ) / "ils_wave.tesc.spv",
+            .stage      = vk::ShaderStageFlagBits::eTessellationControl,
+        },
+        {
+            .spirv_file = nav::config::ils_shader_dir_path( ) / "ils_wave.tese.spv",
+            .stage      = vk::ShaderStageFlagBits::eTessellationEvaluation,
+        },
         {
             .spirv_file = nav::config::ils_shader_dir_path( ) / "ils_wave.frag.spv",
             .stage      = vk::ShaderStageFlagBits::eFragment,
@@ -64,45 +64,19 @@ auto IlsWaveDisplayPipeline::initialize( IlsWavePipelineSettings const& settings
             .setBinding( 0U )
             .setDescriptorType( vk::DescriptorType::eUniformBuffer )
             .setDescriptorCount( 1U )
-            .setStageFlags( vk::ShaderStageFlagBits::eVertex ),
-        // .setStageFlags( vk::ShaderStageFlagBits::eTessellationEvaluation ),
+            .setStageFlags( vk::ShaderStageFlagBits::eTessellationEvaluation ),
     };
 
     auto uniform_push_constants = std::vector{
         // simulation uniforms
         vk::PushConstantRange{ }
             .setStageFlags( vk::ShaderStageFlagBits::eVertex )
-            // .setStageFlags( vk::ShaderStageFlagBits::eTessellationEvaluation )
             .setOffset( 0U )
             .setSize( sizeof( IlsWaveData ) ),
     };
 
-    auto vertex_bindings = std::vector< vk::VertexInputBindingDescription >{
-        // vk::VertexInputBindingDescription{ }
-        //     .setBinding( 0U )
-        //     .setStride( sizeof( float32 ) )
-        //     .setInputRate( vk::VertexInputRate::eVertex ),
-        // vk::VertexInputBindingDescription{ }
-        //     .setBinding( 1U )
-        //     .setStride( sizeof( float32 ) )
-        //     .setInputRate( vk::VertexInputRate::eVertex ),
-    };
-
-    auto vertex_attributes = std::vector< vk::VertexInputAttributeDescription >{
-        // vk::VertexInputAttributeDescription{ }
-        //     .setBinding( 0U )
-        //     .setLocation( 0U )
-        //     .setFormat( vk::Format::eR32Sfloat )
-        //     .setOffset( 0U ),
-        // vk::VertexInputAttributeDescription{ }
-        //     .setBinding( 1U )
-        //     .setLocation( 1U )
-        //     .setFormat( vk::Format::eR32Sfloat )
-        //     .setOffset( 0U ),
-    };
-
-    // constexpr auto tessellation_state
-    // = vk::PipelineTessellationStateCreateInfo{ }.setPatchControlPoints( 1U );
+    constexpr auto tessellation_state
+        = vk::PipelineTessellationStateCreateInfo{ }.setPatchControlPoints( 1U );
 
     LTB_CHECK( pipeline_.initialize( {
         .shader_modules         = std::move( shader_modules ),
@@ -111,13 +85,9 @@ auto IlsWaveDisplayPipeline::initialize( IlsWavePipelineSettings const& settings
         .uniform_push_constants = std::move( uniform_push_constants ),
 
         .pipeline = {
-            .vertex_bindings   = std::move( vertex_bindings ),
-            .vertex_attributes = std::move( vertex_attributes ),
-            // .primitive_topology = vk::PrimitiveTopology::ePatchList,
-            .primitive_topology = vk::PrimitiveTopology::eLineList,
+            .primitive_topology = vk::PrimitiveTopology::ePatchList,
             .depth_stencil      = std::nullopt,
-            // .tessellation_state = tessellation_state,
-            .tessellation_state = std::nullopt,
+            .tessellation_state = tessellation_state,
         },
     } ) );
 
@@ -161,9 +131,10 @@ auto IlsWaveDisplayPipeline::is_initialized( ) const -> bool
 
 auto IlsWaveDisplayPipeline::initialize_wave( ) -> utils::Result< uint32 >
 {
-    auto const wave_id = next_wave_id_++;
+    auto const wave_id = next_wave_id_;
+    ++next_wave_id_;
     ordered_wave_ids_.push_back( wave_id );
-    wave_data_.emplace( wave_id, IlsWaveData{ } );
+    utils::ignore( wave_data_.emplace( wave_id, IlsWaveData{ } ) );
     return wave_id;
 }
 
@@ -200,23 +171,27 @@ auto IlsWaveDisplayPipeline::draw( vlk::objs::FrameInfo const& frame ) -> utils:
 
     for ( auto const& wave_id : ordered_wave_ids_ )
     {
-        auto const wave_data = this->get_data( wave_id );
+        auto wave_data = this->get_data( wave_id );
+
+        auto const line_length = glm::distance( wave_data.start_position, wave_data.end_position );
+        auto const num_patches = std::ceil( line_length * wave_data.carrier_frequency_hz );
+
+        wave_data.line_segments = static_cast< uint32 >( std::max( 1.0F, num_patches ) );
 
         constexpr auto model_offset = 0U;
         frame.command_buffer.pushConstants(
             pipeline_.pipeline_layout( ).get( ),
-            // vk::ShaderStageFlagBits::eTessellationEvaluation,
             vk::ShaderStageFlagBits::eVertex,
             model_offset,
             sizeof( wave_data ),
             &wave_data
         );
 
-        constexpr auto vertex_count   = 2U;
         constexpr auto instance_count = 1U;
         constexpr auto first_vertex   = 0U;
         constexpr auto first_instance = 0U;
-        frame.command_buffer.draw( vertex_count, instance_count, first_vertex, first_instance );
+        frame.command_buffer
+            .draw( wave_data.line_segments, instance_count, first_vertex, first_instance );
     }
 
     return utils::success( );

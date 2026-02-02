@@ -19,8 +19,10 @@ struct IlsWavePipelineSettings
 
 struct IlsWaveData
 {
-    glm::vec2 start_position;
-    glm::vec2 end_position;
+    glm::vec2 start_position       = { 0.0F, 0.0F };
+    glm::vec2 end_position         = { 1.0F, 0.0F };
+    float32   carrier_frequency_hz = 25.0F;
+    uint32     line_segments        = 1U;
 };
 
 class IlsWaveDisplayPipeline

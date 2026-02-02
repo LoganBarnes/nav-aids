@@ -1,42 +1,36 @@
 #version 450
 
-layout(quads, equal_spacing, ccw) in;
+const float PI = 3.14159265359F;
 
-layout(location = 0) in VertexData {
-    float prev_fluid_value;
-    float next_fluid_value;
-    int   fluid_index;
-} tese_in[];
+layout(isolines, equal_spacing) in;
 
-layout(binding = 0) uniform CameraParams
+// varying input from vertex shader
+layout(location = 0) in LineInformation {
+    vec2  start_position;
+    vec2  end_position;
+    float carrier_freq;
+    vec2  line_segment_t;
+} line_in[];
+
+layout(binding = 0) uniform CameraUniforms
 {
     mat4 clip_from_world;
 } camera;
 
-layout(push_constant) uniform SimulationParams
-{
-    float frame_interpolant;
-    float cell_size;
-    uint  fluid_cell_count;
-    float line_thickness;
-} sim;
-
 void main()
 {
-    float x_cell_center = float(tese_in[0].fluid_index) * sim.cell_size;
-    float x_offset      = gl_TessCoord.x * sim.cell_size;
+    vec2  start_pos    = line_in[0].start_position;
+    vec2  end_pos      = line_in[0].end_position;
+    float carrier_freq = line_in[0].carrier_freq;
+    vec2  segment_t    = line_in[0].line_segment_t;
 
-    float y_coord       = gl_TessCoord.y - 0.5F;
-    float y_offset      = y_coord * sim.line_thickness;
+    float x = mix(segment_t.x, segment_t.y, gl_TessCoord.x);
+    float y = sin(x * carrier_freq);
 
-    float fluid_value = mix(
-    tese_in[0].prev_fluid_value,
-    tese_in[0].next_fluid_value,
-    sim.frame_interpolant
-    );
+    vec2 line_dir = normalize(end_pos - start_pos);
+    vec2 line_perp = vec2(-line_dir.y, line_dir.x);
 
-    float x_pos = x_cell_center + x_offset;
-    float y_pos = -fluid_value + y_offset;
+    vec2 pos = start_pos + (line_dir * x) + (line_perp * y);
 
-    gl_Position = camera.clip_from_world * vec4(x_pos, y_pos, 0.0F, 1.0F);
+    gl_Position = camera.clip_from_world * vec4(pos, 0.0F, 1.0F);
 }
