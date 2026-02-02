@@ -1,0 +1,370 @@
+// ///////////////////////////////////////////////////////////////////////////////////////
+// A Logan Thomas Barnes project
+// ///////////////////////////////////////////////////////////////////////////////////////
+#include "app.hpp"
+
+// project
+#include "ltb/exec/app_defaults.hpp"
+#include "ltb/gui/imgui_utils.hpp"
+#include "ltb/vlk/buffer_utils.hpp"
+#include "ltb/vlk/check.hpp"
+#include "ltb/vlk/device_memory_utils.hpp"
+
+// external
+#include <glm/gtc/matrix_transform.hpp>
+#include <spdlog/spdlog.h>
+
+namespace ltb
+{
+
+IlsApp::IlsApp( window::GlfwContext& glfw_context, window::GlfwWindow& glfw_window )
+    : glfw_context_( glfw_context )
+    , glfw_window_( glfw_window )
+{
+}
+
+auto IlsApp::initialize( ) -> utils::Result< exec::UpdateLoopStatus >
+{
+    if ( !this->is_initialized( ) )
+    {
+
+        LTB_CHECK( this->initialize_gpu( )
+                       .and_then( &IlsApp::initialize_presentation )
+                       .and_then( &IlsApp::initialize_fluid )
+                       .and_then( &IlsApp::initialize_camera )
+                       .and_then( &IlsApp::initialize_display_pipeline )
+                       .and_then( &IlsApp::initialize_meshes ) );
+
+        initialized_ = true;
+    }
+
+    return exec::UpdateLoopStatus{
+        .update_time_step = utils::duration_seconds( 0.025F ),
+    };
+}
+
+auto IlsApp::is_initialized( ) const -> bool
+{
+    return initialized_;
+}
+
+auto IlsApp::fixed_step_update( exec::UpdateLoopStatus const& status ) -> exec::UpdateRequests
+{
+    utils::ignore( status );
+    return { };
+}
+
+auto IlsApp::frame_update( exec::UpdateLoopStatus const& status ) -> exec::UpdateRequests
+{
+    utils::ignore( status );
+
+    imgui_.new_frame( );
+    this->configure_gui( );
+
+    // auto display_uniforms = fluid_display_.uniforms( );
+    // fluid_display_.set_uniforms( display_uniforms );
+
+    if ( auto result = this->render( ); !result )
+    {
+        spdlog::error( "render() failed: {}", result.error( ).debug_error_message( ) );
+    }
+
+    return { };
+}
+
+auto IlsApp::configure_gui( ) -> void
+{
+    if ( camera_.handle_inputs( ) )
+    {
+        camera_frames_updated_.clear( );
+    }
+
+    utils::ignore(
+        ImGui::DockSpaceOverViewport( 0, nullptr, ImGuiDockNodeFlags_PassthruCentralNode )
+    );
+
+    if ( ImGui::Begin( "Simulation" ) )
+    {
+        ImGui::Text( "FPS: %.1F", ImGui::GetIO( ).Framerate );
+    }
+    ImGui::End( );
+}
+
+auto IlsApp::on_resize( glm::ivec2 const size ) -> utils::Result< void >
+{
+    camera_.resize( glm::vec2( size ) );
+    camera_frames_updated_.clear( );
+
+    return presentation_.rebuild( {
+        .swapchain = presentation_.swapchain( ).settings( ),
+    } );
+}
+
+auto IlsApp::clean_up( ) -> utils::Result< void >
+{
+    VK_CHECK( gpu_.device( ).get( ).waitIdle( ) );
+
+    return utils::success( );
+}
+
+auto IlsApp::initialize_gpu( ) -> utils::Result< IlsApp* >
+{
+    auto gpu_settings = vlk::objs::VulkanGpuSettings{ };
+    gpu_settings.device.device_features.push_back(
+        &vk::PhysicalDeviceFeatures::tessellationShader
+    );
+
+    LTB_CHECK( gpu_.initialize( std::move( gpu_settings ) ) );
+
+    LTB_CHECK_VALID( gpu_.device( ).queues( ).contains( vlk::QueueType::Graphics ) );
+    LTB_CHECK_VALID( gpu_.device( ).queues( ).contains( vlk::QueueType::Compute ) );
+    LTB_CHECK_VALID( gpu_.device( ).queues( ).contains( vlk::QueueType::Surface ) );
+
+    auto const& graphics_queue = gpu_.device( ).queues( ).at( vlk::QueueType::Graphics );
+    auto const& compute_queue  = gpu_.device( ).queues( ).at( vlk::QueueType::Compute );
+    auto const& surface_queue  = gpu_.device( ).queues( ).at( vlk::QueueType::Surface );
+
+    LTB_CHECK_VALID( graphics_queue == compute_queue );
+
+    graphics_and_compute_queue_ = graphics_queue;
+    presentation_queue_         = surface_queue;
+
+    return this;
+}
+
+auto IlsApp::initialize_presentation( ) -> utils::Result< IlsApp* >
+{
+    LTB_CHECK( presentation_.initialize( {
+        .render_pass = vlk::render_pass_settings_2d( vk::Format::eUndefined ),
+    } ) );
+
+    LTB_CHECK( imgui_.initialize( ) );
+
+    return this;
+}
+
+auto IlsApp::initialize_fluid( ) -> utils::Result< IlsApp* >
+{
+    // auto const num_points  = ils_.num_points;
+    // auto const cfd_divisor = static_cast< float32 >( num_points );
+    //
+    // ils_.initial_positions.reserve( num_points );
+    //
+    // for ( auto i = 0U; i < num_points; ++i )
+    // {
+    //     auto const interpolant = ( static_cast< float32 >( i ) + 0.5 ) / cfd_divisor;
+    //
+    //     if ( auto const x_pos = std::lerp( ils_.domain.min, ils_.domain.max, interpolant );
+    //          ( 0.5F < x_pos ) && ( x_pos < 1.0F ) )
+    //     {
+    //         ils_.initial_positions.emplace_back( 2.0F );
+    //     }
+    //     else
+    //     {
+    //         ils_.initial_positions.emplace_back( 1.0F );
+    //     }
+    // }
+    // LTB_CHECK_VALID( ils_.initial_positions.size( ) == num_points );
+    //
+    // auto fluid_compute_settings = cfd::FluidPipeline1Settings{
+    //     .frame_count       = exec::max_frames_in_flight,
+    //     .initial_positions = ils_.initial_positions,
+    //     .compute_queue     = graphics_and_compute_queue_,
+    // };
+    // LTB_CHECK_VALID( fluid_compute_.initialize( fluid_compute_settings ) );
+    //
+    // auto const cell_size = geom::dimensions( ils_.domain ) / static_cast< float32 >( num_points
+    // );
+    //
+    // auto compute_uniforms        = fluid_compute_.uniforms( );
+    // compute_uniforms.fluid_count = ils_.num_points;
+    // compute_uniforms.cell_size   = cell_size;
+    // fluid_compute_.set_uniforms( compute_uniforms );
+    //
+    // auto display_uniforms             = fluid_display_.uniforms( );
+    // display_uniforms.fluid_cell_count = ils_.num_points;
+    // display_uniforms.cell_size        = cell_size;
+    // fluid_display_.set_uniforms( display_uniforms );
+
+    return this;
+}
+
+auto IlsApp::initialize_camera( ) -> utils::Result< IlsApp* >
+{
+    auto camera_buffer_layout = vlk::MemoryLayout{ };
+    append_memory_size_n(
+        camera_buffer_layout,
+        sizeof( cam::SimpleCameraRenderParams ),
+        exec::max_frames_in_flight
+    );
+
+    LTB_CHECK( camera_ubo_.initialize( {
+        .layout       = std::move( camera_buffer_layout ),
+        .buffer_usage = vk::BufferUsageFlagBits::eUniformBuffer,
+        .memory_properties
+        = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+        .store_mapped_value = true,
+    } ) );
+
+    camera_.set_width( 500.0F );
+    camera_.set_center( { 0.0F, 0.0F } );
+
+    return this;
+}
+
+auto IlsApp::initialize_display_pipeline( ) -> utils::Result< IlsApp* >
+{
+    LTB_CHECK_VALID( camera_ubo_.is_initialized( ) );
+
+    // LTB_CHECK( fluid_display_.initialize( {
+    //     .frame_count = exec::max_frames_in_flight,
+    //     .camera_ubo  = camera_ubo_,
+    // } ) );
+
+    LTB_CHECK( line_display_.initialize( {
+        .frame_count = exec::max_frames_in_flight,
+        .camera_ubo  = camera_ubo_,
+    } ) );
+
+    LTB_CHECK( graphics_cmd_and_sync_.initialize( {
+        .frame_count  = exec::max_frames_in_flight,
+        .image_count  = static_cast< uint32 >( presentation_.swapchain( ).images( ).size( ) ),
+        .command_pool = {
+            .queue_type = vlk::QueueType::Graphics,
+        },
+    } ) );
+
+    return this;
+}
+
+auto IlsApp::initialize_meshes( ) -> utils::Result< IlsApp* >
+{
+    auto const num_points  = 20U;
+    auto const cfd_divisor = static_cast< float32 >( num_points );
+
+    auto grid_lines = vlk::dd::SimpleMesh2{ };
+    for ( auto i = 0U; i <= num_points; ++i )
+    {
+        auto const interpolant = static_cast< float32 >( i ) / cfd_divisor;
+        auto const x_pos       = std::lerp( -100.0F, +100.0F, interpolant );
+
+        utils::ignore(
+            grid_lines.positions.emplace_back( x_pos, -2.0F ),
+            grid_lines.positions.emplace_back( x_pos, -0.0F )
+        );
+    }
+    LTB_CHECK(
+        auto* const grid_uniforms,
+        line_display_.initialize_mesh(
+            grid_lines,
+            graphics_cmd_and_sync_.command_pool( ),
+            graphics_and_compute_queue_
+        )
+    );
+    grid_uniforms->color = { 0.5F, 0.5F, 0.5F, 1.0F };
+
+    return this;
+}
+
+auto IlsApp::compute( ) -> utils::Result< void >
+{
+    // LTB_CHECK( fluid_compute_.dispatch( ) );
+
+    return utils::success( );
+}
+
+auto IlsApp::render( ) -> utils::Result< void >
+{
+    LTB_CHECK(
+        auto const maybe_frame,
+        graphics_cmd_and_sync_.start_frame( presentation_.swapchain( ) )
+    );
+
+    if ( maybe_frame.has_value( ) )
+    {
+        auto const& frame = maybe_frame.value( );
+
+        LTB_CHECK( this->update_camera_uniforms( frame ) );
+        LTB_CHECK( this->record_render_commands( frame ) );
+
+        auto wait_until_signaled = std::vector< vlk::objs::SemaphoreAndStage >{ };
+
+        // if ( auto const& compute_semaphore = fluid_compute_.get_semaphore( ) )
+        // {
+        //     wait_until_signaled.push_back( {
+        //         .semaphore = compute_semaphore.value( ),
+        //         .stage     = vk::PipelineStageFlagBits::eVertexInput,
+        //     } );
+        //     fluid_compute_.clear_semaphore( );
+        // }
+        wait_until_signaled.push_back( {
+            .semaphore = frame.image_semaphore,
+            .stage     = vk::PipelineStageFlagBits::eColorAttachmentOutput,
+        } );
+
+        LTB_CHECK(
+            auto const& render_finished_semaphore,
+            graphics_cmd_and_sync_.get_present_semaphore( frame )
+        );
+
+        LTB_CHECK( graphics_cmd_and_sync_.end_frame(
+            frame,
+            wait_until_signaled,
+            { render_finished_semaphore },
+            graphics_and_compute_queue_
+        ) );
+
+        LTB_CHECK( graphics_cmd_and_sync_
+                       .present_frame( frame, presentation_.swapchain( ), presentation_queue_ ) );
+
+        graphics_cmd_and_sync_.increment_frame( );
+    }
+
+    return utils::success( );
+}
+
+auto IlsApp::update_camera_uniforms( vlk::objs::FrameInfo const& frame ) -> utils::Result< void >
+{
+    if ( camera_frames_updated_.contains( frame.frame_index ) )
+    {
+        return utils::success( );
+    }
+
+    auto const cam_uniforms = camera_.simple_render_params( );
+
+    LTB_CHECK_VALID( frame.frame_index < camera_ubo_.layout( ).ranges.size( ) );
+    auto const& memory_range = camera_ubo_.layout( ).ranges[ frame.frame_index ];
+
+    auto* const dst_data = camera_ubo_.mapped_data( ) + memory_range.offset;
+    LTB_CHECK_VALID( memory_range.size >= sizeof( cam_uniforms ) );
+    LTB_CHECK_VALID( std::memcpy( dst_data, &cam_uniforms, sizeof( cam_uniforms ) ) == dst_data );
+
+    utils::ignore( camera_frames_updated_.emplace( frame.frame_index ) );
+
+    return utils::success( );
+}
+
+auto IlsApp::record_render_commands( vlk::objs::FrameInfo const& frame ) -> utils::Result< void >
+{
+    VK_CHECK( frame.command_buffer.begin( vk::CommandBufferBeginInfo{ } ) );
+
+    LTB_CHECK( presentation_.begin_render_pass( {
+        .command_buffer    = frame.command_buffer,
+        .image_index       = frame.image_index,
+        .color_clear_value = { 0.35F, 0.35F, 0.35F, 1.0F },
+    } ) );
+
+    // auto const [ prev_index, next_index ] = fluid_compute_.last_computed_frame_indices( );
+    // LTB_CHECK( fluid_display_.draw( frame, prev_index, next_index ) );
+    LTB_CHECK( line_display_.draw( frame ) );
+
+    imgui_.render( frame.command_buffer );
+
+    frame.command_buffer.endRenderPass( );
+
+    VK_CHECK( frame.command_buffer.end( ) );
+
+    return utils::success( );
+}
+
+} // namespace ltb

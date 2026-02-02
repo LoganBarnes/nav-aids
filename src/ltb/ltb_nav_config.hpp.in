@@ -2,7 +2,7 @@
 
 #include <filesystem>
 
-namespace ltb::config
+namespace ltb::nav::config
 {
 
 inline auto project_root_dir_path( ) -> std::filesystem::path
@@ -20,4 +20,4 @@ inline auto shader_dir_path( ) -> std::filesystem::path
     return res_dir_path( ) / "shaders";
 }
 
-} // namespace ltb::config
+} // namespace ltb::nav::config

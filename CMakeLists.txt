@@ -42,13 +42,11 @@ include(${CMAKE_CURRENT_LIST_DIR}/cmake/ThirdParty.cmake)
 set(LTB_NAV_GENERATED_DIR ${CMAKE_BINARY_DIR}/generated)
 
 configure_file(
-  ${CMAKE_CURRENT_LIST_DIR}/src/ltb/ltb_config.hpp.in
-  ${LTB_NAV_GENERATED_DIR}/ltb/ltb_config.hpp
+  ${CMAKE_CURRENT_LIST_DIR}/src/ltb/ltb_nav_config.hpp.in
+  ${LTB_NAV_GENERATED_DIR}/ltb/nav/ltb_nav_config.hpp
 )
 
-if (TARGET Vulkan::Vulkan)
-  add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/res/shaders)
-endif ()
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/res/shaders)
 
 # ##############################################################################
 # Library
@@ -62,24 +60,24 @@ file(
   ${CMAKE_CURRENT_LIST_DIR}/src/ltb/*_tests.cpp
   ${CMAKE_CURRENT_LIST_DIR}/src/ltb/test/*.cpp
 )
-file(
-  GLOB_RECURSE
-  LtbNav_SOURCE_FILES
-  LIST_DIRECTORIES
-  false
-  CONFIGURE_DEPENDS
-  ${CMAKE_CURRENT_LIST_DIR}/external/src/*.c
-  ${CMAKE_CURRENT_LIST_DIR}/src/ltb/*.cpp
-)
-list(
-  REMOVE_ITEM
-  LtbNav_SOURCE_FILES
-  ${LtbNav_TEST_FILES}
-)
+#file(
+#  GLOB_RECURSE
+#  LtbNav_SOURCE_FILES
+#  LIST_DIRECTORIES
+#  false
+#  CONFIGURE_DEPENDS
+#  ${CMAKE_CURRENT_LIST_DIR}/src/ltb/*.cpp
+#)
+#list(
+#  REMOVE_ITEM
+#  LtbNav_SOURCE_FILES
+#  ${LtbNav_TEST_FILES}
+#)
 
 add_library(
   LtbNav
-  ${LtbNav_SOURCE_FILES}
+  #  ${LtbNav_SOURCE_FILES}
+  ${CMAKE_CURRENT_LIST_DIR}/src/ltb/apps/ils/app.cpp
 )
 add_library(
   LtbNav::LtbNav
@@ -89,32 +87,20 @@ add_library(
 target_link_libraries(
   LtbNav
   PUBLIC
-  # C++ Utils
-  Threads::Threads
-  tl::expected
-  Boost::pfr
-  magic_enum::magic_enum
-  range-v3::range-v3
-  spdlog::spdlog
-  $<TARGET_NAME_IF_EXISTS:TBB::tbb>
-  # Geometry
-  glm::glm
-  # Gui
-  implot::implot
+  # Shaders
+  LtbNav::generate_spirv
+  # Graphics
+  LtbVlk::LtbVlk
 )
 target_include_directories(
   LtbNav
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
   $<BUILD_INTERFACE:${LTB_NAV_GENERATED_DIR}>
-  PRIVATE
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>
 )
 target_include_directories(
   LtbNav
   SYSTEM
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/external/include>
   PRIVATE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/external/src>
 )
@@ -126,7 +112,6 @@ target_compile_features(
 target_compile_definitions(
   LtbNav
   PUBLIC
-  $<$<COMPILE_LANGUAGE:CXX>:VULKAN_HPP_NO_EXCEPTIONS>
   # Deal with windows warnings and macros.
   $<$<PLATFORM_ID:Windows>:_CRT_SECURE_NO_WARNINGS>
   $<$<PLATFORM_ID:Windows>:NOMINMAX>
@@ -209,34 +194,19 @@ endif ()
 # ##############################################################################
 # Executables
 # ##############################################################################
-add_executable(
-  LtbNavApp
-  ${CMAKE_CURRENT_LIST_DIR}/src/main.cpp
-)
-target_link_libraries(
-  LtbNavApp
-  PRIVATE
-  LtbNav::LtbNav
-)
-
-# Very High Frequency Omnidirectional Range (VOR)
-add_executable(
-  LtbVorApp
-  ${CMAKE_CURRENT_LIST_DIR}/src/vor_main.cpp
-)
-target_link_libraries(
-  LtbVorApp
-  PRIVATE
-  LtbNav::LtbNav
-)
 
 # Instrument Landing System (ILS)
 add_executable(
   LtbIlsApp
-  ${CMAKE_CURRENT_LIST_DIR}/src/ils_main.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/src/ltb/apps/ils/main.cpp
 )
 target_link_libraries(
   LtbIlsApp
   PRIVATE
   LtbNav::LtbNav
+)
+target_include_directories(
+  LtbIlsApp
+  PRIVATE
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>
 )
