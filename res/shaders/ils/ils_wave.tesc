@@ -4,7 +4,7 @@ const float PI = 3.14159265359F;
 
 // specify number of control points per patch output
 // this value controls the size of the input and output arrays
-layout (vertices=2) out;
+layout (vertices = 1) out;
 
 // varying input from the vertex shader
 layout(location = 0) in LineInformation {
@@ -38,14 +38,21 @@ void main()
     // Set tess levels:
 
     float line_length   = abs(line_segment_t.y - line_segment_t.x);
-    float tess_level    = ceil(line_length * carrier_freq * 10.0F);
+    int   tess_level    = int(ceil(line_length * carrier_freq * 10.0F));
 
-    // The number of isolines
+    // The number of segments along outer edges.
+    // Left
     gl_TessLevelOuter[0] = 1;
-    // The number of segments per isoline
-    gl_TessLevelOuter[1] = int(tess_level);
+    // Bottom
+    gl_TessLevelOuter[1] = tess_level;
+    // Right
+    gl_TessLevelOuter[2] = 1;
+    // Top
+    gl_TessLevelOuter[3] = tess_level;
 
-    // gl_TessLevelOuter[2-3] are not used for isolines
-    // gl_TessLevelInner is not used for isolines
+    // The number of internal quads. No divisions
+    // are needed so we set everything to 1
+    gl_TessLevelInner[0] = 1;
+    gl_TessLevelInner[1] = 1;
 
 }

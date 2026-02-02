@@ -22,7 +22,7 @@ namespace ltb
 struct IlsParams
 {
     int32     antenna_pairs      = 1;
-    float32   antenna_spacing    = 1.0F;
+    float32   antenna_spacing    = 0.5F;
     glm::vec3 output_channels    = { 1.0F, 1.0F, 1.0F };
     float32   output_scale       = 0.1F;
     float32   carrier_frequency  = 110.1F;

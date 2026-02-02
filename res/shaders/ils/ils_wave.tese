@@ -2,7 +2,7 @@
 
 const float PI = 3.14159265359F;
 
-layout(isolines, equal_spacing) in;
+layout(quads, equal_spacing, cw) in;
 
 // varying input from the tessellation control shader
 layout(location = 0) in LineInformation {
@@ -32,10 +32,14 @@ void main()
     float x = mix(segment_t.x, segment_t.y, gl_TessCoord.x);
     float y = sin(x * carrier_freq) * 0.5F;
 
+    vec2 normal = vec2(-cos(x * carrier_freq) * 0.5F, 1.0F / carrier_freq);
+    normal = normalize(normal);
+    vec2 width_offset = mix(-normal, normal, gl_TessCoord.y) * 0.02F;
+
     vec2 line_dir = normalize(end_pos - start_pos);
     vec2 line_perp = vec2(-line_dir.y, line_dir.x);
 
-    vec2 pos = start_pos + (line_dir * x) + (line_perp * y);
+    vec2 pos = start_pos + (line_dir * x) + (line_perp * y) + width_offset;
 
     gl_Position = camera.clip_from_world * vec4(pos, 0.0F, 1.0F);
 
