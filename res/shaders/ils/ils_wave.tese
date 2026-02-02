@@ -17,9 +17,16 @@ layout(binding = 0) uniform CameraUniforms
     mat4 clip_from_world;
 } camera;
 
+
+layout(push_constant) uniform DisplayUniforms
+{
+    layout(offset = 32) vec4 color;
+    float line_width;
+} display;
+
 // varying output to the fragment shader
 layout(location = 0) out Display {
-    vec3 color;
+    vec4 color;
 } display_out;
 
 void main()
@@ -34,7 +41,7 @@ void main()
 
     vec2 normal = vec2(-cos(x * carrier_freq) * 0.5F, 1.0F / carrier_freq);
     normal = normalize(normal);
-    vec2 width_offset = mix(-normal, normal, gl_TessCoord.y) * 0.02F;
+    vec2 width_offset = mix(-normal, normal, gl_TessCoord.y) * display.line_width * 0.5F;
 
     vec2 line_dir = normalize(end_pos - start_pos);
     vec2 line_perp = vec2(-line_dir.y, line_dir.x);
@@ -43,9 +50,5 @@ void main()
 
     gl_Position = camera.clip_from_world * vec4(pos, 0.0F, 1.0F);
 
-    if (start_pos.y > 0.0F) {
-        display_out.color = vec3(0.0F, 1.0F, 1.0F);
-    } else {
-        display_out.color = vec3(1.0F, 0.0F, 1.0F);
-    }
+    display_out.color = display.color;
 }

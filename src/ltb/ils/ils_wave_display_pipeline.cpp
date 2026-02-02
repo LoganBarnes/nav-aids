@@ -17,6 +17,24 @@
 
 namespace ltb::ils
 {
+namespace
+{
+
+struct IlsWaveDataUniforms
+{
+    glm::vec2 start_position       = { 0.0F, 0.0F };
+    glm::vec2 end_position         = { 1.0F, 0.0F };
+    float32   carrier_frequency_hz = 25.0F;
+    uint32    line_segments        = 1U;
+};
+
+struct IlsWaveDisplayUniforms
+{
+    glm::vec4 color      = glm::vec4( 1.0F );
+    float32   line_width = 1.0F;
+};
+
+} // namespace
 
 IlsWaveDisplayPipeline::IlsWaveDisplayPipeline(
     vlk::objs::VulkanGpu&          gpu,
@@ -72,7 +90,11 @@ auto IlsWaveDisplayPipeline::initialize( IlsWavePipelineSettings const& settings
         vk::PushConstantRange{ }
             .setStageFlags( vk::ShaderStageFlagBits::eVertex )
             .setOffset( 0U )
-            .setSize( sizeof( IlsWaveData ) ),
+            .setSize( sizeof( IlsWaveDataUniforms ) ),
+        vk::PushConstantRange{ }
+            .setStageFlags( vk::ShaderStageFlagBits::eTessellationEvaluation )
+            .setOffset( 32U )
+            .setSize( sizeof( IlsWaveDisplayUniforms ) ),
     };
 
     constexpr auto tessellation_state
@@ -171,27 +193,46 @@ auto IlsWaveDisplayPipeline::draw( vlk::objs::FrameInfo const& frame ) -> utils:
 
     for ( auto const& wave_id : ordered_wave_ids_ )
     {
-        auto wave_data = this->get_data( wave_id );
+        auto const wave_data = this->get_data( wave_id );
 
         auto const line_length = glm::distance( wave_data.start_position, wave_data.end_position );
         auto const num_patches = std::ceil( line_length * wave_data.carrier_frequency_hz );
+        auto const line_segments = static_cast< uint32 >( std::max( 1.0F, num_patches ) );
 
-        wave_data.line_segments = static_cast< uint32 >( std::max( 1.0F, num_patches ) );
+        auto const data_uniforms = IlsWaveDataUniforms{
+            .start_position       = wave_data.start_position,
+            .end_position         = wave_data.end_position,
+            .carrier_frequency_hz = wave_data.carrier_frequency_hz,
+            .line_segments        = line_segments,
+        };
 
-        constexpr auto model_offset = 0U;
+        constexpr auto data_uniform_offset = 0U;
         frame.command_buffer.pushConstants(
             pipeline_.pipeline_layout( ).get( ),
             vk::ShaderStageFlagBits::eVertex,
-            model_offset,
-            sizeof( wave_data ),
-            &wave_data
+            data_uniform_offset,
+            sizeof( data_uniforms ),
+            &data_uniforms
+        );
+
+        auto const display_uniforms = IlsWaveDisplayUniforms{
+            .color      = wave_data.color,
+            .line_width = wave_data.line_width,
+        };
+
+        constexpr auto display_uniform_offset = 32U;
+        frame.command_buffer.pushConstants(
+            pipeline_.pipeline_layout( ).get( ),
+            vk::ShaderStageFlagBits::eTessellationEvaluation,
+            display_uniform_offset,
+            sizeof( display_uniforms ),
+            &display_uniforms
         );
 
         constexpr auto instance_count = 1U;
         constexpr auto first_vertex   = 0U;
         constexpr auto first_instance = 0U;
-        frame.command_buffer
-            .draw( wave_data.line_segments, instance_count, first_vertex, first_instance );
+        frame.command_buffer.draw( line_segments, instance_count, first_vertex, first_instance );
     }
 
     return utils::success( );

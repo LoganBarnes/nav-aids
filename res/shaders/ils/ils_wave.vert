@@ -1,10 +1,11 @@
 #version 450
 
 layout(push_constant) uniform LineInformation {
-    vec2  start_position;
-    vec2  end_position;
-    float carrier_freq;
-    uint  num_segments;
+    vec2  start_position;// 8 bytes
+    vec2  end_position;// 8 bytes
+    float carrier_freq;// 4 bytes
+    uint  num_segments;// 4 bytes
+// Total: 24 bytes
 } line_in;
 
 // varying output to tessellation control shader

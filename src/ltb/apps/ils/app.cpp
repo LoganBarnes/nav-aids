@@ -117,8 +117,16 @@ auto IlsApp::configure_gui( ) -> void
                  utils::IsTrue{ }
              ) )
         {
-            ils_.carrier_frequency = std::clamp( ils_.carrier_frequency, 108.1F, 111.9F );
-            ils_.carrier_decimation    = std::clamp( ils_.carrier_decimation, 1.0F, 100.0F );
+            ils_.carrier_frequency  = std::clamp( ils_.carrier_frequency, 108.1F, 111.9F );
+            ils_.carrier_decimation = std::clamp( ils_.carrier_decimation, 1.0F, 100.0F );
+            update_world_pos( world_pos_ );
+        }
+
+        ImGui::Separator( );
+
+        if ( ImGui::DragFloat( "Wave Line Width", &wave_line_width_, 0.01F ) )
+        {
+            wave_line_width_ = std::clamp( wave_line_width_, 0.01F, 0.1F );
             update_world_pos( world_pos_ );
         }
     }
@@ -213,7 +221,7 @@ auto IlsApp::initialize_camera( ) -> utils::Result< IlsApp* >
     } ) );
 
     camera_.set_width( 36.0F );
-    camera_.set_center( { 13.0F, 0.0F } );
+    camera_.set_center( { 10.0F, 0.0F } );
 
     return this;
 }
@@ -414,6 +422,8 @@ auto IlsApp::update_world_pos( glm::vec2 const world_pos ) -> void
             .start_position       = { 0.0F, +half_spacing },
             .end_position         = world_pos,
             .carrier_frequency_hz = ils_.carrier_frequency / ils_.carrier_decimation,
+            .color                = glm::vec4{ 0.0F, 1.0F, 1.0F, 1.0F },
+            .line_width           = wave_line_width_,
         }
     );
     ils_wave_pipeline_.set_data(
@@ -422,6 +432,8 @@ auto IlsApp::update_world_pos( glm::vec2 const world_pos ) -> void
             .start_position       = { 0.0F, -half_spacing },
             .end_position         = world_pos,
             .carrier_frequency_hz = ils_.carrier_frequency / ils_.carrier_decimation,
+            .color                = glm::vec4{ 1.0F, 0.0F, 1.0F, 1.0F },
+            .line_width           = wave_line_width_,
         }
     );
 }
