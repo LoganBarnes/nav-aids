@@ -5,7 +5,9 @@
 
 // project
 #include "ltb/exec/app_defaults.hpp"
+#include "ltb/geom/range.hpp"
 #include "ltb/gui/imgui_utils.hpp"
+#include "ltb/utils/container_utils.hpp"
 #include "ltb/vlk/buffer_utils.hpp"
 #include "ltb/vlk/check.hpp"
 #include "ltb/vlk/device_memory_utils.hpp"
@@ -15,8 +17,14 @@
 #include <glm/gtx/matrix_transform_2d.hpp>
 #include <spdlog/spdlog.h>
 
+// standard
+#include <ranges>
+
 namespace ltb
 {
+
+constexpr auto carrier_freq_range_mhz   = geom::Range< float32 >{ .min = 108.1F, .max = 111.9F };
+constexpr auto carrier_decimation_range = geom::Range< float32 >{ .min = 1.0F, .max = 100.0F };
 
 IlsApp::IlsApp( window::GlfwContext& glfw_context, window::GlfwWindow& glfw_window )
     : glfw_context_( glfw_context )
@@ -36,7 +44,7 @@ auto IlsApp::initialize( ) -> utils::Result< exec::UpdateLoopStatus >
                        .and_then( &IlsApp::initialize_display_pipeline )
                        .and_then( &IlsApp::initialize_meshes ) );
 
-        update_world_pos( { 10.0F, 0.0F } );
+        update_world_pos( world_pos_ );
 
         initialized_ = true;
     }
@@ -64,9 +72,6 @@ auto IlsApp::frame_update( exec::UpdateLoopStatus const& status ) -> exec::Updat
     imgui_.new_frame( );
     this->configure_gui( );
 
-    // auto display_uniforms = fluid_display_.uniforms( );
-    // fluid_display_.set_uniforms( display_uniforms );
-
     if ( auto result = this->render( ); !result )
     {
         spdlog::error( "render() failed: {}", result.error( ).debug_error_message( ) );
@@ -89,6 +94,33 @@ auto IlsApp::configure_gui( ) -> void
     if ( ImGui::Begin( "Simulation" ) )
     {
         ImGui::Text( "FPS: %.1F", ImGui::GetIO( ).Framerate );
+
+        ImGui::Separator( );
+
+        if ( std::ranges::any_of(
+                 std::array{
+                     ImGui::DragFloat(
+                         "Carrier Freq (MHz)",
+                         &ils_.carrier_frequency,
+                         0.2F,
+                         carrier_freq_range_mhz.min,
+                         carrier_freq_range_mhz.max
+                     ),
+                     ImGui::DragFloat(
+                         "Carrier Decimation",
+                         &ils_.carrier_decimation,
+                         1.0F,
+                         carrier_decimation_range.min,
+                         carrier_decimation_range.max
+                     ),
+                 },
+                 utils::IsTrue{ }
+             ) )
+        {
+            ils_.carrier_frequency = std::clamp( ils_.carrier_frequency, 108.1F, 111.9F );
+            ils_.carrier_decimation    = std::clamp( ils_.carrier_decimation, 1.0F, 100.0F );
+            update_world_pos( world_pos_ );
+        }
     }
     ImGui::End( );
 
@@ -202,11 +234,6 @@ auto IlsApp::initialize_waves( ) -> utils::Result< IlsApp* >
 auto IlsApp::initialize_display_pipeline( ) -> utils::Result< IlsApp* >
 {
     LTB_CHECK_VALID( camera_ubo_.is_initialized( ) );
-
-    // LTB_CHECK( fluid_display_.initialize( {
-    //     .frame_count = exec::max_frames_in_flight,
-    //     .camera_ubo  = camera_ubo_,
-    // } ) );
 
     LTB_CHECK( line_display_.initialize( {
         .frame_count = exec::max_frames_in_flight,
@@ -370,6 +397,8 @@ auto IlsApp::record_render_commands( vlk::objs::FrameInfo const& frame ) -> util
 
 auto IlsApp::update_world_pos( glm::vec2 const world_pos ) -> void
 {
+    world_pos_ = world_pos;
+
     auto const angle = glm::atan( world_pos.y, world_pos.x );
 
     auto const transform = glm::translate( glm::identity< glm::mat3 >( ), world_pos )
@@ -377,20 +406,22 @@ auto IlsApp::update_world_pos( glm::vec2 const world_pos ) -> void
 
     conversion_line_->model.transform = glm::mat3x4{ transform };
 
-    auto const half_spacing = ils_.antenna_spacing_m * 0.5F;
+    auto const half_spacing = ils_.antenna_spacing * 0.5F;
 
     ils_wave_pipeline_.set_data(
         pos_wave_,
         ils::IlsWaveData{
-            .start_position = { 0.0F, +half_spacing },
-            .end_position   = world_pos,
+            .start_position       = { 0.0F, +half_spacing },
+            .end_position         = world_pos,
+            .carrier_frequency_hz = ils_.carrier_frequency / ils_.carrier_decimation,
         }
     );
     ils_wave_pipeline_.set_data(
         neg_wave_,
         ils::IlsWaveData{
-            .start_position = { 0.0F, -half_spacing },
-            .end_position   = world_pos,
+            .start_position       = { 0.0F, -half_spacing },
+            .end_position         = world_pos,
+            .carrier_frequency_hz = ils_.carrier_frequency / ils_.carrier_decimation,
         }
     );
 }

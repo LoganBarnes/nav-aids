@@ -7,6 +7,7 @@ layout(push_constant) uniform LineInformation {
     uint  num_segments;
 } line_in;
 
+// varying output to tessellation control shader
 layout(location = 0) out LineInformation {
     vec2  start_position;
     vec2  end_position;

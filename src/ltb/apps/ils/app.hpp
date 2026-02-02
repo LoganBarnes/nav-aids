@@ -21,10 +21,12 @@ namespace ltb
 
 struct IlsParams
 {
-    int32     antenna_pairs     = 1;
-    float32   antenna_spacing_m = 5.0F;
-    glm::vec3 output_channels   = { 1.0F, 1.0F, 1.0F };
-    float32   output_scale      = 0.1F;
+    int32     antenna_pairs      = 1;
+    float32   antenna_spacing    = 1.0F;
+    glm::vec3 output_channels    = { 1.0F, 1.0F, 1.0F };
+    float32   output_scale       = 0.1F;
+    float32   carrier_frequency  = 110.1F;
+    float32   carrier_decimation = 5.0F;
 };
 
 class IlsApp
@@ -63,7 +65,8 @@ private:
     vlk::dd::LinesPipeline2         line_display_          = { gpu_, presentation_ };
     vlk::objs::VulkanCommandAndSync graphics_cmd_and_sync_ = { gpu_ };
 
-    IlsParams ils_ = { };
+    glm::vec2 world_pos_ = { 10.0F, 0.0F };
+    IlsParams ils_       = { };
 
     ils::IlsWaveDisplayPipeline ils_wave_pipeline_ = { gpu_, presentation_ };
     uint32                      pos_wave_          = 0U;
@@ -87,7 +90,7 @@ private:
     auto update_camera_uniforms( vlk::objs::FrameInfo const& frame ) -> utils::Result< void >;
     auto record_render_commands( vlk::objs::FrameInfo const& frame ) -> utils::Result< void >;
 
-    auto update_world_pos(glm::vec2 world_pos) -> void;
+    auto update_world_pos( glm::vec2 world_pos ) -> void;
 };
 
 } // namespace ltb

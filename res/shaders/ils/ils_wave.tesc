@@ -6,7 +6,7 @@ const float PI = 3.14159265359F;
 // this value controls the size of the input and output arrays
 layout (vertices=2) out;
 
-// varying input from vertex shader
+// varying input from the vertex shader
 layout(location = 0) in LineInformation {
     vec2  start_position;
     vec2  end_position;
@@ -14,7 +14,7 @@ layout(location = 0) in LineInformation {
     vec2  line_segment_t;
 } line_in[];
 
-// varying output to evaluation shader
+// varying output to the tessellation evaluation shader
 layout(location = 0) out LineInformation {
     vec2  start_position;
     vec2  end_position;
