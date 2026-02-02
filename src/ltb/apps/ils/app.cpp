@@ -103,6 +103,8 @@ auto IlsApp::configure_gui( ) -> void
             = glm::vec2( cam.world_from_clip * glm::vec4( clip_pos.x, clip_pos.y, 0.0F, 1.0F ) );
 
         ImGui::SetTooltip( "World pos: (%.2F, %.2F) m", world_pos.x, world_pos.y );
+
+        update_world_pos( world_pos );
     }
 }
 
