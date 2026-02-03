@@ -30,8 +30,9 @@ struct IlsWaveDataUniforms
 
 struct IlsWaveDisplayUniforms
 {
-    glm::vec4 color      = glm::vec4( 1.0F );
-    float32   line_width = 1.0F;
+    glm::vec4   color      = glm::vec4( 1.0F );
+    float32     line_width = 1.0F;
+    IlsWaveForm wave_form  = IlsWaveForm::Combined;
 };
 
 } // namespace
@@ -218,6 +219,7 @@ auto IlsWaveDisplayPipeline::draw( vlk::objs::FrameInfo const& frame ) -> utils:
         auto const display_uniforms = IlsWaveDisplayUniforms{
             .color      = wave_data.color,
             .line_width = wave_data.line_width,
+            .wave_form  = wave_data.wave_form,
         };
 
         constexpr auto display_uniform_offset = 32U;

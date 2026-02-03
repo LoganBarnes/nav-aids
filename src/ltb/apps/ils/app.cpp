@@ -129,6 +129,11 @@ auto IlsApp::configure_gui( ) -> void
             wave_line_width_ = std::clamp( wave_line_width_, 0.01F, 0.1F );
             update_world_pos( world_pos_ );
         }
+
+        if ( gui::enum_combo_menu( "Wave Form", &wave_form_ ) )
+        {
+            update_world_pos( world_pos_ );
+        }
     }
     ImGui::End( );
 
@@ -424,6 +429,7 @@ auto IlsApp::update_world_pos( glm::vec2 const world_pos ) -> void
             .carrier_frequency_hz = ils_.carrier_frequency / ils_.carrier_decimation,
             .color                = glm::vec4{ 0.0F, 1.0F, 1.0F, 1.0F },
             .line_width           = wave_line_width_,
+            .wave_form            = wave_form_,
         }
     );
     ils_wave_pipeline_.set_data(
@@ -434,6 +440,7 @@ auto IlsApp::update_world_pos( glm::vec2 const world_pos ) -> void
             .carrier_frequency_hz = ils_.carrier_frequency / ils_.carrier_decimation,
             .color                = glm::vec4{ 1.0F, 0.0F, 1.0F, 1.0F },
             .line_width           = wave_line_width_,
+            .wave_form            = wave_form_,
         }
     );
 }

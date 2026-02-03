@@ -26,7 +26,7 @@ struct IlsParams
     glm::vec3 output_channels    = { 1.0F, 1.0F, 1.0F };
     float32   output_scale       = 0.1F;
     float32   carrier_frequency  = 110.1F;
-    float32   carrier_decimation = 5.0F;
+    float32   carrier_decimation = 10.0F;
 };
 
 class IlsApp
@@ -65,9 +65,10 @@ private:
     vlk::dd::LinesPipeline2         line_display_          = { gpu_, presentation_ };
     vlk::objs::VulkanCommandAndSync graphics_cmd_and_sync_ = { gpu_ };
 
-    glm::vec2 world_pos_       = { 16.0F, 0.0F };
-    float32   wave_line_width_ = 0.04F;
-    IlsParams ils_             = { };
+    glm::vec2        world_pos_       = { 16.0F, 0.0F };
+    float32          wave_line_width_ = 0.02F;
+    ils::IlsWaveForm wave_form_       = ils::IlsWaveForm::Combined;
+    IlsParams        ils_             = { };
 
     ils::IlsWaveDisplayPipeline ils_wave_pipeline_ = { gpu_, presentation_ };
     uint32                      pos_wave_          = 0U;

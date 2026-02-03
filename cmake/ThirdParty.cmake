@@ -11,7 +11,7 @@ cpmaddpackage(
   GITHUB_REPOSITORY
   LoganBarnes/ltb-vlk
   GIT_TAG
-  9ee20b5
+  0d985b3
 )
 
 #cpmaddpackage(

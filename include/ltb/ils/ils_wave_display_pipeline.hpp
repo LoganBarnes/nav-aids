@@ -17,14 +17,23 @@ struct IlsWavePipelineSettings
     vlk::objs::VulkanBuffer const& camera_ubo;
 };
 
+enum class IlsWaveForm : uint32
+{
+    Combined,
+    Sbo,
+    Csb,
+    Carrier,
+};
+
 struct IlsWaveData
 {
     glm::vec2 start_position       = { 0.0F, 0.0F };
     glm::vec2 end_position         = { 1.0F, 0.0F };
     float32   carrier_frequency_hz = 25.0F;
 
-    glm::vec4 color      = glm::vec4( 1.0F );
-    float32   line_width = 1.0F;
+    glm::vec4   color      = glm::vec4( 1.0F );
+    float32     line_width = 1.0F;
+    IlsWaveForm wave_form  = IlsWaveForm::Combined;
 };
 
 class IlsWaveDisplayPipeline
