@@ -6,7 +6,6 @@
 // project
 #include "ltb/nav/ltb_nav_config.hpp"
 #include "ltb/vlk/buffer_utils.hpp"
-#include "ltb/vlk/check.hpp"
 #include "ltb/vlk/device_memory_utils.hpp"
 #include "ltb/vlk/objs/frame_info.hpp"
 
@@ -20,12 +19,23 @@ namespace ltb::ils
 namespace
 {
 
+constexpr auto display_uniform_offset = 48U;
+
+enum class Antenna : uint32
+{
+    Both,
+    Pos,
+    Neg,
+};
+
 struct IlsWaveDataUniforms
 {
-    glm::vec2 start_position       = { 0.0F, 0.0F };
-    glm::vec2 end_position         = { 1.0F, 0.0F };
+    glm::vec2 pos_start            = { 0.0F, +1.0F };
+    glm::vec2 neg_start            = { 0.0F, -1.0F };
+    glm::vec2 end                  = { 1.0F, 0.0F };
     float32   carrier_frequency_hz = 25.0F;
     uint32    line_segments        = 1U;
+    Antenna   antenna              = Antenna::Both;
 };
 
 struct IlsWaveDisplayUniforms
@@ -94,7 +104,7 @@ auto IlsWaveDisplayPipeline::initialize( IlsWavePipelineSettings const& settings
             .setSize( sizeof( IlsWaveDataUniforms ) ),
         vk::PushConstantRange{ }
             .setStageFlags( vk::ShaderStageFlagBits::eTessellationEvaluation )
-            .setOffset( 32U )
+            .setOffset( display_uniform_offset )
             .setSize( sizeof( IlsWaveDisplayUniforms ) ),
     };
 
@@ -201,10 +211,12 @@ auto IlsWaveDisplayPipeline::draw( vlk::objs::FrameInfo const& frame ) -> utils:
         auto const line_segments = static_cast< uint32 >( std::max( 1.0F, num_patches ) );
 
         auto const data_uniforms = IlsWaveDataUniforms{
-            .start_position       = wave_data.start_position,
-            .end_position         = wave_data.end_position,
+            .pos_start            = ( wave_data.start_position ),
+            .neg_start            = ( wave_data.start_position ),
+            .end                  = wave_data.end_position,
             .carrier_frequency_hz = wave_data.carrier_frequency_hz,
             .line_segments        = line_segments,
+            .antenna = ( wave_data.start_position.y > 0.0F ? Antenna::Pos : Antenna::Neg ),
         };
 
         constexpr auto data_uniform_offset = 0U;
@@ -222,7 +234,6 @@ auto IlsWaveDisplayPipeline::draw( vlk::objs::FrameInfo const& frame ) -> utils:
             .wave_form  = wave_data.wave_form,
         };
 
-        constexpr auto display_uniform_offset = 32U;
         frame.command_buffer.pushConstants(
             pipeline_.pipeline_layout( ).get( ),
             vk::ShaderStageFlagBits::eTessellationEvaluation,
