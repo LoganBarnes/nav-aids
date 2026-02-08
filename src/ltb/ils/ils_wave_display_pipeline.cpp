@@ -19,6 +19,7 @@ namespace ltb::ils
 namespace
 {
 
+constexpr auto data_uniform_offset    = 0U;
 constexpr auto display_uniform_offset = 48U;
 
 enum class Antenna : uint32
@@ -44,6 +45,42 @@ struct IlsWaveDisplayUniforms
     float32     line_width = 1.0F;
     IlsWaveForm wave_form  = IlsWaveForm::Combined;
 };
+
+auto line_segments( float32 const line_length, float32 const carrier_frequency_hz )
+{
+    auto const num_patches = std::ceil( line_length * carrier_frequency_hz );
+    return static_cast< uint32 >( std::max( 1.0F, num_patches ) );
+}
+
+auto draw_wave(
+    vlk::objs::FrameInfo const&              frame,
+    vlk::objs::VulkanGraphicsPipeline const& pipeline,
+    IlsWaveDataUniforms const&               data_uniforms,
+    IlsWaveDisplayUniforms const&            display_uniforms
+) -> void
+{
+    frame.command_buffer.pushConstants(
+        pipeline.pipeline_layout( ).get( ),
+        vk::ShaderStageFlagBits::eVertex,
+        data_uniform_offset,
+        sizeof( data_uniforms ),
+        &data_uniforms
+    );
+
+    frame.command_buffer.pushConstants(
+        pipeline.pipeline_layout( ).get( ),
+        vk::ShaderStageFlagBits::eTessellationEvaluation,
+        display_uniform_offset,
+        sizeof( display_uniforms ),
+        &display_uniforms
+    );
+
+    constexpr auto instance_count = 1U;
+    constexpr auto first_vertex   = 0U;
+    constexpr auto first_instance = 0U;
+    frame.command_buffer
+        .draw( data_uniforms.line_segments, instance_count, first_vertex, first_instance );
+}
 
 } // namespace
 
@@ -162,91 +199,60 @@ auto IlsWaveDisplayPipeline::is_initialized( ) const -> bool
     return initialized_;
 }
 
-auto IlsWaveDisplayPipeline::initialize_wave( ) -> utils::Result< uint32 >
+auto IlsWaveDisplayPipeline::get_data( ) const -> IlsWaveData
 {
-    auto const wave_id = next_wave_id_;
-    ++next_wave_id_;
-    ordered_wave_ids_.push_back( wave_id );
-    utils::ignore( wave_data_.emplace( wave_id, IlsWaveData{ } ) );
-    return wave_id;
+    return wave_data_;
 }
 
-auto IlsWaveDisplayPipeline::get_data( uint32 const id ) const -> IlsWaveData
+auto IlsWaveDisplayPipeline::set_data( IlsWaveData const& data ) -> void
 {
-    if ( !wave_data_.contains( id ) )
-    {
-        spdlog::error( "IlsWaveDisplayPipeline::get_data: Invalid wave ID {}", id );
-        return { };
-    }
-    return wave_data_.at( id );
-}
-
-auto IlsWaveDisplayPipeline::set_data( uint32 const id, IlsWaveData const& data ) -> void
-{
-    if ( !wave_data_.contains( id ) )
-    {
-        spdlog::error( "IlsWaveDisplayPipeline::set_data: Invalid wave ID {}", id );
-        return;
-    }
-    wave_data_.at( id ) = data;
+    wave_data_ = std::move( data );
 }
 
 auto IlsWaveDisplayPipeline::draw( vlk::objs::FrameInfo const& frame ) -> utils::Result< void >
 {
-    if ( ordered_wave_ids_.empty( ) )
-    {
-        return utils::success( );
-    }
-
     pipeline_.bind( frame.command_buffer );
 
     LTB_CHECK( pipeline_.bind_descriptor_sets( frame ) );
 
-    for ( auto const& wave_id : ordered_wave_ids_ )
-    {
-        auto const wave_data = this->get_data( wave_id );
+    auto display_uniforms = IlsWaveDisplayUniforms{
+        .line_width = wave_data_.line_width,
+        .wave_form  = wave_data_.wave_form,
+    };
 
-        auto const line_length = glm::distance( wave_data.start_position, wave_data.end_position );
-        auto const num_patches = std::ceil( line_length * wave_data.carrier_frequency_hz );
-        auto const line_segments = static_cast< uint32 >( std::max( 1.0F, num_patches ) );
+    auto data_uniforms = IlsWaveDataUniforms{
+        .pos_start            = wave_data_.pos_start,
+        .neg_start            = wave_data_.neg_start,
+        .end                  = wave_data_.end,
+        .carrier_frequency_hz = wave_data_.carrier_frequency_hz,
+    };
 
-        auto const data_uniforms = IlsWaveDataUniforms{
-            .pos_start            = ( wave_data.start_position ),
-            .neg_start            = ( wave_data.start_position ),
-            .end                  = wave_data.end_position,
-            .carrier_frequency_hz = wave_data.carrier_frequency_hz,
-            .line_segments        = line_segments,
-            .antenna = ( wave_data.start_position.y > 0.0F ? Antenna::Pos : Antenna::Neg ),
-        };
+    // Positive antenna wave
+    data_uniforms.line_segments = line_segments(
+        glm::distance( wave_data_.pos_start, wave_data_.end ),
+        wave_data_.carrier_frequency_hz
+    );
+    data_uniforms.antenna  = Antenna::Pos;
+    display_uniforms.color = glm::vec4( 1.0F, 0.0F, 1.0F, 1.0F );
 
-        constexpr auto data_uniform_offset = 0U;
-        frame.command_buffer.pushConstants(
-            pipeline_.pipeline_layout( ).get( ),
-            vk::ShaderStageFlagBits::eVertex,
-            data_uniform_offset,
-            sizeof( data_uniforms ),
-            &data_uniforms
-        );
+    draw_wave( frame, pipeline_, data_uniforms, display_uniforms );
 
-        auto const display_uniforms = IlsWaveDisplayUniforms{
-            .color      = wave_data.color,
-            .line_width = wave_data.line_width,
-            .wave_form  = wave_data.wave_form,
-        };
+    // Negative antenna wave
+    data_uniforms.line_segments = line_segments(
+        glm::distance( wave_data_.neg_start, wave_data_.end ),
+        wave_data_.carrier_frequency_hz
+    );
+    data_uniforms.antenna  = Antenna::Neg;
+    display_uniforms.color = glm::vec4( 0.0F, 1.0F, 1.0F, 1.0F );
 
-        frame.command_buffer.pushConstants(
-            pipeline_.pipeline_layout( ).get( ),
-            vk::ShaderStageFlagBits::eTessellationEvaluation,
-            display_uniform_offset,
-            sizeof( display_uniforms ),
-            &display_uniforms
-        );
+    draw_wave( frame, pipeline_, data_uniforms, display_uniforms );
 
-        constexpr auto instance_count = 1U;
-        constexpr auto first_vertex   = 0U;
-        constexpr auto first_instance = 0U;
-        frame.command_buffer.draw( line_segments, instance_count, first_vertex, first_instance );
-    }
+    // Combined wave
+    data_uniforms.line_segments = line_segments( 20.0F, wave_data_.carrier_frequency_hz );
+    data_uniforms.antenna       = Antenna::Both;
+    display_uniforms.color      = glm::vec4( 1.0F, 1.0F, 1.0F, 1.0F );
+
+    draw_wave( frame, pipeline_, data_uniforms, display_uniforms );
 
     return utils::success( );
 }

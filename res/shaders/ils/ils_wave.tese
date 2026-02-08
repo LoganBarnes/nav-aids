@@ -49,7 +49,7 @@ float wave_function(in float x, in float shift_sign) {
     float shift = shift_sign * PI * 0.5F;
 
     float carrier         = sin(inner * carrier_freq) * amp;
-    float carrier_shifted = sin((inner * carrier_freq) + shift) * amp;
+    float carrier_shifted = sin((inner * carrier_freq) - shift) * amp;
 
     float ninety    = sin(inner * 0.9F);
     float one_fifty = sin(inner * 1.5F);
@@ -92,7 +92,9 @@ float antenna_function(in float x)
     else
     {
         // ANTENNA_BOTH
-        return wave_function(x, +1.0F) + wave_function(x, -1.0F);
+        float pos_x = x + distance(line_in[0].pos_start, line_in[0].end);
+        float neg_x = x + distance(line_in[0].neg_start, line_in[0].end);
+        return wave_function(pos_x, +1.0F) + wave_function(neg_x, -1.0F);
     }
 }
 

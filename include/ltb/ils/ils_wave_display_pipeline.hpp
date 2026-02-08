@@ -27,11 +27,11 @@ enum class IlsWaveForm : uint32
 
 struct IlsWaveData
 {
-    glm::vec2 start_position       = { 0.0F, 0.0F };
-    glm::vec2 end_position         = { 1.0F, 0.0F };
+    glm::vec2 pos_start            = { 0.0F, 0.0F };
+    glm::vec2 neg_start            = { 0.0F, 0.0F };
+    glm::vec2 end                  = { 1.0F, 0.0F };
     float32   carrier_frequency_hz = 25.0F;
 
-    glm::vec4   color      = glm::vec4( 1.0F );
     float32     line_width = 1.0F;
     IlsWaveForm wave_form  = IlsWaveForm::Combined;
 };
@@ -49,11 +49,9 @@ public:
     [[nodiscard( "Const getter" )]]
     auto is_initialized( ) const -> bool;
 
-    auto initialize_wave( ) -> utils::Result< uint32 >;
-
     [[nodiscard( "Const getter" )]]
-    auto get_data( uint32 id ) const -> IlsWaveData;
-    auto set_data( uint32 id, IlsWaveData const& data ) -> void;
+    auto get_data( ) const -> IlsWaveData;
+    auto set_data( IlsWaveData const& data ) -> void;
 
     auto draw( vlk::objs::FrameInfo const& frame ) -> utils::Result< void >;
 
@@ -63,9 +61,7 @@ private:
 
     vlk::objs::VulkanGraphicsPipeline pipeline_ = { gpu_, presentation_ };
 
-    uint32                                    next_wave_id_     = 1U;
-    std::vector< uint32 >                     ordered_wave_ids_ = { };
-    std::unordered_map< uint32, IlsWaveData > wave_data_        = { };
+    IlsWaveData wave_data_ = { };
 
     bool initialized_ = false;
 };

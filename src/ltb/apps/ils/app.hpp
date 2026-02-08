@@ -71,9 +71,6 @@ private:
     IlsParams        ils_             = { };
 
     ils::IlsWaveDisplayPipeline ils_wave_pipeline_ = { gpu_, presentation_ };
-    uint32                      pos_wave_          = 0U;
-    uint32                      neg_wave_          = 0U;
-    uint32                      combined_wave_     = 0U;
 
     vlk::dd::SimpleMeshUniforms* conversion_line_ = nullptr;
 

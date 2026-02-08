@@ -238,9 +238,6 @@ auto IlsApp::initialize_waves( ) -> utils::Result< IlsApp* >
         .camera_ubo  = camera_ubo_,
     } ) );
 
-    LTB_CHECK( pos_wave_, ils_wave_pipeline_.initialize_wave( ) );
-    LTB_CHECK( neg_wave_, ils_wave_pipeline_.initialize_wave( ) );
-
     return this;
 }
 
@@ -422,23 +419,11 @@ auto IlsApp::update_world_pos( glm::vec2 const world_pos ) -> void
     auto const half_spacing = ils_.antenna_spacing * 0.5F;
 
     ils_wave_pipeline_.set_data(
-        pos_wave_,
         ils::IlsWaveData{
-            .start_position       = { 0.0F, +half_spacing },
-            .end_position         = world_pos,
+            .pos_start            = { 0.0F, +half_spacing },
+            .neg_start            = { 0.0F, -half_spacing },
+            .end                  = world_pos,
             .carrier_frequency_hz = ils_.carrier_frequency / ils_.carrier_decimation,
-            .color                = glm::vec4{ 0.0F, 1.0F, 1.0F, 1.0F },
-            .line_width           = wave_line_width_,
-            .wave_form            = wave_form_,
-        }
-    );
-    ils_wave_pipeline_.set_data(
-        neg_wave_,
-        ils::IlsWaveData{
-            .start_position       = { 0.0F, -half_spacing },
-            .end_position         = world_pos,
-            .carrier_frequency_hz = ils_.carrier_frequency / ils_.carrier_decimation,
-            .color                = glm::vec4{ 1.0F, 0.0F, 1.0F, 1.0F },
             .line_width           = wave_line_width_,
             .wave_form            = wave_form_,
         }

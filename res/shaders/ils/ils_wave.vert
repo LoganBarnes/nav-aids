@@ -61,5 +61,5 @@ void main()
 
     float segment_length     = line_length() / float(line_in.num_segments);
     line_out.line_segment_t  = vec2(gl_VertexIndex, gl_VertexIndex + 1) * segment_length;
-//    line_out.line_segment_t += line_start();
+    // line_out.line_segment_t += line_start();
 }
