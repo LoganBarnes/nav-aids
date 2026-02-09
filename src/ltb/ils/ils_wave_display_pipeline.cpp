@@ -273,33 +273,11 @@ auto IlsWaveDisplayPipeline::draw( vlk::objs::FrameInfo const& frame ) -> utils:
     draw_wave( frame, pipeline_, data_uniforms, display_uniforms );
 
     // Combined wave
-    if ( ( wave_data_.wave_form == IlsWaveForm::All )
-         || ( wave_data_.wave_form == IlsWaveForm::Sbo ) )
+    if ( wave_data_.wave_form != IlsWaveForm::All )
     {
         data_uniforms.line_segments = line_segments( 20.0F, wave_data_.carrier_frequency_hz );
         data_uniforms.antenna       = Antenna::Both;
-
-        display_uniforms.wave_form = WaveForm::Combined;
-        display_uniforms.color     = glm::vec4( 0.5F, 0.5F, 0.5F, 1.0F );
-
-        draw_wave( frame, pipeline_, data_uniforms, display_uniforms );
-    }
-
-    if ( wave_data_.wave_form == IlsWaveForm::All )
-    {
-        data_uniforms.line_segments = line_segments( 20.0F, wave_data_.carrier_frequency_hz );
-        data_uniforms.antenna       = Antenna::Both;
-
-        display_uniforms.wave_form = WaveForm::Csb;
-        display_uniforms.color     = glm::vec4( 0.1F, 0.1F, 0.1F, 1.0F );
-
-        draw_wave( frame, pipeline_, data_uniforms, display_uniforms );
-
-        data_uniforms.line_segments = line_segments( 20.0F, wave_data_.carrier_frequency_hz );
-        data_uniforms.antenna       = Antenna::Both;
-
-        display_uniforms.wave_form = WaveForm::Sbo;
-        display_uniforms.color     = glm::vec4( 1.0F, 1.0F, 0.0F, 1.0F );
+        display_uniforms.color      = glm::vec4( 1.0F, 1.0F, 1.0F, 1.0F );
 
         draw_wave( frame, pipeline_, data_uniforms, display_uniforms );
     }
@@ -307,9 +285,22 @@ auto IlsWaveDisplayPipeline::draw( vlk::objs::FrameInfo const& frame ) -> utils:
     {
         data_uniforms.line_segments = line_segments( 20.0F, wave_data_.carrier_frequency_hz );
         data_uniforms.antenna       = Antenna::Both;
+        display_uniforms.wave_form  = WaveForm::Combined;
+        display_uniforms.color      = glm::vec4( 0.5F, 0.5F, 0.5F, 1.0F );
 
-        display_uniforms.wave_form = to_wave_form( wave_data_.wave_form );
-        display_uniforms.color     = glm::vec4( 1.0F, 1.0F, 1.0F, 1.0F );
+        draw_wave( frame, pipeline_, data_uniforms, display_uniforms );
+
+        data_uniforms.line_segments = line_segments( 20.0F, wave_data_.carrier_frequency_hz );
+        data_uniforms.antenna       = Antenna::Both;
+        display_uniforms.wave_form  = WaveForm::Csb;
+        display_uniforms.color      = glm::vec4( 0.1F, 0.1F, 0.1F, 1.0F );
+
+        draw_wave( frame, pipeline_, data_uniforms, display_uniforms );
+
+        data_uniforms.line_segments = line_segments( 20.0F, wave_data_.carrier_frequency_hz );
+        data_uniforms.antenna       = Antenna::Both;
+        display_uniforms.wave_form  = WaveForm::Sbo;
+        display_uniforms.color      = glm::vec4( 1.0F, 1.0F, 0.0F, 1.0F );
 
         draw_wave( frame, pipeline_, data_uniforms, display_uniforms );
     }
