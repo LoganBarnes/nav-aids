@@ -23,6 +23,7 @@ enum class IlsWaveForm : uint32
     Sbo,
     Csb,
     Carrier,
+    All,
 };
 
 struct IlsWaveData
