@@ -78,6 +78,7 @@ add_library(
   LtbNav
   #  ${LtbNav_SOURCE_FILES}
   ${CMAKE_CURRENT_LIST_DIR}/src/ltb/apps/ils/app.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/src/ltb/ils/ils_pattern_display_pipeline.cpp
   ${CMAKE_CURRENT_LIST_DIR}/src/ltb/ils/ils_wave_display_pipeline.cpp
 )
 add_library(

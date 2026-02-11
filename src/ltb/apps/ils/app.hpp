@@ -7,6 +7,7 @@
 #include "ltb/cam/camera_2d.hpp"
 #include "ltb/exec/update_loop.hpp"
 #include "ltb/gui/imgui_glfw_vulkan_setup.hpp"
+#include "ltb/ils/ils_pattern_display_pipeline.hpp"
 #include "ltb/ils/ils_wave_display_pipeline.hpp"
 #include "ltb/vlk/dd/lines_pipeline_2.hpp"
 #include "ltb/vlk/objs/vulkan_buffer.hpp"
@@ -18,7 +19,6 @@
 
 namespace ltb
 {
-
 struct IlsParams
 {
     int32     antenna_pairs      = 1;
@@ -70,7 +70,8 @@ private:
     ils::IlsWaveForm wave_form_       = ils::IlsWaveForm::Combined;
     IlsParams        ils_             = { };
 
-    ils::IlsWaveDisplayPipeline ils_wave_pipeline_ = { gpu_, presentation_ };
+    ils::IlsWaveDisplayPipeline    ils_wave_pipeline_    = { gpu_, presentation_ };
+    ils::IlsPatternDisplayPipeline ils_pattern_pipeline_ = { gpu_, presentation_ };
 
     vlk::dd::SimpleMeshUniforms* conversion_line_ = nullptr;
 
