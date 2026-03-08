@@ -2,16 +2,23 @@
 # A Logan Thomas Barnes project
 # ##############################################################################
 
-# Graphics APIs
-find_package( Vulkan REQUIRED )
+# Graphics API
 
-#file(
-#  STRINGS
-#  "${CMAKE_CURRENT_SOURCE_DIR}/version.txt"
-#  MY_VERSION
-#  LIMIT_COUNT
-#  1
-#)
+find_package(Git REQUIRED)
+
+execute_process(
+  COMMAND ${GIT_EXECUTABLE} rev-parse HEAD:ltb-vlk
+  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+  OUTPUT_VARIABLE LTB_VLK_COMMIT_HASH
+  RESULT_VARIABLE GIT_RESULT
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+if (GIT_RESULT EQUAL 0)
+  message(STATUS "ltb-vlk commit hash: ${LTB_VLK_COMMIT_HASH}")
+  else()
+  message(FATAL_ERROR "Failed to get ltb-vlk commit hash.")
+endif ()
 
 cpmaddpackage(
   NAME
@@ -19,20 +26,8 @@ cpmaddpackage(
   GITHUB_REPOSITORY
   LoganBarnes/ltb-vlk
   GIT_TAG
-  a207318
+  ${LTB_VLK_COMMIT_HASH}
 )
-
-#cpmaddpackage(
-#  NAME
-#  implot
-#  GITHUB_REPOSITORY
-#  epezent/implot
-#  GIT_TAG
-#  f156599 # master: Jan 22, 2024
-#  DOWNLOAD_ONLY
-#  TRUE
-#)
-#cpmaddpackage("gh:apolukhin/pfr_non_boost#2.2.0")
 
 if (${LTB_NAV_BUILD_TESTS})
   cpmaddpackage(
@@ -50,37 +45,3 @@ if (${LTB_NAV_BUILD_TESTS})
   # Enable testing
   include(CTest)
 endif ()
-
-#if (implot_ADDED)
-#  add_library(
-#    implot
-#    ${implot_SOURCE_DIR}/implot.cpp
-#    ${implot_SOURCE_DIR}/implot.h
-#    ${implot_SOURCE_DIR}/implot_demo.cpp
-#    ${implot_SOURCE_DIR}/implot_internal.h
-#    ${implot_SOURCE_DIR}/implot_items.cpp
-#  )
-#  add_library(
-#    implot::implot
-#    ALIAS
-#    implot
-#  )
-#  target_link_libraries(
-#    implot
-#    PUBLIC
-#    imgui::imgui
-#  )
-#  target_include_directories(
-#    implot
-#    SYSTEM
-#    PUBLIC
-#    # Mark external include directories as system includes to avoid warnings.
-#    $<BUILD_INTERFACE:${implot_SOURCE_DIR}>
-#  )
-#  target_compile_options(
-#    implot
-#    PRIVATE
-#    # Ignore build warnings on this third-party code
-#    $<$<COMPILE_LANG_AND_ID:CXX,GNU,Clang,AppleClang>:-w>
-#  )
-#endif ()

@@ -1,6 +1,8 @@
 # ##############################################################################
 # A Logan Thomas Barnes project
 # ##############################################################################
+find_package(Vulkan REQUIRED)
+
 file(
   GLOB_RECURSE LtbNav_SHADERS
   LIST_DIRECTORIES false
