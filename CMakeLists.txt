@@ -80,6 +80,8 @@ add_library(
   ${CMAKE_CURRENT_LIST_DIR}/src/ltb/apps/ils/app.cpp
   ${CMAKE_CURRENT_LIST_DIR}/src/ltb/ils/ils_pattern_display_pipeline.cpp
   ${CMAKE_CURRENT_LIST_DIR}/src/ltb/ils/ils_wave_display_pipeline.cpp
+
+  ${CMAKE_CURRENT_LIST_DIR}/src/ltb/apps/vor/app.cpp
 )
 add_library(
   LtbNav::LtbNav
@@ -203,6 +205,23 @@ target_link_libraries(
 )
 target_include_directories(
   LtbIlsApp
+  PRIVATE
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>
+)
+
+
+# VHR Omnidirectional Range (VOR)
+add_executable(
+  LtbVorApp
+  ${CMAKE_CURRENT_LIST_DIR}/src/ltb/apps/vor/main.cpp
+)
+target_link_libraries(
+  LtbVorApp
+  PRIVATE
+  LtbNav::LtbNav
+)
+target_include_directories(
+  LtbVorApp
   PRIVATE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>
 )
