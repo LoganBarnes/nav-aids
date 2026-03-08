@@ -5,6 +5,14 @@
 # Graphics APIs
 find_package( Vulkan REQUIRED )
 
+#file(
+#  STRINGS
+#  "${CMAKE_CURRENT_SOURCE_DIR}/version.txt"
+#  MY_VERSION
+#  LIMIT_COUNT
+#  1
+#)
+
 cpmaddpackage(
   NAME
   LtbVlk
