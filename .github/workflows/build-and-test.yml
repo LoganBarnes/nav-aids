@@ -31,9 +31,9 @@ jobs:
         build_type: [Release]
         c_compiler: [gcc, clang, cl]
         include:
-#          - os: windows-latest
-#            c_compiler: cl
-#            cpp_compiler: cl
+          - os: windows-latest
+            c_compiler: cl
+            cpp_compiler: cl
           - os: ubuntu-latest
             c_compiler: gcc
             cpp_compiler: g++
@@ -55,7 +55,6 @@ jobs:
           # You can set the Vulkan SDK version to download.
           # Defaults to latest version, if version not set.
           vulkan_version: 1.4.341.1
-          cache: true
 
       - uses: actions/checkout@v4
 
