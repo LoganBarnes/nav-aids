@@ -7,6 +7,8 @@
 // external
 #include <glm/gtc/matrix_transform.hpp>
 
+// #define VOR
+
 namespace ltb::app
 {
 namespace
@@ -15,6 +17,9 @@ namespace
 auto constexpr draw_start_vertex       = 0;
 auto constexpr fullscreen_draw_mode    = GL_TRIANGLE_STRIP;
 auto constexpr fullscreen_vertex_count = 4;
+
+constexpr auto antenna_power        = 100.0F;
+auto constexpr antenna_frequency_hz = 4.0F;
 
 } // namespace
 
@@ -47,12 +52,59 @@ auto AntennaApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Resul
         )
     );
 
-    antennas_ = std::vector{
-        Antenna{ .world_position = { -0.01F, -0.5F }, .antenna_power = 100.0F },
-        Antenna{ .world_position = { +0.01F, -0.5F }, .antenna_power = 100.0F },
-        Antenna{ .world_position = { -0.01F, +0.5F }, .antenna_power = 100.0F },
-        Antenna{ .world_position = { +0.01F, +0.5F }, .antenna_power = 100.0F },
+#if defined( VOR )
+
+    antennas_ = {
+        {
+            .world_position = { -0.025F, -0.025F },
+            .antenna_power  = antenna_power,
+            .phase_rads     = 0.0F * glm::two_pi< float32 >( ),
+        },
+        {
+            .world_position = { +0.025F, +0.025F },
+            .antenna_power  = antenna_power,
+            .phase_rads     = 0.5F * glm::two_pi< float32 >( ),
+        },
+        {
+            .world_position = { -0.025F, +0.025F },
+            .antenna_power  = antenna_power,
+            .phase_rads     = 0.25F * glm::two_pi< float32 >( ),
+        },
+        {
+            .world_position = { +0.025F, -0.025F },
+            .antenna_power  = antenna_power,
+            .phase_rads     = 0.75F * glm::two_pi< float32 >( ),
+        },
     };
+
+#else
+
+    antennas_ = {
+        {
+            .world_position = { 0.0F, 0.0F },
+            .antenna_power  = antenna_power,
+            .phase_rads     = 0.0F,
+        },
+    };
+    for ( auto i = 1; i <= 5; ++i )
+    {
+        constexpr auto wave_speed       = 0.25F;
+        constexpr auto wave_length      = wave_speed / antenna_frequency_hz;
+        constexpr auto half_wave_length = wave_length / 2.0F;
+
+        antennas_.push_back( {
+            .world_position = { 0.0F, -static_cast< float32 >( i ) * half_wave_length },
+            .antenna_power  = antenna_power,
+            .phase_rads     = 0.0F,
+        } );
+        antennas_.push_back( {
+            .world_position = { 0.0F, +static_cast< float32 >( i ) * half_wave_length },
+            .antenna_power  = antenna_power,
+            .phase_rads     = 0.0F,
+        } );
+    }
+
+#endif
 
     // Store the vertex data in a GPU buffer.
     ogl::buffer_data(
@@ -74,7 +126,14 @@ auto AntennaApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Resul
         antenna_pipeline_.program,
         "antenna_power",
     };
-    LTB_CHECK( utils::initialize( antenna_world_position_attrib, antenna_power_attrib ) );
+    auto antenna_phase_attrib = ogl::Attribute< decltype( Antenna::phase_rads ) >{
+        antenna_pipeline_.program,
+        "phase_rads",
+    };
+    LTB_CHECK(
+        utils::
+            initialize( antenna_world_position_attrib, antenna_power_attrib, antenna_phase_attrib )
+    );
 
     ogl::set_attributes(
         ogl::bind( antenna_pipeline_.vertex_array ),
@@ -91,6 +150,12 @@ auto AntennaApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Resul
                 .num_coordinates         = 1,
                 .data_type               = GL_FLOAT,
                 .initial_offset_into_vbo = &( null_antenna_ptr->antenna_power ),
+            },
+            {
+                .attribute_location      = antenna_phase_attrib.location( ),
+                .num_coordinates         = 1,
+                .data_type               = GL_FLOAT,
+                .initial_offset_into_vbo = &( null_antenna_ptr->phase_rads ),
             },
         },
         total_vertex_stride,
@@ -119,7 +184,9 @@ auto AntennaApp::render( ) -> void
     display_wave_field( );
 }
 
-auto AntennaApp::configure_gui( ) -> void {}
+auto AntennaApp::configure_gui( ) -> void
+{
+}
 
 auto AntennaApp::destroy( ) -> void
 {
@@ -199,7 +266,6 @@ auto AntennaApp::render_antennas( ) -> void
     auto constexpr proj_from_world = glm::identity< glm::mat4 >( );
 
     // Render the wave field.
-    auto constexpr antenna_frequency_hz = 2.0F;
     ogl::set( antenna_pipeline_.clip_from_world_uniform, proj_from_world );
     ogl::set( antenna_pipeline_.time_s_uniform, elapsed_time_s );
     ogl::set( antenna_pipeline_.frequency_hz_uniform, antenna_frequency_hz );
@@ -207,7 +273,7 @@ auto AntennaApp::render_antennas( ) -> void
     ogl::draw(
         ogl::bind( antenna_pipeline_.program ),
         ogl::bind( antenna_pipeline_.vertex_array ),
-        GL_TRIANGLE_STRIP,
+        GL_POINTS,
         draw_start_vertex,
         static_cast< GLsizei >( antennas_.size( ) )
     );

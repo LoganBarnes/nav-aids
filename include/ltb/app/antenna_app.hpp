@@ -62,8 +62,9 @@ private:
     // Program to set antenna positions and strength.
     struct Antenna
     {
-        glm::vec2 world_position;
-        float32   antenna_power;
+        glm::vec2 world_position = { 0.0F, 0.0F };
+        float32   antenna_power  = 100.0F;
+        float32   phase_rads     = 0.0F;
     };
 
     struct AntennaPipeline

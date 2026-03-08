@@ -4,7 +4,7 @@
 
 uniform float spatial_step = 1.0F;
 uniform float time_step    = 1.0F;
-uniform float speed        = 0.5F;
+uniform float speed        = 0.25F;
 
 uniform vec2      state_size;
 uniform sampler2D prev_state;
@@ -33,5 +33,5 @@ void main()
     next_value *= alpha;
     next_value += 2.0F * curr_value - prev_value;
 
-    //    next_value = curr_value;
+    next_value *= 0.9998F;
 }

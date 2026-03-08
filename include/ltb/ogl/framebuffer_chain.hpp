@@ -10,8 +10,8 @@ namespace ltb::ogl
 struct TextureParams
 {
     // Texture parameters.
-    GLint texture_filter = GL_NEAREST;
-    GLint texture_wrap   = GL_REPEAT;
+    GLint texture_filter = GL_LINEAR;
+    GLint texture_wrap   = GL_CLAMP_TO_EDGE;
 
     // GPU storage format.
     GLint internal_format = GL_RGBA32F;
