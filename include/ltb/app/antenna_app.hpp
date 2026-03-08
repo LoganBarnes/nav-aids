@@ -47,6 +47,7 @@ private:
 
         ogl::Program program = { vertex_shader, fragment_shader };
 
+        ogl::Uniform< float32 >      speed_uniform      = { program, "speed" };
         ogl::Uniform< glm::vec2 >    state_size_uniform = { program, "state_size" };
         ogl::Uniform< ogl::Texture > prev_state_uniform = { program, "prev_state" };
         ogl::Uniform< ogl::Texture > curr_state_uniform = { program, "curr_state" };
@@ -105,6 +106,8 @@ private:
         .vertex_shader = fullscreen_vertex_shader_,
         .vertex_array  = fullscreen_vertex_array_,
     };
+
+    glm::mat4 proj_from_world_ = glm::identity< glm::mat4 >( );
 
     auto update_framebuffer( ) -> void;
     auto propagate_waves( ) -> void;

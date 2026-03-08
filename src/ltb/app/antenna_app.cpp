@@ -19,7 +19,10 @@ auto constexpr fullscreen_draw_mode    = GL_TRIANGLE_STRIP;
 auto constexpr fullscreen_vertex_count = 4;
 
 constexpr auto antenna_power        = 100.0F;
-auto constexpr antenna_frequency_hz = 4.0F;
+constexpr auto antenna_frequency_hz = 4.0F;
+auto constexpr wave_speed           = 0.25F;
+
+constexpr auto screen_height = 5.0F;
 
 } // namespace
 
@@ -34,6 +37,7 @@ auto AntennaApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Resul
             wave_pipeline_.vertex_shader,
             wave_pipeline_.fragment_shader,
             wave_pipeline_.program,
+            wave_pipeline_.speed_uniform,
             wave_pipeline_.state_size_uniform,
             wave_pipeline_.prev_state_uniform,
             wave_pipeline_.curr_state_uniform
@@ -88,7 +92,6 @@ auto AntennaApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Resul
     };
     for ( auto i = 1; i <= 5; ++i )
     {
-        constexpr auto wave_speed       = 0.25F;
         constexpr auto wave_length      = wave_speed / antenna_frequency_hz;
         constexpr auto half_wave_length = wave_length / 2.0F;
 
@@ -175,6 +178,9 @@ auto AntennaApp::initialize( glm::ivec2 const framebuffer_size ) -> utils::Resul
     glDisable( GL_DEPTH_TEST );
 
     start_time_ = std::chrono::steady_clock::now( );
+
+    resize( framebuffer_size );
+
     return utils::success( );
 }
 
@@ -207,8 +213,17 @@ auto AntennaApp::destroy( ) -> void
 
 auto AntennaApp::resize( glm::ivec2 const framebuffer_size ) -> void
 {
+    spdlog::error( "Resize" );
     framebuffer_size_ = framebuffer_size;
     LTB_CHECK_OR( wave_field_chain_.resize( framebuffer_size_ ), utils::log_error );
+
+    auto const aspect = static_cast< float32 >( framebuffer_size_.x )
+                      / static_cast< float32 >( framebuffer_size_.y );
+
+    constexpr auto half_height = screen_height / 2.0F;
+    auto const     half_width  = half_height * aspect;
+
+    proj_from_world_ = glm::ortho( -half_width, +half_width, -half_height, +half_height );
 }
 
 auto AntennaApp::update_framebuffer( ) -> void
@@ -227,6 +242,7 @@ auto AntennaApp::update_framebuffer( ) -> void
 
 auto AntennaApp::propagate_waves( ) -> void
 {
+    ogl::set( wave_pipeline_.speed_uniform, wave_speed );
     ogl::set( wave_pipeline_.state_size_uniform, glm::vec2( framebuffer_size_ ) );
 
     auto const& previous_state = wave_field_chain_.get_texture< 1 >( );
@@ -262,11 +278,8 @@ auto AntennaApp::render_antennas( ) -> void
     auto const elapsed_duration = current_time - start_time_;
     auto const elapsed_time_s = std::chrono::duration_cast< Duration >( elapsed_duration ).count( );
 
-    // Camera projection matrix.
-    auto constexpr proj_from_world = glm::identity< glm::mat4 >( );
-
     // Render the wave field.
-    ogl::set( antenna_pipeline_.clip_from_world_uniform, proj_from_world );
+    ogl::set( antenna_pipeline_.clip_from_world_uniform, proj_from_world_ );
     ogl::set( antenna_pipeline_.time_s_uniform, elapsed_time_s );
     ogl::set( antenna_pipeline_.frequency_hz_uniform, antenna_frequency_hz );
 
