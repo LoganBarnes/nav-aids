@@ -9,6 +9,7 @@
 
 // external
 #include <spdlog/spdlog.h>
+#include <spdlog/fmt/ranges.h>
 
 // standard
 #include <memory>

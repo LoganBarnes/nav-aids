@@ -90,7 +90,7 @@ cpmaddpackage(
   DOWNLOAD_ONLY
   TRUE
 )
-cpmaddpackage("gh:gabime/spdlog@1.14.1")
+cpmaddpackage("gh:gabime/spdlog@1.17.0")
 
 if (${LTB_NAV_BUILD_TESTS})
   cpmaddpackage(

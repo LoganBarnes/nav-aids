@@ -248,8 +248,8 @@ auto AntennaApp::propagate_waves( ) -> void
     auto const& previous_state = wave_field_chain_.get_texture< 1 >( );
     auto const& current_state  = wave_field_chain_.get_texture< 2 >( );
 
-    auto const active_tex_0 = GLint{ 0 };
-    auto const active_tex_1 = GLint{ 1 };
+    auto constexpr active_tex_0 = GLint{ 0 };
+    auto constexpr active_tex_1 = GLint{ 1 };
 
     previous_state.active_tex( active_tex_0 );
     current_state.active_tex( active_tex_1 );
