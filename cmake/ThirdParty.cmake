@@ -2,10 +2,9 @@
 # A Logan Thomas Barnes project
 # ##############################################################################
 
-# Graphics API
-
 find_package(Git REQUIRED)
 
+# Graphics API
 execute_process(
   COMMAND ${GIT_EXECUTABLE} rev-parse HEAD:ltb-vlk
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
