@@ -10,8 +10,7 @@
 #include "ltb/vlk/objs/frame_info.hpp"
 
 // external
-#include "spdlog/fmt/bundled/os.h"
-#include <range/v3/range/conversion.hpp>
+#include <spdlog/fmt/bundled/os.h>
 #include <spdlog/spdlog.h>
 
 namespace ltb::ils
